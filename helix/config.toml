@@ -1,0 +1,65 @@
+theme = "ayu_evolve2"
+
+[editor]
+cursorline = true
+auto-pairs = false
+
+# borrowed default alphabet from leap.nvim
+# https://github.com/ggandor/leap.nvim/blob/7a9407d17fab3a1c3cfe201965d680a408776152/doc/leap.txt#L297
+jump-label-alphabet = "njklhosfdweimbuyvrgtaqpcxz"
+
+[editor.cursor-shape]
+insert = "bar"
+
+[editor.file-picker]
+hidden = false
+
+[editor.lsp]
+display-messages = true
+
+[editor.soft-wrap]
+enable = true
+
+[editor.statusline]
+right = [
+  "workspace-diagnostics",
+  "diagnostics",
+  "selections",
+  "register",
+  "position",
+  "position-percentage",
+  "total-line-numbers",
+  "file-encoding",
+]
+
+[editor.whitespace.render]
+nbsp = "all"
+
+[keys.normal]
+C-s = ":w"
+"{" = "goto_previous_buffer"
+"}" = "goto_next_buffer"
+A-w = ":bc"
+"=" = ":reflow"
+# relies on command expansions PR: https://github.com/helix-editor/helix/pull/6979
+C-b = ":sh hxblame %{cwd} %{filename} %{linenumber}"
+C-B = ":echo %sh{git blame -c --date=short -L %{linenumber},+1 %{filename} | sed -E 's/[0-9]+).*//' | sed 's/(//g'}"
+
+x = "select_line_below"
+X = "select_line_above"
+
+[keys.select]
+# J = "select_line_below"
+# K = "select_line_above" 
+# "A-j" = "join_selections"
+# "A-J" = "join_selections_space"
+x = "select_line_below"
+X = "select_line_above"
+
+[keys.insert]
+C-s = ["normal_mode", ":w"]
+# disable arrow keys
+up = "no_op"
+down = "no_op"
+left = "no_op"
+right = "no_op"

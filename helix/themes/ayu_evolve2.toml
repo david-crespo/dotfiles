@@ -1,0 +1,4 @@
+inherits = "ayu_evolve"
+
+"ui.virtual.jump-label" = { fg = "red", modifiers = ["bold"] }
+"ui.popup" = { fg = "#7B91b3", bg = "dark_gray" }
