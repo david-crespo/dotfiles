@@ -1,0 +1,102 @@
+[user]
+name = David Crespo
+email = david.crespo@oxidecomputer.com
+
+[checkout]
+defaultRemote = origin
+
+[core]
+pager = delta
+
+[interactive]
+diffFilter = delta --color-only
+
+[delta]
+navigate = true # use n and N to move between diff sections
+light = false   # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
+# hyperlinks = true
+
+[pager]
+difftool = true
+
+[color "diff-highlight"]
+oldNormal = red bold
+oldHighlight = red bold 52
+newNormal = green bold
+newHighlight = green bold 22
+
+[color "diff"]
+meta = yellow
+frag = magenta bold
+commit = yellow bold
+old = red bold
+new = green bold
+whitespace = "#ffff00" reverse
+# whitespace = red reverse
+
+[alias]
+co = checkout
+cm = commit -m
+aa = add --all
+st = status
+amend = commit --amend
+namend = commit --amend --no-edit
+fa = fetch --all
+dh1 = diff HEAD~1
+um = !git checkout master && git pull && git checkout -
+ds = diff --stat
+dc = diff --cached
+dft = difftool
+
+# Fancy logging.
+#   h = head
+#   hp = head with patch
+#   r = recent commits, only current branch
+#   rb = recent commits, all local branches
+#   ra = recent commits, all reachable refs
+#   l = all commits, only current branch
+#   la = all commits, all reachable refs
+#   b = all branches
+head = !git r -1
+h = !git head
+hp = !. ~/.githelpers && show_git_head
+r = !GIT_NO_PAGER=1 git l -15
+rb = !git r --branches
+ra = !git r --all
+l = !. ~/.githelpers && pretty_git_log
+pf = push --force-with-lease
+b = !. ~/.githelpers && pretty_git_branch
+ba = !. ~/.githelpers && pretty_git_branch --all
+yolo = !. ~/.githelpers && git_yolo
+ayolo = !. ~/.githelpers && git aa && git_yolo
+
+[alias "push"]
+please = push --force-with-lease
+
+[diff]
+tool = difftastic
+colorMoved = default
+
+[diff "javascript"]
+xfuncname = "^\\s*(.*?\\bfunction\\b.*?\\(.*?\\))"
+
+[difftool]
+prompt = false
+
+[difftool "difftastic"]
+cmd = difft "$LOCAL" "$REMOTE"
+
+[push]
+default = current
+[pull]
+ff = only
+[init]
+defaultBranch = main
+[merge]
+conflictstyle = diff3
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential

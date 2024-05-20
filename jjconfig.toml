@@ -1,0 +1,16 @@
+user.name = "David Crespo"
+user.email = "david.crespo@oxidecomputer.com"
+
+
+[ui]
+default-command = "log"
+# pager = ["sh", "-c", "delta"]
+# ui.pager = ["sh", "-c", "diff-so-fancy | less -RFX"]
+
+[ui.diff]
+format = "git"
+tool = ["delta", "$left", "$right"]
+
+[aliases]
+d = ["diff", "--git", "--config-toml=ui.pager='delta'"]
+
