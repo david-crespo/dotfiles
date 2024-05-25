@@ -202,16 +202,6 @@ function findrep() {
 alias tviz='~/repos/things-viz/main.ts'
 alias tsearch='~/repos/things-viz/search.ts'
 
-# used by a helix shortcut, or would be if helix was using the right shell?
-function ghline() {
-  local working_dir="$1"
-  local file_abs_path="$2"
-  local line_number="$3"
-
-  local rel_path=$(grealpath --relative-to=$working_dir $file_abs_path)
-  gh browse "$rel_path:$line_number"
-}
-
 source "$HOME/.cargo/env"
 
 export NVM_DIR="$HOME/.nvm"

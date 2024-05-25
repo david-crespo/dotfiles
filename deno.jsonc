@@ -1,0 +1,10 @@
+{
+  "fmt": {
+    "lineWidth": 92,
+    "semiColons": false
+  },
+  "imports": {
+    "@std/cli": "jsr:@std/cli@^0.224.3",
+    "@std/path": "jsr:@std/path@^0.225.1"
+  }
+}
