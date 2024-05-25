@@ -7,22 +7,10 @@ alias gd='git diff'
 alias gp='git pull'
 alias gacm="git commit -am"
 alias gds='git diff --stat'
-alias gdns='git diff --numstat'
 alias gdc='git diff --cached'
 alias gdcs='git diff --cached --stat'
 alias grm='(gco main || gco master) && gp && gfp' # git reset main
 alias gss='git show --stat'
-
-# prune branches, get list of delete remote references,
-# attempt to delete local copies, ignoring errors
-function gfp() {
-  git fetch --prune 2>&1 |
-    grep "\[deleted\]" |
-    sed -E "s/.+origin\///g" |
-    xargs git b -D 2>/dev/null
-}
-
-alias gf='git fetch'
 
 alias gb='git b'
 alias gbd='git b -D'
@@ -37,8 +25,6 @@ alias server='python3 -m http.server 8000'
 alias cdc='cd ~/oxide/console'
 alias codec='code2 ~/oxide/console'
 alias ysm='npm run start:msw'
-alias ysmo='npm run start:msw -- --open'
-alias ysmf='npm run start:msw -- --force'
 alias ts='npx tsc'
 alias e2e='npx playwright test'
 alias e2ec='npx playwright test --project=chrome'
@@ -143,8 +129,6 @@ function gdlb() {
 function gdsnl() {
   git diff --stat $1 -- . :^package-lock.json :^yarn.lock
 }
-
-alias ghrel='~/repos/dotfiles/gh-rel.nu'
 
 function codeblock() {
   if [ $# -eq 0 ]; then

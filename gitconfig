@@ -14,7 +14,6 @@ diffFilter = delta --color-only
 [delta]
 navigate = true # use n and N to move between diff sections
 light = false   # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
-# hyperlinks = true
 
 [pager]
 difftool = true
@@ -38,15 +37,9 @@ whitespace = "#ffff00" reverse
 co = checkout
 cm = commit -m
 aa = add --all
-st = status
 amend = commit --amend
 namend = commit --amend --no-edit
 fa = fetch --all
-dh1 = diff HEAD~1
-um = !git checkout master && git pull && git checkout -
-ds = diff --stat
-dc = diff --cached
-dft = difftool
 
 # Fancy logging.
 #   h = head
