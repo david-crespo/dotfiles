@@ -12,6 +12,15 @@ alias gdcs='git diff --cached --stat'
 alias grm='(gco main || gco master) && gp && gfp' # git reset main
 alias gss='git show --stat'
 
+# prune branches, get list of delete remote references,
+# attempt to delete local copies, ignoring errors
+function gfp() {
+  git fetch --prune 2>&1 |
+    grep "\[deleted\]" |
+    sed -E "s/.+origin\///g" |
+    xargs git b -D 2>/dev/null
+}
+
 alias gb='git b'
 alias gbd='git b -D'
 alias grb='git rb'
