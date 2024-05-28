@@ -31,6 +31,10 @@ auto-format = true
 name = "css"
 auto-format = false
 
+[language-server.biome]
+command = "biome"
+args = ["lsp-proxy"]
+
 [language-server.deno-lsp]
 command = "deno"
 args = ["lsp"]
