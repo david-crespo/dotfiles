@@ -6,8 +6,10 @@
  * based on the extension. Used for piping files to my LLM CLI.
  */
 
-import { extname } from "@std/path"
-import { parseArgs } from "@std/cli"
+// wanted to use names from the import map but it broke when calling this
+// through a symlink because it doesn't see the deno.jsonc
+import { extname } from "jsr:@std/path@^0.225.1"
+import { parseArgs } from "jsr:@std/cli@^0.224.3"
 
 // adoc doesn't display right in glow but it does on github
 const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh"]

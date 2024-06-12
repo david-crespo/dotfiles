@@ -8,6 +8,11 @@ auto-pairs = false
 # https://github.com/ggandor/leap.nvim/blob/7a9407d17fab3a1c3cfe201965d680a408776152/doc/leap.txt#L297
 jump-label-alphabet = "njklhosfdweimbuyvrgtaqpcxz"
 
+end-of-line-diagnostics = "hint"
+
+[editor.inline-diagnostics]
+cursor-line = "warning" # show warnings and errors on the cursorline inline
+
 [editor.cursor-shape]
 insert = "bar"
 
