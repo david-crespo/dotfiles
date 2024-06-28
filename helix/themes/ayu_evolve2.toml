@@ -4,3 +4,6 @@ inherits = "ayu_evolve"
 "ui.popup" = { fg = "foreground", bg = "#20262d" } # bg is dark_gray but a bit darker
 "ui.menu" = { fg = "foreground", bg = "#20262d" }
 "ui.menu.selected" = { fg = "background", bg = "gray" }
+
+[palette]
+red = "#dd5540" # tone down red a bit
