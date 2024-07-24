@@ -26,7 +26,7 @@ export HISTSIZE=10000
 
 bindkey -e # zshell emacs mode, which makes opt+left/right work!
 
-eval "$(fzf --zsh)"
+source <(fzf --zsh)
 
 export DENO_INSTALL="/Users/david/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
