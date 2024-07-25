@@ -6,7 +6,7 @@ email = david.crespo@oxidecomputer.com
 defaultRemote = origin
 
 [core]
-pager = delta
+pager = delta --dark
 
 [interactive]
 diffFilter = delta --color-only
