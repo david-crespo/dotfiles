@@ -12,6 +12,12 @@ args = parser.parse_args()
 
 async def main(conn):
     abs_dir = os.path.abspath(args.dir)
+    if not os.path.exists(abs_dir):
+        print(f"'{abs_dir}' does not exist")
+        return
+    if not os.path.isdir(abs_dir):
+        print(f"'{abs_dir}' is not a directory")
+        return
 
     app = await iterm2.async_get_app(conn)
     window = app.current_window
