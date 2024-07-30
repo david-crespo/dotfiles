@@ -5,8 +5,7 @@ inherits = "ayu_evolve"
 "ui.menu" = { fg = "foreground", bg = "#20262d" }
 "ui.menu.selected" = { fg = "background", bg = "gray" }
 
-"ui.picker.header" = "magenta"
-"ui.picker.header.active" = "cyan"
+"ui.picker.header.column.active" = { underline.style = "line" }
 
 [palette]
 red = "#dd5540" # tone down red a bit
