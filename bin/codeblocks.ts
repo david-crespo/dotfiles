@@ -15,14 +15,20 @@ import { parseArgs } from "jsr:@std/cli@^0.224.3"
 const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh"]
 
 const args = parseArgs(Deno.args, {
-  boolean: ["collapse"],
-  alias: { c: "collapse" },
+  boolean: ["collapse", "names"],
+  alias: { c: "collapse", n: "names" },
 })
 
 for (const filename of args._) {
   const file = filename.toString()
   // only look at files
   if (!(await Deno.lstat(file)).isFile) continue
+
+  // just print the names and move on
+  if (args.names) {
+    console.log(file)
+    continue
+  }
 
   if (args.collapse) {
     console.log("<details>")
