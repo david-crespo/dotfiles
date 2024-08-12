@@ -10,6 +10,9 @@ ln -sf $PWD/init.vim ~/.config/nvim/init.vim
 vim +PlugInstall +PlugUpdate +qall
 nvim +PlugInstall +PlugUpdate +qall
 
+mkdir -p ~/.config/wezterm
+ln -sf $PWD/wezterm.lua ~/.config/wezterm/wezterm.lua
+
 # HELIX
 mkdir -p ~/.config/helix/themes
 ln -sf $PWD/helix/config.toml ~/.config/helix/config.toml
