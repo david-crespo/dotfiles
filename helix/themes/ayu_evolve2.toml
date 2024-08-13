@@ -1,11 +1,8 @@
 inherits = "ayu_evolve"
 
 "ui.virtual.jump-label" = { fg = "red", modifiers = ["bold"] }
-"ui.popup" = { fg = "foreground", bg = "#20262d" } # bg is dark_gray but a bit darker
-"ui.menu" = { fg = "foreground", bg = "#20262d" }
-"ui.menu.selected" = { fg = "background", bg = "gray" }
-
 "ui.picker.header.column.active" = { underline.style = "line" }
 
 [palette]
+black = "#131721" # bring back lighter black from ayu_dark
 red = "#dd5540" # tone down red a bit
