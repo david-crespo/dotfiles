@@ -88,6 +88,7 @@ alias coder='code2 ~/oxide/rfd-site'
 
 alias dotfiles='code2 ~/repos/dotfiles'
 alias llm-cli='code2 ~/repos/llm-cli'
+alias helix='code2 ~/repos/helix'
 
 alias ls='eza'
 alias l='eza -l --all --group-directories-first --git'
