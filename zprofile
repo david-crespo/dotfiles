@@ -68,7 +68,6 @@ function ntpicker() {
     fzf --reverse
 }
 
-alias update-openapi="EXPECTORATE=overwrite cargo t -p omicron-nexus -E 'test(=integration_tests::commands::test_nexus_openapi)'"
 alias update-auth='EXPECTORATE=overwrite nt unauthorized'
 
 function ntv() {
