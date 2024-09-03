@@ -9,6 +9,7 @@ cursor-shape.insert = "bar"
 lsp.display-messages = true
 soft-wrap.enable = true
 whitespace.render.nbsp = "all"
+shell = ["zsh", "-c"]
 
 end-of-line-diagnostics = "hint"
 inline-diagnostics.cursor-line = "warning"

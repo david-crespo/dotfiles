@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 oxclone() {
   git clone "https://github.com/oxidecomputer/$1.git" "${@:2}"
 }

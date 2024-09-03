@@ -24,8 +24,6 @@ ln -sf $PWD/atuin/config.toml ~/.config/atuin/config.toml
 
 mkdir -p ~/.local/bin
 ln -sf $PWD/bin/codeblocks.ts ~/.local/bin/cb
-ln -sf $PWD/bin/hxblame.sh ~/.local/bin/hxblame
-ln -sf $PWD/bin/hxai.sh ~/.local/bin/hxai
 ln -sf $PWD/bin/gh-rel.nu ~/.local/bin/gh-rel
 ln -sf $PWD/iterm2/code.py ~/.local/bin/code2
 
