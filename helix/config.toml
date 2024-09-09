@@ -10,6 +10,8 @@ lsp.display-messages = true
 soft-wrap.enable = true
 whitespace.render.nbsp = "all"
 shell = ["zsh", "-c"]
+rounded-corners = true
+popup-border = "popup"
 
 end-of-line-diagnostics = "hint"
 inline-diagnostics.cursor-line = "warning"
@@ -38,6 +40,7 @@ C-B = ":echo %sh{git blame --date=short -L %{linenumber},+1 %{filename} | sed -E
 [keys.normal.L]
 m = "@|hxai -m gpt-4o-mini "
 c = "@|hxai " # claude by default
+j = "save_selection"
 
 [keys.select]
 x = "select_line_below"
