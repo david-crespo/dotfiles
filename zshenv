@@ -4,7 +4,7 @@
 #
 # -m sonnet is a default that can be overridden by passing -m again
 function hxai() {
-  ai -m sonnet --raw --system "You are part of a code completion system in a text editor. You will receive a prompt and possibly some code to replace. Your output will be inserted directly into a text file, so only output code -- do not wrap it in a markdown code block. Do NOT include prose commentary or explanation." "$@"
+  ai -m sonnet --raw --system "You are part of a code completion system in a text editor. You will some code to replace, followed by a prompt. Your output will be inserted directly into a text file, so only output code -- do not wrap it in a markdown code block and do NOT include prose commentary or explanation. If you are asked to modify only part of the code, make sure to include the unchanged parts in the output so they can be reinserted as-is in the target file." "$@"
 }
 
 # Used by helix blame shortcut to get the most recent commit that will not 404
