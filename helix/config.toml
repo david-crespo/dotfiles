@@ -11,7 +11,7 @@ soft-wrap.enable = true
 whitespace.render.nbsp = "all"
 shell = ["zsh", "-c"]
 rounded-corners = true
-popup-border = "popup"
+popup-border = "all"
 
 end-of-line-diagnostics = "hint"
 inline-diagnostics.cursor-line = "warning"
@@ -22,8 +22,8 @@ statusline.right = [
   "selections",
   "register",
   "position",
-  "position-percentage",
   "total-line-numbers",
+  "search-position",
 ]
 
 [keys.normal]
