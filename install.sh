@@ -26,5 +26,6 @@ mkdir -p ~/.local/bin
 ln -sf $PWD/bin/codeblocks.ts ~/.local/bin/cb
 ln -sf $PWD/bin/gh-rel.nu ~/.local/bin/gh-rel
 ln -sf $PWD/iterm2/code.py ~/.local/bin/code2
+ln -sf $PWD/bin/dq.ts ~/.local/bin/dq
 
 # import iTerm color scheme manually

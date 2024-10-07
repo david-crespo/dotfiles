@@ -1,35 +1,47 @@
 {
-  "version": "3",
-  "packages": {
-    "specifiers": {
-      "jsr:@std/assert@^0.225.2": "jsr:@std/assert@0.225.3",
-      "jsr:@std/assert@^0.225.3": "jsr:@std/assert@0.225.3",
-      "jsr:@std/cli@^0.224.3": "jsr:@std/cli@0.224.3",
-      "jsr:@std/path@^0.225.1": "jsr:@std/path@0.225.1"
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/assert@~0.225.2": "0.225.3",
+    "jsr:@std/assert@~0.225.3": "0.225.3",
+    "jsr:@std/bytes@^1.0.2": "1.0.2",
+    "jsr:@std/cli@1.0": "1.0.6",
+    "jsr:@std/cli@~0.224.3": "0.224.3",
+    "jsr:@std/io@0.224": "0.224.9",
+    "jsr:@std/path@~0.225.1": "0.225.1"
+  },
+  "jsr": {
+    "@std/assert@0.225.3": {
+      "integrity": "b3c2847aecf6955b50644cdb9cf072004ea3d1998dd7579fc0acb99dbb23bd4f"
     },
-    "jsr": {
-      "@std/assert@0.225.3": {
-        "integrity": "b3c2847aecf6955b50644cdb9cf072004ea3d1998dd7579fc0acb99dbb23bd4f"
-      },
-      "@std/cli@0.224.3": {
-        "integrity": "54fd879e24b738f6812dcc75bcae1534ba8f014245064ceae1bcfc2996c06d44",
-        "dependencies": [
-          "jsr:@std/assert@^0.225.3"
-        ]
-      },
-      "@std/path@0.225.1": {
-        "integrity": "8c3220635a73730eb51fe43de9e10b79e2724a5bb8638b9355d35ae012fd9429",
-        "dependencies": [
-          "jsr:@std/assert@^0.225.2"
-        ]
-      }
+    "@std/bytes@1.0.2": {
+      "integrity": "fbdee322bbd8c599a6af186a1603b3355e59a5fb1baa139f8f4c3c9a1b3e3d57"
+    },
+    "@std/cli@0.224.3": {
+      "integrity": "54fd879e24b738f6812dcc75bcae1534ba8f014245064ceae1bcfc2996c06d44",
+      "dependencies": [
+        "jsr:@std/assert@~0.225.3"
+      ]
+    },
+    "@std/cli@1.0.6": {
+      "integrity": "d22d8b38c66c666d7ad1f2a66c5b122da1704f985d3c47f01129f05abb6c5d3d"
+    },
+    "@std/io@0.224.9": {
+      "integrity": "4414664b6926f665102e73c969cfda06d2c4c59bd5d0c603fd4f1b1c840d6ee3",
+      "dependencies": [
+        "jsr:@std/bytes"
+      ]
+    },
+    "@std/path@0.225.1": {
+      "integrity": "8c3220635a73730eb51fe43de9e10b79e2724a5bb8638b9355d35ae012fd9429",
+      "dependencies": [
+        "jsr:@std/assert@~0.225.2"
+      ]
     }
   },
-  "remote": {},
   "workspace": {
     "dependencies": [
-      "jsr:@std/cli@^0.224.3",
-      "jsr:@std/path@^0.225.1"
+      "jsr:@std/cli@~0.224.3",
+      "jsr:@std/path@~0.225.1"
     ]
   }
 }
