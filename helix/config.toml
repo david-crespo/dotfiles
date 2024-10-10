@@ -37,10 +37,7 @@ x = "select_line_below"
 C-b = ":sh gh browse %{filename:git_rel}:%{linenumber} -c=%sh{latest_pushed_commit}"
 C-B = ":echo %sh{git blame --date=short -L %{linenumber},+1 %{filename} | sed -E 's/[0-9]+).*//' | sed 's/(//g'}"
 
-[keys.normal.L]
-m = "@|hxai -m gpt-4o-mini "
-c = "@|hxai " # claude by default
-j = "save_selection"
+L = "@|hxai " # claude by default, pass -m <model> to override
 
 [keys.select]
 x = "select_line_below"

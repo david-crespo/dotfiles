@@ -16,6 +16,7 @@ name = "tsx"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.tsx"] }
 language-servers = [ "typescript-language-server", "tailwindcss-ls", "eslint" ]
 auto-format = true
+block-comment-tokens = ["{/*", "*/}"]
 
 [[language]]
 name = "json"
