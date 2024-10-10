@@ -1,0 +1,34 @@
+// https://zed.dev/docs/configuring-zed
+{
+  "vim_mode": true,
+  "buffer_font_size": 13,
+  "buffer_font_family": "Berkeley Mono",
+  "buffer_line_height": { "custom": 1.5 },
+  "cursor_blink": false,
+
+  "project_panel": {
+    "dock": "right"
+  },
+  "terminal": {
+    "dock": "left",
+    "line_height": { "custom": 1.5 }
+  },
+
+  "assistant": {
+    "default_model": {
+      "provider": "zed.dev",
+      "model": "claude-3-5-sonnet-20240620"
+    },
+    "version": "2",
+    "dock": "right"
+  },
+
+  "theme": "Ayu Dark",
+  "experimental.theme_overrides": {
+    "syntax": {
+      "comment": {
+        "color": "#8c8b88ff" // darker, same as comment.doc
+      }
+    }
+  }
+}

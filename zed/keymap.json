@@ -1,0 +1,91 @@
+[
+  {
+    "context": "Editor && VimControl && !VimWaiting && !menu",
+    "bindings": {
+      "j": ["vim::Down", { "displayLines": true }],
+      "k": ["vim::Up", { "displayLines": true }],
+      "alt-w": "pane::CloseActiveItem"
+    }
+  },
+  {
+    "context": "Editor && vim_mode == normal && vim_operator == none && !VimWaiting",
+    "bindings": {
+      "d": "vim::DeleteRight",
+      "x": "vim::ToggleVisualLine",
+      "X": "vim::ToggleVisualLine",
+      "U": "editor::Redo",
+      "R": "vim::Paste",
+      "g e": "vim::EndOfDocument",
+      "g r": "editor::FindAllReferences",
+      "space k": "editor::Hover",
+      "space f": "file_finder::Toggle",
+      "space b": "file_finder::Toggle",
+      "space r": "editor::Rename",
+      "space a": "editor::ToggleCodeActions",
+      "{": "pane::ActivatePrevItem",
+      "}": "pane::ActivateNextItem",
+      "=": "vim::Rewrap"
+    }
+  },
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      "cmd-shift-enter": "editor::ShowInlineCompletion"
+    }
+  },
+  {
+    "context": "Editor && vim_mode == visual && !VimWaiting && !VimObject",
+    "bindings": {
+      "x": "vim::Down",
+      "X": "vim::Up",
+      "R": "vim::Paste",
+      "=": "vim::Rewrap"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "cmd-t": "workspace::NewTerminal"
+    }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
+      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
+      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
+      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "ctrl-c": "vim::ToggleComments",
+
+      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
+      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
+      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
+      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+    }
+  },
+  {
+    "context": "Pane",
+    "bindings": {
+      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
+      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
+      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
+      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"],
+
+      "cmd-1": ["pane::ActivateItem", 0],
+      "cmd-2": ["pane::ActivateItem", 1],
+      "cmd-3": ["pane::ActivateItem", 2],
+      "cmd-4": ["pane::ActivateItem", 3],
+      "cmd-5": ["pane::ActivateItem", 4],
+      "cmd-6": ["pane::ActivateItem", 5],
+      "cmd-7": ["pane::ActivateItem", 6],
+      "cmd-8": ["pane::ActivateItem", 7],
+      "cmd-9": ["pane::ActivateItem", 8],
+      "cmd-0": "pane::ActivateLastItem"
+    }
+  }
+]
