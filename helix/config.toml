@@ -49,3 +49,11 @@ up = "no_op"
 down = "no_op"
 left = "no_op"
 right = "no_op"
+
+# let's clear out some stuff from the space menu
+[keys.select." "]
+F = "no_op"
+G = "no_op"
+[keys.normal." "]
+F = "no_op"
+G = "no_op"
