@@ -30,6 +30,7 @@
   {
     "context": "Editor && vim_mode == insert",
     "bindings": {
+      "cmd-s": ["workspace::SendKeystrokes", "escape cmd-s"],
       "cmd-shift-enter": "editor::ShowInlineCompletion"
     }
   },
