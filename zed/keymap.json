@@ -1,5 +1,17 @@
 [
   {
+    "context": "Editor",
+    "bindings": {
+      "cmd-k cmd-t": "terminal_panel::ToggleFocus"
+    }
+  },
+  {
+    "context": "Editor && mode == full",
+    "bindings": {
+      "cmd-shift-enter": "editor::ExpandExcerptsDown"
+    }
+  },
+  {
     "context": "Editor && VimControl && !VimWaiting && !menu",
     "bindings": {
       "j": ["vim::Down", { "displayLines": true }],
