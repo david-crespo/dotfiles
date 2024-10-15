@@ -32,4 +32,6 @@ ln -sf $PWD/bin/gh-rel.nu ~/.local/bin/gh-rel
 ln -sf $PWD/iterm2/code.py ~/.local/bin/code2
 ln -sf $PWD/bin/dq.ts ~/.local/bin/dq
 
+ln -sf $PWD/brew/outdated-exclude.txt ~/.local/share/brew-outdated-exclude.txt
+
 # import iTerm color scheme manually

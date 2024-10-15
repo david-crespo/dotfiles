@@ -45,6 +45,8 @@ alias outdated='npm outdated | awk "{print \$1, \$2, \$3, \$4}" | column -t'
 alias api-diff='~/oxide/console/tools/deno/api-diff.ts'
 alias npm-clean='dust --no-percent-bars --depth 0 node_modules && echo "Deleting..." && rm -rf node_modules'
 
+alias brew-outdated='brew outdated -v | grep -vf ~/.local/share/brew-outdated-exclude.txt'
+
 alias cdo='cd ~/oxide/omicron'
 alias codeo='code2 ~/oxide/omicron'
 
