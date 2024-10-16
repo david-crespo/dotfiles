@@ -5,6 +5,8 @@
   "buffer_font_family": "Berkeley Mono",
   "buffer_line_height": { "custom": 1.5 },
   "cursor_blink": false,
+  "double_click_in_multibuffer": "open",
+  "use_autoclose": false,
 
   "project_panel": {
     "dock": "right"
