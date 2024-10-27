@@ -3,6 +3,7 @@ boost
 c-ares
 certifi
 cmake
+dav1d
 edencommon
 fb303
 fbthrift
@@ -15,6 +16,7 @@ harfbuzz
 hwloc
 imagemagick
 jpeg-xl
+leptonica
 libarchive
 libomp
 libpq

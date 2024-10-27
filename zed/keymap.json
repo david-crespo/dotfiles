@@ -34,6 +34,7 @@
       "space b": "file_finder::Toggle",
       "space r": "editor::Rename",
       "space a": "editor::ToggleCodeActions",
+      "space S": "project_symbols::Toggle",
       "{": "pane::ActivatePrevItem",
       "}": "pane::ActivateNextItem",
       "=": "vim::Rewrap"

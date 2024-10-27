@@ -32,12 +32,15 @@ A-w = ":bc"
 "=" = ":reflow"
 X = "select_line_above"
 x = "select_line_below"
+C-p = "file_picker"
 
 # need command expansions: https://github.com/helix-editor/helix/pull/11164
 C-b = ":sh gh browse %{filename:git_rel}:%{linenumber} -c=%sh{latest_pushed_commit}"
 C-B = ":echo %sh{git blame --date=short -L %{linenumber},+1 %{filename} | sed -E 's/[0-9]+).*//' | sed 's/(//g'}"
 
-L = "@|hxai " # claude by default, pass -m <model> to override
+[keys.normal.L]
+r = "@|hxai " # claude by default, pass -m <model> to override
+e = "@|ai-edit "
 
 [keys.select]
 x = "select_line_below"
