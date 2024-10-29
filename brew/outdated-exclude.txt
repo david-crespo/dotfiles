@@ -26,9 +26,11 @@ libxml2
 dainiusjocas/brew/lmgrep
 luajit-openresty
 mbedtls
+mpg123
 mvfst
 netpbm
 nss
+nspr
 numpy
 openexr
 openjdk

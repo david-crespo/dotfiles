@@ -15,9 +15,6 @@ diffFilter = delta --color-only
 navigate = true # use n and N to move between diff sections
 light = false   # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
 
-[pager]
-difftool = true
-
 [color "diff-highlight"]
 oldNormal = red bold
 oldHighlight = red bold 52
@@ -73,11 +70,23 @@ colorMoved = default
 [diff "javascript"]
 xfuncname = "^\\s*(.*?\\bfunction\\b.*?\\(.*?\\))"
 
-[difftool]
-prompt = false
-
 [difftool "difftastic"]
-cmd = difft "$LOCAL" "$REMOTE"
+    # See `man git-difftool` for a description of MERGED, LOCAL and REMOTE.
+    cmd = difft "$MERGED" "$LOCAL" "abcdef1" "100644" "$REMOTE" "abcdef2" "100644"
+
+[difftool]
+    # Run the difftool immediately, don't ask 'are you sure' each time.
+    prompt = false
+
+[pager]
+    # Use a pager if the difftool output is larger than one screenful,
+    # consistent with the behaviour of `git diff`.
+    difftool = true
+
+[diff]
+    # Set difftastic as the default difftool, so we don't need to specify
+    # `-t difftastic` every time.
+    tool = difftastic
 
 [push]
 default = current
