@@ -14,10 +14,12 @@ gobject-introspection
 guile
 harfbuzz
 hwloc
+icu4c
 imagemagick
 jpeg-xl
 leptonica
 libarchive
+libheif
 libomp
 libpq
 libssh2
@@ -42,6 +44,7 @@ python@3.11
 python@3.12
 sdl2
 taplo
+tbb
 tesseract
 unar
 unbound

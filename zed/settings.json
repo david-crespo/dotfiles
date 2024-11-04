@@ -8,6 +8,10 @@
   "double_click_in_multibuffer": "open",
   "use_autoclose": false,
 
+  "languages": {
+    "HTML": { "tab_size": 2 }
+  },
+
   "project_panel": {
     "dock": "right"
   },
