@@ -1,7 +1,8 @@
-#! /usr/bin/env -S deno run --allow-env=ANTHROPIC_API_KEY --allow-net
+#! /usr/bin/env -S deno run --allow-env=ANTHROPIC_API_KEY,OPENAI_API_KEY --allow-net
 
 import { readAll } from "jsr:@std/io@0.224"
 
+import OpenAI from "npm:openai@4.71"
 import Anthropic from "npm:@anthropic-ai/sdk@0.30"
 import * as v from "jsr:@valibot/valibot@0.42"
 import { parseArgs } from "jsr:@std/cli@1.0"
@@ -27,15 +28,18 @@ async function askClaude(text: string, instructions: string) {
   const response = await new Anthropic().beta.messages.create({
     model: "claude-3-5-sonnet-latest",
     system:
-      `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Use the str_replace command in the str_replace_editor tool to make the requested changes. Return multiple replace calls if making multiple small edits lets you avoid making a large edit.`,
-    messages: [{
-      role: "user",
-      content: `<text>\n${text}\n</text>\n<instructions>\n${instructions}\n</instructions>`,
-    }],
+      `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Use the str_replace command in the str_replace_editor tool to make the requested changes. Return multiple replace calls if making multiple small edits lets you avoid making a large edit. Do not use the view command.`,
+    messages: [
+      {
+        role: "user",
+        content:
+          `<text>\n${text}\n</text>\n<instructions>\n${instructions}\n</instructions>`,
+      },
+    ],
     max_tokens: 4096,
     tools: [{ type: "text_editor_20241022", name: "str_replace_editor" }],
     betas: ["computer-use-2024-10-22"],
-    tool_choice: { "type": "tool", "name": "str_replace_editor" },
+    tool_choice: { type: "tool", name: "str_replace_editor" },
   })
 
   let result = text
@@ -47,10 +51,29 @@ async function askClaude(text: string, instructions: string) {
   return [response, result]
 }
 
+async function askGpt(text: string, instructions: string) {
+  const response = await new OpenAI().chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content:
+          `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Return only raw text. Do not wrap it in a markdown code block.`,
+      },
+      { role: "user", content: instructions },
+      { role: "user", content: text },
+    ],
+    prediction: { type: "content", content: text },
+  })
+  const result = response.choices[0].message.content
+  if (!result) throw new Error("null response")
+  return [response, result]
+}
+
 if (import.meta.main) {
   const args = parseArgs(Deno.args, {
-    boolean: ["debug"],
-    alias: { d: "debug" },
+    boolean: ["debug", "claude"],
+    alias: { d: "debug", c: "claude" },
   })
 
   const text = await getStdin()
@@ -59,7 +82,9 @@ if (import.meta.main) {
   const instructions = args._.join(" ")
   invariant(instructions, "No instructions provided via positional args")
 
-  const [response, result] = await askClaude(text, instructions)
+  const [response, result] = args.claude
+    ? await askClaude(text, instructions)
+    : await askGpt(text, instructions)
 
   console.log(result)
 
