@@ -9,9 +9,6 @@ import { parseArgs } from "jsr:@std/cli@1.0"
 // read all of stdin
 const getStdin = async () => new TextDecoder().decode(await readAll(Deno.stdin)).trim()
 
-const SYSTEM_PROMPT =
-  `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Use the str_replace command in the str_replace_editor tool to make the requested changes. Return multiple replace calls if making multiple small edits lets you avoid making a large edit.`
-
 // needed for now because the SDK types are not helpful about it
 const TextEditorSchema = v.object({
   type: v.literal("tool_use"),
@@ -26,10 +23,11 @@ function invariant(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message)
 }
 
-const askClaude = (text: string, instructions: string) =>
-  new Anthropic().beta.messages.create({
+async function askClaude(text: string, instructions: string) {
+  const response = await new Anthropic().beta.messages.create({
     model: "claude-3-5-sonnet-latest",
-    system: SYSTEM_PROMPT,
+    system:
+      `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Use the str_replace command in the str_replace_editor tool to make the requested changes. Return multiple replace calls if making multiple small edits lets you avoid making a large edit.`,
     messages: [{
       role: "user",
       content: `<text>\n${text}\n</text>\n<instructions>\n${instructions}\n</instructions>`,
@@ -39,6 +37,15 @@ const askClaude = (text: string, instructions: string) =>
     betas: ["computer-use-2024-10-22"],
     tool_choice: { "type": "tool", "name": "str_replace_editor" },
   })
+
+  let result = text
+  for (const contentBlock of response.content) {
+    const toolCall = v.parse(TextEditorSchema, contentBlock)
+    const { old_str, new_str } = toolCall.input
+    result = result.replace(old_str, new_str)
+  }
+  return [response, result]
+}
 
 if (import.meta.main) {
   const args = parseArgs(Deno.args, {
@@ -52,14 +59,7 @@ if (import.meta.main) {
   const instructions = args._.join(" ")
   invariant(instructions, "No instructions provided via positional args")
 
-  const response = await askClaude(text, instructions)
-
-  let result = text
-  for (const contentBlock of response.content) {
-    const toolCall = v.parse(TextEditorSchema, contentBlock)
-    const { old_str, new_str } = toolCall.input
-    result = result.replace(old_str, new_str)
-  }
+  const [response, result] = await askClaude(text, instructions)
 
   console.log(result)
 
