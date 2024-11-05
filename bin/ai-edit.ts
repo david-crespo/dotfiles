@@ -58,15 +58,18 @@ async function askGpt(text: string, instructions: string) {
       {
         role: "system",
         content:
-          `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Return only raw text. Do not wrap it in a markdown code block.`,
+          `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Return only raw text. Do not wrap output in a markdown code block.`,
       },
-      { role: "user", content: instructions },
       { role: "user", content: text },
+      {
+        role: "user",
+        content: instructions + ". Do not wrap output in a markdown code block.",
+      },
     ],
     prediction: { type: "content", content: text },
   })
   const result = response.choices[0].message.content
-  if (!result) throw new Error("null response")
+  invariant(result, "null response from OpenAI")
   return [response, result]
 }
 
