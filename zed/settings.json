@@ -8,6 +8,13 @@
   "double_click_in_multibuffer": "open",
   "use_autoclose": false,
 
+  "git": {
+    "inline_blame": {
+      "enabled": false,
+      "show_commit_summary": true
+    }
+  },
+
   "languages": {
     "HTML": { "tab_size": 2 }
   },
@@ -26,7 +33,8 @@
       "model": "claude-3-5-sonnet-latest"
     },
     "version": "2",
-    "dock": "right"
+    "dock": "right",
+    "enable_experimental_live_diffs": true
   },
 
   "theme": "Ayu Dark",

@@ -20,6 +20,13 @@
     }
   },
   {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "space s": "outline::Toggle",
+      "space S": "project_symbols::Toggle"
+    }
+  },
+  {
     "context": "Editor && vim_mode == normal && vim_operator == none && !VimWaiting",
     "bindings": {
       "d": "vim::DeleteRight",
@@ -34,7 +41,8 @@
       "space b": "file_finder::Toggle",
       "space r": "editor::Rename",
       "space a": "editor::ToggleCodeActions",
-      "space S": "project_symbols::Toggle",
+      "space g": "editor::ToggleGitBlameInline",
+      "space G": "editor::ToggleGitBlame",
       "{": "pane::ActivatePrevItem",
       "}": "pane::ActivateNextItem",
       "=": "vim::Rewrap"

@@ -53,7 +53,7 @@ alias codeo='code2 ~/oxide/omicron'
 # nexus test. gnarly pipe stuff is to extract log file to a tmp file so I can
 # easily print it with ntlog
 function nt() {
-  cargo t --no-fail-fast --color=always -p omicron-nexus -E "test($1)" 2>&1 | 
+  cargo t --no-fail-fast --color=always -p omicron-nexus -E "test($1)" 2>&1 |
     tee /dev/tty | rg 'log file:.*0\.log' | awk '{print $NF}' > /tmp/nexus-test.log
 }
 
@@ -68,7 +68,7 @@ function ntpick() {
 function ntpicker() {
   rg -A1 "#\[nexus_test" --no-heading -N |
     rg --replace '$module::$function' --no-filename \
-    --only-matching '/(?P<module>[^/]+).rs-[ ]*async fn (?P<function>test_[^(]+)' | 
+    --only-matching '/(?P<module>[^/]+).rs-[ ]*async fn (?P<function>test_[^(]+)' |
     fzf --reverse
 }
 
@@ -108,7 +108,7 @@ alias hxprw="open 'https://github.com/helix-editor/helix/pulls?q=is%3Apr+is%3Aop
 function hxcm() {
   gh api '/repos/helix-editor/helix/commits?per_page=20' |
     jq -r '.[] | [(.commit.message | split("\n")[0]), .author.login, .commit.committer.date] | @tsv' |
-    rg -v 'dependabot' | 
+    rg -v 'dependabot' |
     gum table --print --separator "	" -c Message,Author,Date
 }
 
@@ -160,8 +160,10 @@ function codeblock() {
 }
 
 function aip() {
-  pbpaste | codeblock | ai "$@" 
+  pbpaste | codeblock | ai "$@"
 }
+
+alias fp='files-to-prompt'
 
 # play happy sound on success and error sound on error
 function bell() {
@@ -196,14 +198,16 @@ function findrep() {
   echo "Done."
 }
 
+function find-space() {
+  { find ~/oxide -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \); \
+    find ~/repos -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \); } | \
+    xargs dust -d 0 -p
+}
+
 alias tviz='~/repos/things-viz/main.ts'
 alias tsearch='~/repos/things-viz/search.ts'
 
 source "$HOME/.cargo/env"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # ctrl-e to edit current command in nvim
 # export VISUAL=nvim
@@ -211,6 +215,8 @@ export NVM_DIR="$HOME/.nvm"
 # bindkey "^e" edit-command-line
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
+
+eval "$(fnm env --use-on-cd --shell zsh)"
 
 export PATH="$HOME/.local/bin:$PATH"
 # Setting PATH for Python 3.10
