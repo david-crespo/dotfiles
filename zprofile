@@ -14,6 +14,13 @@ alias gdcs='git diff --cached --stat'
 alias grm='(gco main || gco master) && gp && gfp' # git reset main
 alias gss='git show --stat'
 
+alias js='jj st'
+alias jd='jj d'
+alias jds='jj diff --stat'
+alias jss='jj show --stat -r @-'
+alias jp='jj git pull'
+alias jr='jj log -n 10'
+
 # prune branches, get list of delete remote references,
 # attempt to delete local copies, ignoring errors
 function gfp() {
@@ -217,6 +224,9 @@ source "$HOME/.cargo/env"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 eval "$(fnm env --use-on-cd --shell zsh)"
+
+# uncomment after next jj release
+# source <(COMPLETE=zsh jj) # jj completions
 
 export PATH="$HOME/.local/bin:$PATH"
 # Setting PATH for Python 3.10
