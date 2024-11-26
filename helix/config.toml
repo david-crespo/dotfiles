@@ -35,7 +35,7 @@ x = "select_line_below"
 C-p = "file_picker"
 
 # need command expansions: https://github.com/helix-editor/helix/pull/11164
-C-b = ":sh gh browse %{filename:git_rel}:%{linenumber} -c=%sh{latest_pushed_commit}"
+C-b = ":sh gh browse %{filename:repo_rel}:%{linenumber} -c=%sh{latest_pushed_commit}"
 C-B = ":echo %sh{git blame --date=short -L %{linenumber},+1 %{filename} | sed -E 's/[0-9]+).*//' | sed 's/(//g'}"
 
 [keys.normal.L]
