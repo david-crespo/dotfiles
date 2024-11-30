@@ -45,7 +45,8 @@
       "space G": "editor::ToggleGitBlame",
       "{": "pane::ActivatePrevItem",
       "}": "pane::ActivateNextItem",
-      "=": "vim::Rewrap"
+      "=": "vim::Rewrap",
+      "%": "editor::SelectAll"
     }
   },
   {

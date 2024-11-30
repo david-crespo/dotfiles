@@ -11,3 +11,6 @@ tool = ["delta", "$left", "$right"]
 [aliases]
 d = ["diff", "--git", "--config-toml=ui.pager='delta'"]
 
+[template-aliases]
+# Username part of the email address
+'format_short_signature(signature)' = 'signature.username()'
