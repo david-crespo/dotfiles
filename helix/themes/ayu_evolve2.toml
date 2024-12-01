@@ -2,6 +2,8 @@ inherits = "ayu_evolve"
 
 "ui.virtual.jump-label" = { fg = "red", modifiers = ["bold"] }
 "ui.picker.header.column.active" = { underline.style = "line" }
+"ui.statusline" = { bg = "dark_gray" }
+"ui.window" = "gray"
 
 [palette]
 black = "#131721" # bring back lighter black from ayu_dark
