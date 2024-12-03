@@ -53,7 +53,7 @@ async function askClaude(text: string, instructions: string) {
 
 async function askGpt(text: string, instructions: string) {
   const response = await new OpenAI().chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-2024-11-20",
     messages: [
       {
         role: "system",
@@ -75,8 +75,8 @@ async function askGpt(text: string, instructions: string) {
 
 if (import.meta.main) {
   const args = parseArgs(Deno.args, {
-    boolean: ["debug", "claude"],
-    alias: { d: "debug", c: "claude" },
+    boolean: ["debug", "gpt"],
+    alias: { d: "debug", g: "gpt" },
   })
 
   const text = await getStdin()
@@ -85,9 +85,9 @@ if (import.meta.main) {
   const instructions = args._.join(" ")
   invariant(instructions, "No instructions provided via positional args")
 
-  const [response, result] = args.claude
-    ? await askClaude(text, instructions)
-    : await askGpt(text, instructions)
+  const [response, result] = args.gpt
+    ? await askGpt(text, instructions)
+    : await askClaude(text, instructions)
 
   console.log(result)
 
