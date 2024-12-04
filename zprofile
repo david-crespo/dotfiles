@@ -43,7 +43,7 @@ alias server='python3 -m http.server 8000'
 alias cdc='cd ~/oxide/console'
 alias codec='code2 ~/oxide/console'
 alias ysm='npm run start:msw'
-alias ts='npx tsc'
+alias ts='./node_modules/.bin/tsc'
 alias e2e='npx playwright test'
 alias e2ec='npx playwright test --project=chrome'
 alias lint='npm run lint'
@@ -208,7 +208,8 @@ function findrep() {
 
 function find-space() {
   { find ~/oxide -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \); \
-    find ~/repos -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \); } | \
+    find ~/repos -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \); \
+  } | \
     xargs dust -d 0 -p
 }
 
@@ -224,7 +225,7 @@ source "$HOME/.cargo/env"
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-eval "$(fnm env --use-on-cd --shell zsh)"
+eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"
 
 # uncomment after next jj release
 # source <(COMPLETE=zsh jj) # jj completions
