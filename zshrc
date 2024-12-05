@@ -47,3 +47,5 @@ eval "$(atuin init zsh --disable-up-arrow)"
 autoload -U compinit
 compinit
 eval "$(zoxide init zsh)"
+
+source <(jj util completion zsh)

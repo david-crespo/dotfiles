@@ -20,6 +20,7 @@ alias jds='jj diff --stat'
 alias jss='jj show --stat -r @-'
 alias jp='jj git pull'
 alias jr='jj log -n 10'
+alias jcm='jj commit -m'
 
 # prune branches, get list of delete remote references,
 # attempt to delete local copies, ignoring errors
@@ -226,9 +227,6 @@ source "$HOME/.cargo/env"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"
-
-# uncomment after next jj release
-# source <(COMPLETE=zsh jj) # jj completions
 
 export PATH="$HOME/.local/bin:$PATH"
 # Setting PATH for Python 3.10
