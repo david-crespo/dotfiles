@@ -28,6 +28,7 @@ statusline.right = [
 
 [keys.normal]
 C-s = ":w"
+Cmd-s = ":w"
 A-w = ":bc"
 "=" = ":reflow"
 X = "select_line_above"
