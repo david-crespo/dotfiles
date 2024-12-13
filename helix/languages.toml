@@ -19,6 +19,12 @@ auto-format = true
 block-comment-tokens = ["{/*", "*/}"]
 
 [[language]]
+name = "astro"
+formatter = { command = "prettierd", args = ["--stdin-filepath", "x.astro"] }
+language-servers = ["astro-ls"]
+auto-format = true
+
+[[language]]
 name = "json"
 auto-format = false
 # formatter = { command = "npx", args = ["prettier", "--parser", "json"] }
@@ -31,6 +37,12 @@ auto-format = true
 [[language]]
 name = "css"
 auto-format = false
+language-servers = [ "vscode-css-language-server", "tailwindcss-ls" ]
+
+[language-server.astro-ls]
+command = "astro-ls"
+args = ["--stdio"]
+config = {typescript = {tsdk = "/Users/david/.local/share/fnm/node-versions/v22.11.0/installation/lib/node_modules/typescript/lib"}, environment = "node"}
 
 [language-server.biome]
 command = "biome"
