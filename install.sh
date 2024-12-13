@@ -26,6 +26,9 @@ ln -sf $PWD/zed/settings.json ~/.config/zed/settings.json
 mkdir -p ~/.config/atuin
 ln -sf $PWD/atuin/config.toml ~/.config/atuin/config.toml
 
+mkdir -p ~/.config/ghostty
+ln -sf $PWD/ghostty/config ~/.config/ghostty/config
+
 mkdir -p ~/.local/bin
 ln -sf $PWD/bin/codeblocks.ts ~/.local/bin/cb
 ln -sf $PWD/bin/gh-rel.nu ~/.local/bin/gh-rel

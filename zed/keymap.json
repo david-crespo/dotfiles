@@ -68,7 +68,9 @@
   {
     "context": "Terminal",
     "bindings": {
-      "cmd-t": "workspace::NewTerminal"
+      "cmd-t": "workspace::NewTerminal",
+      "cmd-d": "pane::SplitRight",
+      "cmd-shift-d": "pane::SplitDown"
     }
   },
   {

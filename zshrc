@@ -48,4 +48,4 @@ autoload -U compinit
 compinit
 eval "$(zoxide init zsh)"
 
-source <(jj util completion zsh)
+source <(COMPLETE=zsh jj)

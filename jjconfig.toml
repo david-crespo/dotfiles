@@ -6,10 +6,10 @@ default-command = ["st"]
 pager = "delta"
 
 [ui.diff]
-tool = ["delta", "$left", "$right"]
+format = "git"
 
 [aliases]
-d = ["diff", "--git", "--config-toml=ui.pager='delta'"]
+d = ["diff"]
 
 [template-aliases]
 # Username part of the email address

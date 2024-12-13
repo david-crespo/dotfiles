@@ -1,0 +1,10 @@
+font-family = Berkeley Mono
+adjust-cell-height = 3
+
+theme = Ayu Mirage
+macos-titlebar-style = tabs
+
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:bottom
+keybind = ctrl+k=goto_split:top
+keybind = ctrl+l=goto_split:right

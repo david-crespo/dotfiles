@@ -22,6 +22,9 @@ alias jp='jj git pull'
 alias jr='jj log -n 10'
 alias jcm='jj commit -m'
 
+function curr_bookmark { jj bookmark list -r @ -T 'name++"\n"' | uniq }
+function jdr { jj diff -f "$(curr_bookmark)@origin" }
+
 # prune branches, get list of delete remote references,
 # attempt to delete local copies, ignoring errors
 function gfp() {
@@ -43,7 +46,7 @@ alias server='python3 -m http.server 8000'
 
 alias cdc='cd ~/oxide/console'
 alias codec='code2 ~/oxide/console'
-alias ysm='npm run start:msw'
+alias dev='npm run dev'
 alias ts='./node_modules/.bin/tsc'
 alias e2e='npx playwright test'
 alias e2ec='npx playwright test --project=chrome'

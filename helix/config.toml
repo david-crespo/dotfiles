@@ -49,6 +49,7 @@ X = "select_line_above"
 
 [keys.insert]
 C-s = ["normal_mode", ":w"]
+Cmd-s = ["normal_mode", ":w"]
 up = "no_op"
 down = "no_op"
 left = "no_op"
