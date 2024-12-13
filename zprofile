@@ -139,6 +139,30 @@ function ghpr() {
     awk '{print $1}' |
     xargs gh pr checkout
 }
+
+# same as ghpr except we need the branch name, so we include it in each line,
+# hide it from the UI with --with-nth, and then extract it from the output
+function jpr() {
+  local branch="$(
+    gh pr list --limit 100 --json headRefName,number,title,updatedAt,author --template \
+      '{{range .}}{{tablerow .headRefName .number .title .author.name (timeago .updatedAt)}}{{end}}' |
+      fzf --height 25% --reverse --with-nth=2.. |
+      awk '{print $1}'
+  )"
+
+  [[ -z "$branch" ]] && return
+
+  echo "Branch name: '$branch'"
+
+  PS4='> '
+  set -x
+  jj git fetch
+  # if the branch is already tracked this will do nothing
+  jj bookmark track "$branch@origin"
+  jj new "$branch"
+  { set +x; } 2>/dev/null
+}
+
 alias prc='git push -u && gh pr create --web'
 alias prv='gh pr view --web'
 
