@@ -3,13 +3,19 @@ user.email = "david.crespo@oxidecomputer.com"
 
 [ui]
 pager = "delta"
+default-command = "log"
 
 [ui.diff]
 format = "git"
 
 [aliases]
 d = ["diff"]
+dm = ["describe", "-m"]
 dt = ["diff", "--tool", "difft"]
+rp = ["log", "--no-graph", "-T", "commit_id"]
+ds = ["diff", "--stat"]
+r = ["log", "-n", "10"]
+cm = ["commit", "-m"]
 
 [merge-tools.difft]
 diff-args = ["--color=always", "$left", "$right"]

@@ -14,15 +14,8 @@ alias gdcs='git diff --cached --stat'
 alias grm='(gco main || gco master) && gp && gfp' # git reset main
 alias gss='git show --stat'
 
-alias js='jj st'
-alias jd='jj d'
-alias jdt='jj dt'
-alias jds='jj diff --stat'
-alias jss='jj show --stat -r @-'
-alias jp='jj git pull'
-alias jr='jj log -n 10'
+# jj helpers that can't be done as aliases
 alias jrw='echo .jj/working_copy/checkout | entr -c jj log -n 10'
-alias jcm='jj commit -m'
 
 function curr_bookmark { jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1 }
 alias jdr='jj diff -f "$(curr_bookmark)@origin"'
@@ -42,7 +35,19 @@ alias grb='git rb'
 alias gr='git r'
 alias grh='git reset --hard'
 alias gco='git co'
-alias grph='echo "$(git rev-parse HEAD) (copied!)"; echo -n $(git rev-parse HEAD) | pbcopy'
+alias grph='git rev-parse HEAD | ecopy'
+
+# Execute a command, echo output, and also copy it to the clipboard
+function ecopy() {
+  local output
+  if [ $# -gt 0 ]; then
+    output="$*"
+  else
+    read -r output
+  fi
+  echo "$output (copied!)"
+  echo -n "$output" | pbcopy
+}
 
 alias server='python3 -m http.server 8000'
 
@@ -94,7 +99,7 @@ function ntv() {
 }
 
 alias clippy='cargo xtask clippy'
-alias uuid='UUID=$(uuidgen | tr "[:upper:]" "[:lower:]"); echo "$UUID (copied!)"; echo -n $UUID | pbcopy'
+alias uuid='uuidgen | tr "[:upper:]" "[:lower:]" | ecopy'
 alias sweep='cargo sweep -t 5'
 
 alias cdk='cd ~/oxide/oxide-computer-2'
