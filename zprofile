@@ -16,14 +16,16 @@ alias gss='git show --stat'
 
 alias js='jj st'
 alias jd='jj d'
+alias jdt='jj dt'
 alias jds='jj diff --stat'
 alias jss='jj show --stat -r @-'
 alias jp='jj git pull'
 alias jr='jj log -n 10'
+alias jrw='echo .jj/working_copy/checkout | entr -c jj log -n 10'
 alias jcm='jj commit -m'
 
-function curr_bookmark { jj bookmark list -r @ -T 'name++"\n"' | uniq }
-function jdr { jj diff -f "$(curr_bookmark)@origin" }
+function curr_bookmark { jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1 }
+alias jdr='jj diff -f "$(curr_bookmark)@origin"'
 
 # prune branches, get list of delete remote references,
 # attempt to delete local copies, ignoring errors

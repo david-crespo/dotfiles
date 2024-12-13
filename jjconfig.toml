@@ -2,7 +2,6 @@ user.name = "David Crespo"
 user.email = "david.crespo@oxidecomputer.com"
 
 [ui]
-default-command = ["st"]
 pager = "delta"
 
 [ui.diff]
@@ -10,6 +9,10 @@ format = "git"
 
 [aliases]
 d = ["diff"]
+dt = ["diff", "--tool", "difft"]
+
+[merge-tools.difft]
+diff-args = ["--color=always", "$left", "$right"]
 
 [template-aliases]
 # Username part of the email address
