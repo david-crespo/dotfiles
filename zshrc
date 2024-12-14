@@ -1,15 +1,8 @@
 #!/bin/zsh
 
-autoload -Uz vcs_info
-precmd_vcs_info() { vcs_info }
-precmd_functions+=( precmd_vcs_info )
+# modify the prompt to display the path and place the shell indicator ($) in a new line.
 setopt prompt_subst
-RPROMPT=''  # clear the right-side prompt
-zstyle ':vcs_info:git:*' formats '%F{250}[%b]%f'  # add brackets around the git branch
-zstyle ':vcs_info:*' enable git
-
-# modify the prompt to display the path, git branch and place the shell indicator ($) in a new line.
-export PROMPT='%K{green}%F{black} %~ %f%k ${vcs_info_msg_0_}
+export PROMPT='%K{green}%F{black} %~ %f%k
 \$ '
 
 # ctrl-xe to edit command in $EDITOR. doesn't work in VS code terminal
