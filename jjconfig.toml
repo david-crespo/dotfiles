@@ -3,7 +3,7 @@ user.email = "david.crespo@oxidecomputer.com"
 
 [ui]
 pager = "delta"
-default-command = "log"
+default-command = "st"
 
 [ui.diff]
 format = "git"

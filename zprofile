@@ -14,6 +14,7 @@ alias gdcs='git diff --cached --stat'
 alias grm='(gco main || gco master) && gp && gfp' # git reset main
 alias gss='git show --stat'
 
+alias js="jj st"
 alias jd="jj d"
 alias jr="jj r"
 alias jds="jj ds"

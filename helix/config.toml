@@ -42,6 +42,13 @@ C-B = ":echo %sh{git blame --date=short -L %{linenumber},+1 %{filename} | sed -E
 [keys.normal.L]
 r = "@|hxai " # claude by default, pass -m <model> to override
 e = "@|ai-edit "
+t = "@|stag<ret>sxxx<ret>c"
+f = ":toggle-option auto-format"
+
+[keys.select.L]
+r = "@|hxai "
+e = "@|ai-edit "
+t = "@|stag<ret>sxxx<ret>c"
 
 [keys.select]
 x = "select_line_below"

@@ -24,3 +24,9 @@ function latest_pushed_commit() {
     echo $main_commit
   fi
 }
+
+function stag() {
+  echo "<xxx>"
+  cat
+  echo "</xxx>"
+}
