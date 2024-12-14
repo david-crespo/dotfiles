@@ -14,6 +14,18 @@ alias gdcs='git diff --cached --stat'
 alias grm='(gco main || gco master) && gp && gfp' # git reset main
 alias gss='git show --stat'
 
+alias jd="jj d"
+alias jr="jj r"
+alias jds="jj ds"
+
+# fzf jj bookmark picker
+function zjb() {
+  jj b list -T 'separate("\t", name, normal_target.author().name(), normal_target.description())' |
+    column -t -s "	" | # that's a tab lol
+    fzf --reverse --height '25%' |
+    awk '{print $1}'
+}
+
 # jj helpers that can't be done as aliases
 alias jrw='echo .jj/working_copy/checkout | entr -c jj log -n 10'
 
@@ -142,7 +154,7 @@ function ghpr() {
 
 # same as ghpr except we need the branch name, so we include it in each line,
 # hide it from the UI with --with-nth, and then extract it from the output
-function jpr() {
+function zjpr() {
   local branch="$(
     gh pr list --limit 100 --json headRefName,number,title,updatedAt,author --template \
       '{{range .}}{{tablerow .headRefName .number .title .author.name (timeago .updatedAt)}}{{end}}' |
