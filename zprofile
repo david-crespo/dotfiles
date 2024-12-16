@@ -56,6 +56,35 @@ function jpr() {
   { set +x; } 2>/dev/null
 }
 
+function jprc() {
+  jj st
+  echo ''
+  
+  # first check for existing bookmarks
+  local bookmark=$(jj bookmark list -r @ -T 'name++"\n"')
+  local bookmark_count="$(echo "$bookmark" | wc -l)"
+
+  # if there is no bookmark, prompt for one
+  if [ -z "$bookmark" ]; then
+    bookmark=$(gum input --placeholder "Enter branch name")
+    [ -z "$bookmark" ] && return 1
+
+    jj bookmark create "$bookmark"
+    jj git push -b "$bookmark" --allow-new
+  # if there is more than one, use `gum choose` to pick one
+  elif [ $bookmark_count -gt 1 ]; then
+    bookmark=$(
+      echo "$bookmark" |
+        tr '\n' '\0' |
+        xargs -0 gum choose --header "More than one bookmark found. Choose one:"
+    )
+    [ -z "$bookmark" ] && return 1
+  fi
+
+  # otherwise there was exactly one bookmark, so just use that
+  gh pr create --head "$bookmark" --web
+}
+
 # prune branches, get list of delete remote references,
 # attempt to delete local copies, ignoring errors
 function gfp() {
