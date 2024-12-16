@@ -7,8 +7,8 @@ done
 mkdir -p ~/.config/nvim
 ln -sf "$PWD/init.vim" ~/.config/nvim/init.vim
 
-vim +PlugInstall +PlugUpdate +qall
-nvim +PlugInstall +PlugUpdate +qall
+# vim +PlugInstall +PlugUpdate +qall
+# nvim +PlugInstall +PlugUpdate +qall
 
 mkdir -p ~/.config/wezterm
 ln -sf "$PWD/wezterm.lua" ~/.config/wezterm/wezterm.lua
@@ -34,6 +34,7 @@ ln -sf "$PWD/bin/codeblocks.ts" ~/.local/bin/cb
 ln -sf "$PWD/bin/gh-rel.nu" ~/.local/bin/gh-rel
 ln -sf "$PWD/iterm2/code.py" ~/.local/bin/code2
 ln -sf "$PWD/bin/dq.ts" ~/.local/bin/dq
+ln -sf "$PWD/bin/jprc.ts" ~/.local/bin/jprc
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
