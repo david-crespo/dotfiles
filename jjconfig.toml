@@ -4,6 +4,7 @@ user.email = "david.crespo@oxidecomputer.com"
 [ui]
 pager = "delta"
 default-command = "st"
+diff-editor = ":builtin"
 
 [ui.diff]
 format = "git"
