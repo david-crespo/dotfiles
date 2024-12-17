@@ -30,7 +30,10 @@ function zjb() {
 # jj helpers that can't be done as aliases
 alias jrw='echo .jj/working_copy/checkout | entr -c jj log -n 10'
 
-function curr_bookmark { jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1 }
+function curr_bookmark {
+  jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1
+}
+
 alias jdr='jj diff -f "$(curr_bookmark)@origin"'
 
 # same as ghpr except we need the branch name, so we include it in each line,
@@ -59,7 +62,7 @@ function jpr() {
 function jprc() {
   jj st
   echo ''
-  
+
   # first check for existing bookmarks
   local bookmark=$(jj bookmark list -r @ -T 'name++"\n"')
   local bookmark_count="$(echo "$bookmark" | wc -l)"
@@ -139,7 +142,7 @@ alias codeo='code2 ~/oxide/omicron'
 # easily print it with ntlog
 function nt() {
   cargo t --no-fail-fast --color=always -p omicron-nexus -E "test($1)" 2>&1 |
-    tee /dev/tty | rg 'log file:.*0\.log' | awk '{print $NF}' > /tmp/nexus-test.log
+    tee /dev/tty | rg 'log file:.*0\.log' | awk '{print $NF}' >/tmp/nexus-test.log
 }
 
 alias ntlog='cat $(cat /tmp/nexus-test.log)'
@@ -153,7 +156,7 @@ function ntpick() {
 function ntpicker() {
   rg -A1 "#\[nexus_test" --no-heading -N |
     rg --replace '$module::$function' --no-filename \
-    --only-matching '/(?P<module>[^/]+).rs-[ ]*async fn (?P<function>test_[^(]+)' |
+      --only-matching '/(?P<module>[^/]+).rs-[ ]*async fn (?P<function>test_[^(]+)' |
     fzf --reverse
 }
 
@@ -231,7 +234,7 @@ function gdsnl() {
 
 function codeblock() {
   if [ $# -eq 0 ]; then
-  echo '```'
+    echo '```'
     cat
   elif [ $# -eq 1 ]; then
     echo "\`\`\`$1"
@@ -255,7 +258,7 @@ alias fp='files-to-prompt'
 function bell() {
   "$@"
   (($?)) && SOUND="Sosumi" || SOUND="Funk"
-  afplay "/System/Library/Sounds/$SOUND.aiff" &!
+  (afplay "/System/Library/Sounds/$SOUND.aiff" &)
 }
 
 function findrep() {
@@ -285,9 +288,10 @@ function findrep() {
 }
 
 function find-space() {
-  { find ~/oxide -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \); \
-    find ~/repos -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \); \
-  } | \
+  {
+    find ~/oxide -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \)
+    find ~/repos -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \)
+  } |
     xargs dust -d 0 -p
 }
 

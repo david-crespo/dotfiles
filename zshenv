@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-# Wrapper around LLM CLI meant for direct inline use with pipe: in helix. 
+# Wrapper around LLM CLI meant for direct inline use with pipe: in helix.
 #
 # -m sonnet is a default that can be overridden by passing -m again
 function hxai() {

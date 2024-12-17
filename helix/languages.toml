@@ -72,3 +72,8 @@ codeAction = { disableRuleComment = { enable = true, location = "separateLine" }
 experimental = {}
 problems = { shortenToSingleLine = false }
 # workingDirectory = { mode = "auto" }
+
+[[language]]
+name = "bash"
+auto-format = true
+formatter = { command = "shfmt", args = ["--indent", "2"] }
