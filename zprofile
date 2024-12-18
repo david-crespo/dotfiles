@@ -18,6 +18,8 @@ alias js="jj st"
 alias jd="jj d"
 alias jr="jj r"
 alias jds="jj ds"
+alias jf="jj git fetch"
+alias jp="jj git push"
 
 # fzf jj bookmark picker
 function zjb() {
