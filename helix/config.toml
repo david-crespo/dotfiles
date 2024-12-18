@@ -34,6 +34,7 @@ A-w = ":bc"
 X = "select_line_above"
 x = "select_line_below"
 C-p = "file_picker"
+V = ["select_mode", "select_line_below"]
 
 # need command expansions: https://github.com/helix-editor/helix/pull/11164
 C-b = ":sh gh browse %{filename:repo_rel}:%{linenumber} -c=%sh{latest_pushed_commit}"

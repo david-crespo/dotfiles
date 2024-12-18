@@ -264,6 +264,8 @@ function find-space() {
   {
     find ~/oxide -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \)
     find ~/repos -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \)
+    ls -d ~/.rustup/toolchains/*
+    echo ~/Library/Caches
   } |
     xargs dust -d 0 -p
 }

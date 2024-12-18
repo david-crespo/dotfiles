@@ -1,10 +1,21 @@
+theme = ayu
+# lighten dark gray for faded bits in jj
+palette = 8=#555555
+# darker black
+background = 020202
+
 font-family = Berkeley Mono
 adjust-cell-height = 3
-
-theme = Ayu Mirage
-macos-titlebar-style = tabs
 
 keybind = ctrl+h=goto_split:left
 keybind = ctrl+j=goto_split:bottom
 keybind = ctrl+k=goto_split:top
 keybind = ctrl+l=goto_split:right
+
+keybind = cmd+right=text:\x05
+keybind = cmd+left=text:\x01
+keybind = cmd+backspace=text:\x15
+keybind = opt+left=esc:b
+keybind = opt+right=esc:f
+
+unfocused-split-opacity = 0.8
