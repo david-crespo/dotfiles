@@ -1,8 +1,10 @@
 theme = ayu
 # lighten dark gray for faded bits in jj
 palette = 8=#555555
-# darker black
-background = 020202
+
+# darker black to match helix. commented out for now because
+# the pane border is invisible
+# background = 020202
 
 font-family = Berkeley Mono
 adjust-cell-height = 3
@@ -19,3 +21,10 @@ keybind = opt+left=esc:b
 keybind = opt+right=esc:f
 
 unfocused-split-opacity = 0.8
+
+# both lines necessary to turn off cursor blink. no-title leaves dir in place as
+# tab/window title. shell integration overall is still worth turning on because
+# of prompt marking and other features not covered by flags
+shell-integration-features = no-cursor,no-sudo,no-title
+cursor-style-blink = false
+
