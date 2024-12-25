@@ -275,11 +275,6 @@ alias tsearch='~/repos/things-viz/search.ts'
 
 source "$HOME/.cargo/env"
 
-# ctrl-e to edit current command in nvim
-# export VISUAL=nvim
-# autoload edit-command-line; zle -N edit-command-line
-# bindkey "^e" edit-command-line
-
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"

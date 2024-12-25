@@ -15,7 +15,7 @@ dm = ["describe", "-m"]
 dt = ["diff", "--tool", "difft"]
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
-r = ["log", "-n", "10"]
+r = ["log"]
 cm = ["commit", "-m"]
 
 [merge-tools.difft]

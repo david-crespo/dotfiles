@@ -5,9 +5,9 @@ setopt prompt_subst
 export PROMPT='%K{green}%F{black} %~ %f%k
 \$ '
 
-# ctrl-xe to edit command in $EDITOR. doesn't work in VS code terminal
+# ctrl-xe to edit command in $EDITOR
 autoload -U edit-command-line
-# Emacs style shortcuts
+# # Emacs style shortcuts
 zle -N edit-command-line
 bindkey '^xe' edit-command-line
 bindkey '^x^e' edit-command-line
@@ -18,8 +18,6 @@ export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 export HOMEBREW_NO_ENV_HINTS=1
 export EDITOR=hx
 export HISTSIZE=10000
-
-bindkey -e # zshell emacs mode, which makes opt+left/right work!
 
 source <(fzf --zsh)
 
