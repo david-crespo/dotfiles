@@ -9,6 +9,7 @@ fb303
 fbthrift
 ffmpegthumbnailer
 fizz
+fmt
 folly
 gobject-introspection
 guile
