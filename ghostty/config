@@ -20,9 +20,10 @@ keybind = ctrl+j=goto_split:bottom
 keybind = ctrl+k=goto_split:top
 keybind = ctrl+l=goto_split:right
 
-keybind = cmd+backspace=text:\x15
-# keybind = cmd+backspace=esc:w
+keybind = cmd+backspace=esc:w
 
 # no-title leaves dir in place as tab/window title. shell integration overall is
 # worth leaving on for prompt marking and other features not covered by flags
 shell-integration-features = cursor,no-sudo,no-title
+
+auto-update-channel = stable
