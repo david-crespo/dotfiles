@@ -1,17 +1,19 @@
 ## With workspace filtering enabled, Atuin will filter for commands executed
 ## in any directory within a git repository tree (default: false)
 workspaces = true
+filter_mode = "workspace"
 
 ## which filter mode to use when atuin is invoked from a shell up-key binding
 ## the accepted values are identical to those of "filter_mode"
 ## leave unspecified to use same mode set in "filter_mode"
 filter_mode_shell_up_key_binding = "directory"
 
+
 ## enable or disable showing a preview of the selected command
 ## useful when the command is longer than the terminal width and is cut off
 show_preview = true
 
-## what to do when the escape key is pressed when searching
+## what to do when the escape key i++++essed when searching
 ## possible values: return-original, return-query
 # exit_mode = "return-original"
 
