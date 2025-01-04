@@ -1,10 +1,17 @@
-user.name = "David Crespo"
-user.email = "david.crespo@oxidecomputer.com"
+[user]
+name = "David Crespo"
+email = "crespo.dm@gmail.com"
+
+[[--scope]]
+--when.repositories = ["~/oxide"]
+[--scope.user]
+email = "david.crespo@oxidecomputer.com"
 
 [ui]
 pager = "delta"
 default-command = "st"
 diff-editor = ":builtin"
+merge-editor = "vscode"
 
 [ui.diff]
 format = "git"
@@ -23,4 +30,4 @@ diff-args = ["--color=always", "$left", "$right"]
 
 [template-aliases]
 # Username part of the email address
-'format_short_signature(signature)' = 'signature.username()'
+'format_short_signature(signature)' = 'signature.email().local()'

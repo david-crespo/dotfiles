@@ -5,9 +5,10 @@ palette = 8=#5B5B5B
 # darker black to match helix. commented out bc pane border is invisible
 # background = 020202
 
-font-family = Berkeley Mono
+font-family = TX-02
 adjust-cell-height = 3
-adjust-cursor-thickness = 2
+adjust-cursor-thickness = 1
+adjust-box-thickness = -1
 
 macos-titlebar-style = tabs
 unfocused-split-opacity = 0.8
