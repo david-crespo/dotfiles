@@ -7,6 +7,7 @@ jump-label-alphabet = "asdghklqwertyuiopzxcvbnmfj"
 file-picker.hidden = false # show hidden files
 cursor-shape.insert = "bar"
 lsp.display-messages = true
+lsp.display-progress-messages = true
 soft-wrap.enable = true
 whitespace.render.nbsp = "all"
 shell = ["zsh", "-c"]
