@@ -20,6 +20,8 @@ keybind = ctrl+h=goto_split:left
 keybind = ctrl+j=goto_split:bottom
 keybind = ctrl+k=goto_split:top
 keybind = ctrl+l=goto_split:right
+# I think auto covers me pretty much all the time
+keybind = cmd+d=new_split:auto
 
 keybind = cmd+backspace=esc:w
 
