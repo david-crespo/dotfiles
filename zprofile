@@ -16,7 +16,7 @@ alias gss='git show --stat'
 
 alias js="jj st"
 alias jd="jj d"
-alias jr="jj r"
+alias jr="jj r -n 10"
 alias jds="jj ds"
 alias jf="jj git fetch"
 alias jp="jj git push"
@@ -101,6 +101,7 @@ alias e2ec='npx playwright test --project=chrome'
 alias e2es='npx playwright test --project=safari'
 alias lint='npm run lint'
 alias lint-fast='npm run lint-fast'
+alias oxlint='./node_modules/.bin/oxlint'
 alias outdated='npm outdated | awk "{print \$1, \$2, \$3, \$4}" | column -t'
 alias api-diff='~/oxide/console/tools/deno/api-diff.ts'
 alias npm-clean='dust --no-percent-bars --depth 0 node_modules && echo "Deleting..." && rm -rf node_modules'

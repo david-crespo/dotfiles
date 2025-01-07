@@ -8,7 +8,7 @@ inherits = "ayu_evolve"
 
 [palette]
 black = "#131721" # bring back lighter black from ayu_dark
-red = "#dd5540" # tone down red a bit
+red = "#ff5540" # tone down red a bit
 
 # from ghostty's ayu
 green = "#b8cc52"

@@ -1,4 +1,6 @@
 theme = ayu
+# lighten error red a bit (prob too similar to 9, though)
+palette = 1=#ff5555
 # lighten dark gray for faded bits in jj
 palette = 8=#5B5B5B
 # darker black to match helix
@@ -11,7 +13,7 @@ adjust-cursor-thickness = 1
 adjust-box-thickness = -1
 
 macos-titlebar-style = tabs
-unfocused-split-opacity = 0.8
+unfocused-split-opacity = 0.9
 window-save-state = always
 window-padding-x = 4
 window-padding-y = 2
