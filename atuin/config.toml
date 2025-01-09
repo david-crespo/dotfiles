@@ -1,7 +1,7 @@
 ## With workspace filtering enabled, Atuin will filter for commands executed
 ## in any directory within a git repository tree (default: false)
 workspaces = true
-filter_mode = "workspace"
+filter_mode = "directory"
 
 ## which filter mode to use when atuin is invoked from a shell up-key binding
 ## the accepted values are identical to those of "filter_mode"
@@ -32,17 +32,11 @@ history_filter = [
 # This applies for new installs. Old installs will keep the old behaviour unless configured otherwise.
 enter_accept = true
 
-#[stats]
+[stats]
 # Set commands where we should consider the subcommand for statistics. Eg, kubectl get vs just kubectl
-#common_subcommands = [
-#  "cargo",
-#  "go",
-#  "git",
-#  "npm",
-#  "yarn",
-#  "pnpm",
-#  "kubectl",
-#]
-#
-# Set commands that should be totally stripped and ignored from stats
-#common_prefix = ["sudo"]
+common_subcommands = [
+  "cargo",
+  "git",
+  "npm",
+  "jj",
+]
