@@ -26,8 +26,6 @@ source <(fzf --zsh)
 export DENO_INSTALL="/Users/david/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
 # bun completions
 [ -s "/Users/david/.bun/_bun" ] && source "/Users/david/.bun/_bun"
 
