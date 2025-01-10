@@ -40,13 +40,23 @@ separate(" ",
     refs,
     separate(" ",
       if(commit.conflict(), label("conflict", "(conflict)")),
-      if(commit.empty(), label("empty", "(empty)")),
       if(commit.description(),
-        commit.description().first_line(),
-        label(if(commit.empty(), "empty"), description_placeholder),
+        if(commit.empty(), label("empty", "(empty) ")) ++ commit.description().first_line(),
+        if(commit.empty(), label("empty", "(empty)"), label("empty", "(no desc)")),
       ),
     ),
   ),
 )
 '''
 
+# logic for the empty + desc above
+# 
+# if desc
+#   if empty
+#     show (empty)
+#   show desc 
+# else
+#   if empty
+#     just show (empty)
+#   else
+#     show (no desc)
