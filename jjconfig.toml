@@ -31,3 +31,22 @@ diff-args = ["--color=always", "$left", "$right"]
 [template-aliases]
 # Username part of the email address
 'format_short_signature(signature)' = 'signature.email().local()'
+
+# format_commit_summary_with_refs minus git commit
+'zsh_prompt_summary(commit, refs)' = '''
+separate(" ",
+  format_short_change_id_with_hidden_and_divergent_info(commit),
+  separate(commit_summary_separator,
+    refs,
+    separate(" ",
+      if(commit.conflict(), label("conflict", "(conflict)")),
+      if(commit.empty(), label("empty", "(empty)")),
+      if(commit.description(),
+        commit.description().first_line(),
+        label(if(commit.empty(), "empty"), description_placeholder),
+      ),
+    ),
+  ),
+)
+'''
+
