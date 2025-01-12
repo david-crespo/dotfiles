@@ -5,9 +5,9 @@ palette = 1=#ff5555
 palette = 8=#5B5B5B
 # darker black to match helix
 background = 020202
-split-divider-color = #666
+split-divider-color = #777
 
-font-family = TX-02
+font-family = Berkeley Mono
 adjust-cell-height = 3
 adjust-cursor-thickness = 1
 adjust-box-thickness = -1
