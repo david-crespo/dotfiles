@@ -29,14 +29,12 @@ statusline.right = [
 ]
 
 [keys.normal]
-C-s = ":w"
 Cmd-s = ":w"
 A-w = ":bc"
 "=" = ":reflow"
 X = "select_line_above"
 x = "select_line_below"
 C-p = "file_picker"
-V = ["select_mode", "select_line_below"]
 # make it so you can get back to where you were before % with ctrl-o
 "%" = ["save_selection", "select_all"]
 
@@ -60,7 +58,6 @@ x = "select_line_below"
 X = "select_line_above"
 
 [keys.insert]
-C-s = ["normal_mode", ":w"]
 Cmd-s = ["normal_mode", ":w"]
 up = "no_op"
 down = "no_op"
