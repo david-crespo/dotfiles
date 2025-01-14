@@ -35,6 +35,7 @@ netpbm
 nss
 nspr
 numpy
+openblas
 openexr
 openjdk
 openssl@1.1
