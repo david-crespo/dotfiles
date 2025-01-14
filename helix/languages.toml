@@ -77,3 +77,7 @@ problems = { shortenToSingleLine = false }
 name = "bash"
 auto-format = true
 formatter = { command = "shfmt", args = ["--indent", "2"] }
+
+[language-server.rust-analyzer.config]
+# completion.autoimport.enable = false
+imports.granularity.group = "item"

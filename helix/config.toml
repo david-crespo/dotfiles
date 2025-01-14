@@ -37,6 +37,12 @@ x = "select_line_below"
 C-p = "file_picker"
 # make it so you can get back to where you were before % with ctrl-o
 "%" = ["save_selection", "select_all"]
+# Cmd-h only works if you override the macOS default by binding Hide Ghostty to
+# ⌘I in Keyboard > Keyboard shortcuts > App shortcuts
+Cmd-h = "jump_view_left"
+Cmd-j = "jump_view_down"
+Cmd-k = "jump_view_up"
+Cmd-l = "jump_view_right"
 
 # need command expansions: https://github.com/helix-editor/helix/pull/12527
 C-b = ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}"
@@ -54,8 +60,13 @@ e = "@|ai-edit "
 t = "@|stag<ret>sxxx<ret>c"
 
 [keys.select]
+Cmd-s = ":w"
 x = "select_line_below"
 X = "select_line_above"
+Cmd-h = "jump_view_left"
+Cmd-j = "jump_view_down"
+Cmd-k = "jump_view_up"
+Cmd-l = "jump_view_right"
 
 [keys.insert]
 Cmd-s = ["normal_mode", ":w"]

@@ -20,6 +20,8 @@ alias jr="jj r -n 10"
 alias jds="jj ds"
 alias jf="jj git fetch"
 alias jp="jj git push"
+# reset on top of main after being done with a PR
+alias jrm="jj git fetch && (jj new main || jj new master)"
 
 # fzf jj bookmark picker
 function zjb() {
@@ -278,8 +280,23 @@ function find-space() {
     xargs dust -d 0 -p
 }
 
+function clear-space() {
+  for dir in ~/oxide/dendrite ~/oxide/maghemite; do
+    echo "$dir"
+    cd "$dir" && cargo clean
+  done
+}
+
 alias tviz='~/repos/things-viz/main.ts'
 alias tsearch='~/repos/things-viz/search.ts'
+
+function tts() {
+  if [ -p /dev/stdin ]; then
+    edge-playback --file -
+  else
+    edge-playback --text "$*"
+  fi
+}
 
 source "$HOME/.cargo/env"
 
@@ -288,9 +305,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"
 
 export PATH="$HOME/.local/bin:$PATH"
-# Setting PATH for Python 3.10
-# The original version is saved in .zprofile.pysave
-export PATH="/Library/Frameworks/Python.framework/Versions/3.10/bin:${PATH}"
 export PATH="/Users/david/oxide/omicron/out/dendrite-stub/root/opt/oxide/dendrite/bin:$PATH"
 export PATH="/Users/david/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin:$PATH"
 export PATH="/Applications/Racket v8.11.1/bin:$PATH"

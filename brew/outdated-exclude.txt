@@ -11,6 +11,7 @@ ffmpegthumbnailer
 fizz
 fmt
 folly
+fontconfig
 gobject-introspection
 guile
 harfbuzz
@@ -40,6 +41,7 @@ openexr
 openjdk
 openssl@1.1
 openvino
+pango
 pngquant
 python-packaging
 python@3.11
