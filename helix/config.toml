@@ -14,6 +14,7 @@ shell = ["zsh", "-c"]
 rounded-corners = true
 popup-border = "all"
 continue-comments = false
+search.max-matches = 1000
 
 end-of-line-diagnostics = "hint"
 inline-diagnostics.cursor-line = "warning"

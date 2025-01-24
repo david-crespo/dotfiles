@@ -47,11 +47,14 @@ python-packaging
 python@3.11
 python@3.12
 sdl2
+svt-av1
 taplo
 tbb
 tesseract
 unar
 unbound
+vulkan-headers
+vulkan-loader
 wangle
 watchman
 wxwidgets

@@ -95,7 +95,6 @@ function ecopy() {
 alias server='python3 -m http.server 8000'
 
 alias cdc='cd ~/oxide/console'
-alias codec='code2 ~/oxide/console'
 alias dev='npm run dev'
 alias ts='./node_modules/.bin/tsc'
 alias e2e='npx playwright test'
@@ -119,7 +118,6 @@ function brew-why() {
 }
 
 alias cdo='cd ~/oxide/omicron'
-alias codeo='code2 ~/oxide/omicron'
 
 # nexus test. gnarly pipe stuff is to extract log file to a tmp file so I can
 # easily print it with ntlog
@@ -154,15 +152,7 @@ alias uuid='uuidgen | tr "[:upper:]" "[:lower:]" | ecopy'
 alias sweep='cargo sweep -t 5'
 
 alias cdk='cd ~/oxide/oxide-computer-2'
-alias codek='code2 ~/oxide/oxide-computer-2'
-
 alias cdd='cd ~/oxide/docs'
-alias coded='code2 ~/oxide/docs'
-alias coder='code2 ~/oxide/rfd-site'
-
-alias dotfiles='code2 ~/repos/dotfiles'
-alias llm-cli='code2 ~/repos/llm-cli'
-alias helix='code2 ~/repos/helix'
 
 alias ls='eza'
 alias l='eza -l --all --group-directories-first --git'
@@ -278,12 +268,17 @@ function find-space() {
     echo ~/Library/Caches
   } |
     xargs dust -d 0 -p
+  df -h | head -2
 }
 
 function clear-space() {
   for dir in ~/oxide/dendrite ~/oxide/maghemite; do
     echo "$dir"
     cd "$dir" && cargo clean
+  done
+  for dir in ~/oxide/docs ~/oxide/rfd-site; do
+    echo "$dir"
+    cd "$dir" && npm-clean
   done
 }
 
