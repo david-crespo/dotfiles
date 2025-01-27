@@ -23,6 +23,11 @@ alias jp="jj git push"
 # reset on top of main after being done with a PR
 alias jrm="jj git fetch && (jj new main || jj new master)"
 
+# jj abandon branch
+function jab() {
+  jj abandon -r "trunk()..$1" && jj bookmark forget "$1"
+}
+
 # fzf jj bookmark picker
 function zjb() {
   jj b list -T 'separate("\t", name, normal_target.author().name(), normal_target.description())' |
@@ -53,14 +58,8 @@ function jpr() {
   [[ -z "$branch" ]] && return
 
   echo "Branch name: '$branch'"
-
-  PS4='> '
-  set -x
   jj git fetch
-  # if the branch is already tracked this will do nothing
-  jj bookmark track "$branch@origin"
-  jj new "$branch"
-  { set +x; } 2>/dev/null
+  jj new "$branch@origin"
 }
 
 # prune branches, get list of delete remote references,
