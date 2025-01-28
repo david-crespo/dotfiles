@@ -1,6 +1,9 @@
 [user]
 name = David Crespo
-email = david.crespo@oxidecomputer.com
+email = crespo.dm@gmail.com
+
+[includeIf "gitdir:~/oxide"]
+    path = "~/.gitconfig-oxide"
 
 [checkout]
 defaultRemote = origin
