@@ -28,7 +28,7 @@ function jjgit_prompt() {
 
 function ps1_jjgit_prompt() {
   local jgp=$(jjgit_prompt)
-  PROMPT="%K{green}%F{black} %~ %f%k ${jgp}
+  PROMPT="%K{green}%F{black} %~ %f%k %{${jgp}%}
 \$ "
 }
 
