@@ -4,7 +4,11 @@ inherits = "ayu_evolve"
 "ui.picker.header.column.active" = { underline.style = "line" }
 "ui.statusline" = { bg = "dark_gray" }
 "ui.window" = "gray"
-"comment" = { fg = "gray" } # same as evolve and dark but no italic
+
+# same as evolve (inherited from dark) but no italic
+"comment" = { fg = "gray" } 
+# same as evolve but no italic
+"type.builtin" = { fg = "blue" }
 
 [palette]
 black = "#131721" # bring back lighter black from ayu_dark
