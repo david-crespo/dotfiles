@@ -204,24 +204,8 @@ function gdsnl() {
   git diff --stat $1 -- . :^package-lock.json :^yarn.lock
 }
 
-function codeblock() {
-  if [ $# -eq 0 ]; then
-    echo '```'
-    cat
-  elif [ $# -eq 1 ]; then
-    echo "\`\`\`$1"
-    cat
-  else
-    echo "usage: codeblock [language]" >&2
-    exit 1
-  fi
-
-  echo ''
-  echo '```'
-}
-
 function aip() {
-  pbpaste | codeblock | ai "$@"
+  pbpaste | cb | ai "$@"
 }
 
 alias fp='files-to-prompt'

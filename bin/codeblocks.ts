@@ -6,49 +6,69 @@
  * based on the extension. Used for piping files to my LLM CLI.
  */
 
-// wanted to use names from the import map but it broke when calling this
-// through a symlink because it doesn't see the deno.jsonc
-import { extname } from "jsr:@std/path@^0.225.1"
-import { parseArgs } from "jsr:@std/cli@^0.224.3"
+import { extname } from "jsr:@std/path@^1.0.8"
+import { readAll } from "jsr:@std/io@0.225.1"
+import { Command } from "jsr:@cliffy/command@1.0.0-rc.7"
 
 // adoc doesn't display right in glow but it does on github
 const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh"]
 
-const args = parseArgs(Deno.args, {
-  boolean: ["collapse", "names"],
-  alias: { c: "collapse", n: "names" },
-})
-
-for (const filename of args._) {
-  const file = filename.toString()
-  // only look at files
-  if (!(await Deno.lstat(file)).isFile) continue
-
-  // just print the names and move on
-  if (args.names) {
-    console.log(file)
-    continue
-  }
-
-  if (args.collapse) {
+function printFile(
+  filename: string,
+  content: string,
+  details: boolean,
+  langArg: string | undefined,
+) {
+  if (details) {
     console.log("<details>")
-    console.log(`  <summary>${file}</summary>\n`)
+    console.log(`  <summary>${filename}</summary>\n`)
   } else {
-    console.log(`\n---\n\n### \`${file}\`\n\n`)
+    console.log(`\n---\n\n### \`${filename}\`\n\n`)
   }
 
-  const ext = extname(file).slice(1)
-  const content = await Deno.readTextFile(file)
+  const ext = filename ? extname(filename).slice(1) : ""
 
-  if (ext === "md") {
+  if (ext === "md" || langArg === "md") {
     // for markdown, just render the contents directly
     console.log(content)
     console.log()
-    continue
+    return
   }
 
-  const lang = LANGS.includes(ext) ? ext : ""
+  const lang = langArg || (LANGS.includes(ext) ? ext : "")
   console.log(`\`\`\`${lang}\n${content}\n\`\`\`\n`)
 
-  if (args.collapse) console.log("</details>")
+  if (details) console.log("</details>")
 }
+
+await new Command()
+  .name("cb")
+  .description(`
+This script takes a set of file paths as positional args and prints their
+contents, wrapped in markdown code blocks with the right language key based
+on the extension. Used for piping files to my LLM CLI.`.trim())
+  .helpOption("-h, --help", "Show help")
+  .help({ hints: false }) // hides ugly (Conflicts: persona) hint
+  .example("1)", "cb script.ts")
+  .example("2)", "pbpaste | cb")
+  .example("3)", "pbpaste | cb script.ts")
+  .example("4)", "echo \"console.log('hi')\" | cb -l js data.json")
+  .arguments("[files...]")
+  .option("-l, --lang <lang:string>", "Code block lang for stdin")
+  .option("-d, --details", "Wrap files in <details>", { default: false })
+  // TODO: add -c to wrap in XML for claude
+  .action(async (opts, ...files) => {
+    if (!Deno.stdin.isTerminal()) {
+      const stdin = new TextDecoder().decode(await readAll(Deno.stdin)).trim()
+      if (stdin) printFile("[stdin]", stdin, opts.details, opts.lang)
+    }
+
+    for (const file of files) {
+      if (!(await Deno.lstat(file)).isFile) continue
+      const content = await Deno.readTextFile(file)
+      const ext = extname(file).slice(1)
+      const lang = LANGS.includes(ext) ? ext : "" // files ignore lang arg
+      printFile(file, content, opts.details, lang)
+    }
+  })
+  .parse(Deno.args)
