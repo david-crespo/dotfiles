@@ -32,7 +32,9 @@ diff-args = ["--color=always", "$left", "$right"]
 # Username part of the email address
 'format_short_signature(signature)' = 'signature.email().local()'
 
-# format_commit_summary_with_refs minus git commit
+# format_commit_summary_with_refs minus the git commit, and remove empty label
+# color from description_placeholder
+# https://github.com/jj-vcs/jj/blob/faa689a7/cli/src/config/templates.toml#L192C1
 'zsh_prompt_summary(commit, refs)' = '''
 separate(" ",
   format_short_change_id_with_hidden_and_divergent_info(commit),
@@ -40,23 +42,12 @@ separate(" ",
     refs,
     separate(" ",
       if(commit.conflict(), label("conflict", "(conflict)")),
+      if(commit.empty(), label("empty", "(empty)")),
       if(commit.description(),
-        if(commit.empty(), label("empty", "(empty) ")) ++ commit.description().first_line(),
-        if(commit.empty(), label("empty", "(empty)"), label("empty", "(no desc)")),
+        commit.description().first_line(),
+        label("description placeholder", "(no desc)")
       ),
     ),
   ),
 )
 '''
-
-# logic for the empty + desc above
-# 
-# if desc
-#   if empty
-#     show (empty)
-#   show desc 
-# else
-#   if empty
-#     just show (empty)
-#   else
-#     show (no desc)
