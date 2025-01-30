@@ -29,9 +29,9 @@
   {
     "context": "Editor && vim_mode == normal && vim_operator == none && !VimWaiting",
     "bindings": {
-      "d": "vim::DeleteRight",
-      "x": "vim::ToggleVisualLine",
-      "X": "vim::ToggleVisualLine",
+      // "d": "vim::DeleteRight",
+      // "x": "vim::ToggleVisualLine",
+      // "X": "vim::ToggleVisualLine",
       "U": "editor::Redo",
       "R": "vim::Paste",
       "g e": "vim::EndOfDocument",
