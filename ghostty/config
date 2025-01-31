@@ -16,21 +16,29 @@ macos-titlebar-style = tabs
 unfocused-split-opacity = 0.9
 window-save-state = always
 window-padding-x = 4
-window-padding-y = 2
-
-keybind = cmd+opt+right=next_tab
-keybind = cmd+opt+left=previous_tab
-keybind = ctrl+h=goto_split:left
-keybind = ctrl+j=goto_split:bottom
-keybind = ctrl+k=goto_split:top
-keybind = ctrl+l=goto_split:right
-# I think auto covers me pretty much all the time
-keybind = cmd+d=new_split:auto
-
-keybind = cmd+backspace=esc:w
+window-padding-y = 4
 
 # no-title leaves dir in place as tab/window title. shell integration overall is
 # worth leaving on for prompt marking and other features not covered by flags
 shell-integration-features = cursor,no-sudo,no-title
 
 auto-update-channel = stable
+
+# quick terminal
+keybind = global:cmd+\=toggle_quick_terminal
+quick-terminal-position = center
+quick-terminal-animation-duration = 0
+
+keybind = cmd+opt+right=next_tab
+keybind = cmd+opt+left=previous_tab
+
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:bottom
+keybind = ctrl+k=goto_split:top
+keybind = ctrl+l=goto_split:right
+
+# auto covers me pretty much all the time
+keybind = cmd+d=new_split:auto
+
+keybind = cmd+backspace=esc:w
+
