@@ -23,11 +23,6 @@ alias jp="jj git push"
 # reset on top of main after being done with a PR
 alias jrm="jj git fetch && (jj new main || jj new master)"
 
-# jj abandon branch
-function jab() {
-  jj abandon -r "trunk()..$1" && jj bookmark forget "$1"
-}
-
 # fzf jj bookmark picker
 function zjb() {
   jj b list -T 'separate("\t", name, normal_target.author().name(), normal_target.description())' |
@@ -36,14 +31,17 @@ function zjb() {
     awk '{print $1}'
 }
 
-# jj helpers that can't be done as aliases
-alias jrw='echo .jj/working_copy/checkout | entr -c jj log -n 10'
-
 function curr_bookmark {
   jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1
 }
 
 alias jdr='jj diff -f "$(curr_bookmark)@origin"'
+# set current bookmark (will default to -r @)
+alias jbs='jj bookmark set "$(curr_bookmark)"'
+# jj abandon branch
+function jab() {
+  jj abandon -r "trunk()..$1" && jj bookmark forget "$1"
+}
 
 # same as ghpr except we need the branch name, so we include it in each line,
 # hide it from the UI with --with-nth, and then extract it from the output
@@ -78,6 +76,14 @@ alias gr='git r'
 alias grh='git reset --hard'
 alias gco='git co'
 alias grph='git rev-parse HEAD | ecopy'
+
+function grp() {
+  if [ -z "$1" ]; then
+    echo "Error: missing argument" >&2
+    return 1
+  fi
+  git rev-parse "$1" | ecopy
+}
 
 # Execute a command, echo output, and also copy it to the clipboard
 function ecopy() {

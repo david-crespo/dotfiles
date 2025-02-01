@@ -11,10 +11,8 @@ lsp.display-progress-messages = true
 soft-wrap.enable = true
 whitespace.render.nbsp = "all"
 shell = ["zsh", "-c"]
-rounded-corners = true
 popup-border = "all"
 continue-comments = false
-search.max-matches = 1000
 
 end-of-line-diagnostics = "hint"
 inline-diagnostics.cursor-line = "warning"
@@ -28,6 +26,13 @@ statusline.right = [
   "total-line-numbers",
   "search-position",
 ]
+
+# https://github.com/helix-editor/helix/pull/11497
+# leaving out of my local thing for now
+# rounded-corners = true
+
+# https://github.com/helix-editor/helix/pull/11700
+search.max-matches = 1000
 
 [keys.normal]
 Cmd-s = ":w"
