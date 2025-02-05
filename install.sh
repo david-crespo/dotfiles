@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-for f in gitconfig gitconfig-oxide githelpers gitignore jjconfig.toml tmux.conf vimrc zprofile zshrc zshenv; do
+for f in gitconfig gitconfig-oxide githelpers gitignore jjconfig.toml lesskey tmux.conf vimrc zprofile zshrc zshenv; do
   ln -sf "$PWD/$f" ~/.$f
 done
 

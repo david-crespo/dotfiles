@@ -7,6 +7,16 @@ email = "crespo.dm@gmail.com"
 [--scope.user]
 email = "david.crespo@oxidecomputer.com"
 
+# Delta uses less by default but doesn't pass -X to it, which would the last
+# page stick around after quit. I could use
+#
+#   pager = ["delta", "--pager", "less -FRX"]
+#
+# but I don't want this behavior on diffs, only the commit log, where I'm
+# trying to look at a change ID. So instead what I've done is map Q to toggle
+# --redraw-on-quit on before quitting. See ./lesskey.
+# https://github.com/gwsw/less/issues/36#issuecomment-913200056
+
 [ui]
 pager = "delta"
 default-command = "st"
