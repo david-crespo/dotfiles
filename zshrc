@@ -1,5 +1,34 @@
 #!/bin/zsh
 
+# returns PWD but with collapsed segments and ~ replacement
+# function prompt_pwd_collapsed() {
+#   setopt local_options extended_glob
+#    # Replace home dir prefix with ~
+#   local path="${PWD//$HOME/~}"
+#   local segments=("${(@s:/:)path}")
+
+#   if [[ ${#segments} -gt 2 ]]; then
+#     for ((i=2; i < ${#segments}; i++)); do
+#       segments[$i]=${segments[$i][1]}
+#     done
+#   fi
+
+#   echo "${(j:/:)segments}"
+# }
+
+function prompt_pwd() {
+  local pwd=$PWD
+
+  # replace leading $HOME/repos/ with empty string
+  pwd=${pwd/#$HOME\/repos\//}
+  # replace leading $HOME/oxide/ with empty string
+  pwd=${pwd/#$HOME\/oxide\//}
+  # replace leading $HOME/ with ~
+  pwd=${pwd/#$HOME/\~}
+
+  echo "$pwd"
+}
+
 # jj prompt logic based on https://github.com/jj-vcs/jj/wiki/Shell-Prompt
 # but heavily modified
 
@@ -28,7 +57,8 @@ function jjgit_prompt() {
 
 function ps1_jjgit_prompt() {
   local jgp=$(jjgit_prompt)
-  PROMPT="%K{green}%F{black} %~ %f%k %{${jgp}%}
+  local pwd=$(prompt_pwd)
+  PROMPT="%K{green}%F{black} ${pwd} %f%k %{${jgp}%}
 \$ "
 }
 
