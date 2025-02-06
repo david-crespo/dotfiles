@@ -42,33 +42,19 @@ diff-args = ["--color=always", "$left", "$right"]
 # Username part of the email address
 'format_short_signature(signature)' = 'signature.email().local()'
 
-'diff_stat_short(stat)' = '''
-separate(",",
-  if(stat.total_removed() > 0, "-" ++ stat.total_removed()),
-  if(stat.total_added() > 0, "+" ++ stat.total_added()),
-)
-'''
-
-# use the above like this
-# surround("(", ")", diff_stat_short(commit.diff().stat())),
-
 # format_commit_summary_with_refs minus the git commit, and remove empty label
 # color from description_placeholder
 # https://github.com/jj-vcs/jj/blob/faa689a7/cli/src/config/templates.toml#L192C1
 'zsh_prompt_summary(commit, refs)' = '''
-separate(commit_summary_separator,
-  separate(" ",
-    format_short_change_id_with_hidden_and_divergent_info(commit),
+separate(" ",
+  format_short_change_id_with_hidden_and_divergent_info(commit),
+  if(commit.conflict(), label("conflict", "(conflict)")),
+  if(commit.empty(),
+    label("empty", "(empty)"),
   ),
-  separate(" ",
-    if(commit.conflict(), label("conflict", "(conflict)")),
-    if(commit.empty(),
-      label("empty", "(empty)"),
-    ),
-    if(commit.description(),
-      commit.description().first_line(),
-      label("description placeholder", "(no desc)")
-    ),
+  if(commit.description(),
+    commit.description().first_line(),
+    label("description placeholder", "(no desc)")
   ),
 )
 '''
