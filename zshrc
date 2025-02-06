@@ -1,21 +1,5 @@
 #!/bin/zsh
 
-# returns PWD but with collapsed segments and ~ replacement
-# function prompt_pwd_collapsed() {
-#   setopt local_options extended_glob
-#    # Replace home dir prefix with ~
-#   local path="${PWD//$HOME/~}"
-#   local segments=("${(@s:/:)path}")
-
-#   if [[ ${#segments} -gt 2 ]]; then
-#     for ((i=2; i < ${#segments}; i++)); do
-#       segments[$i]=${segments[$i][1]}
-#     done
-#   fi
-
-#   echo "${(j:/:)segments}"
-# }
-
 function prompt_pwd() {
   local pwd=$PWD
 
