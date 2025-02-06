@@ -26,7 +26,7 @@ auto-update-channel = stable
 
 # quick terminal
 keybind = global:cmd+\=toggle_quick_terminal
-quick-terminal-position = center
+quick-terminal-position = left
 quick-terminal-animation-duration = 0
 
 keybind = cmd+opt+right=next_tab

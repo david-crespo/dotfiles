@@ -52,7 +52,7 @@ Cmd-l = "jump_view_right"
 
 # need command expansions: https://github.com/helix-editor/helix/pull/12527
 C-b = ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}"
-C-B = ":echo %sh{git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'}"
+C-B = ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'"
 
 [keys.normal.L]
 r = "@|hxai " # claude by default, pass -m <model> to override
