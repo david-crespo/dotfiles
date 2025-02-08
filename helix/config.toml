@@ -36,11 +36,11 @@ search.max-matches = 1000
 
 [keys.normal]
 Cmd-s = ":w"
+Cmd-p = "file_picker"
 A-w = ":bc"
 "=" = ":reflow"
 X = "select_line_above"
 x = "select_line_below"
-C-p = "file_picker"
 # make it so you can get back to where you were before % with ctrl-o
 "%" = ["save_selection", "select_all"]
 # Cmd-h only works if you override the macOS default by binding Hide Ghostty to
@@ -59,6 +59,8 @@ r = "@|hxai " # claude by default, pass -m <model> to override
 e = "@|ai-edit "
 t = "@|stag<ret>sxxx<ret>c"
 f = ":toggle-option auto-format"
+# open link under cursor
+l = "@maW:pipe-to xargs open<ret>"
 
 [keys.select.L]
 r = "@|hxai "

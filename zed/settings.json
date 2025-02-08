@@ -38,11 +38,13 @@
     "enable_experimental_live_diffs": true
   },
 
+  // "theme": "Ayu Dark",
   "theme": "Base16 Ayu Dark",
   "experimental.theme_overrides": {
     "syntax": {
       "comment": {
-        "color": "#8c8b88ff" // darker, same as comment.doc
+        "color": "#8c8b88ff", // darker, same as comment.doc
+        "font_style": "normal" // I hate italics
       }
     }
   }
