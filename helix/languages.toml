@@ -1,9 +1,9 @@
-# npm i -g typescript typescript-language-server vscode-langservers-extracted @tailwindcss/language-server
+# npm i -g typescript typescript-language-server vscode-langservers-extracted @tailwindcss/language-server @astrojs/language-server
 
 [[language]]
 name = "typescript"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.ts"] }
-language-servers = [ "typescript-language-server", "eslint" ]
+language-servers = [ "typescript-language-server", "vscode-eslint-language-server" ]
 auto-format = true
 
 [[language]]
@@ -14,7 +14,7 @@ auto-format = true
 [[language]]
 name = "tsx"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.tsx"] }
-language-servers = [ "typescript-language-server", "tailwindcss-ls", "eslint" ]
+language-servers = [ "typescript-language-server", "tailwindcss-ls", "vscode-eslint-language-server" ]
 auto-format = true
 block-comment-tokens = ["{/*", "*/}"]
 
@@ -42,7 +42,7 @@ language-servers = [ "vscode-css-language-server", "tailwindcss-ls" ]
 [language-server.astro-ls]
 command = "astro-ls"
 args = ["--stdio"]
-config = {typescript = {tsdk = "/Users/david/.local/share/fnm/node-versions/v22.11.0/installation/lib/node_modules/typescript/lib"}, environment = "node"}
+config = {typescript = {tsdk = "/Users/david/.local/share/fnm/node-versions/v22.12.0/installation/lib/node_modules/typescript/lib"}, environment = "node"}
 
 [language-server.biome]
 command = "biome"
@@ -52,26 +52,6 @@ args = ["lsp-proxy"]
 command = "deno"
 args = ["lsp"]
 environment = { NO_COLOR = "1" }
-
-[language-server.eslint]
-args = ["--stdio"]
-command = "vscode-eslint-language-server"
-
-[language-server.eslint.config]
-# format = true
-nodePath = ""
-# onIgnoredFiles = "off"
-# packageManager = "yarn"
-quiet = false
-rulesCustomizations = []
-run = "onType"
-# useESLintClass = false
-validate = "on"
-codeAction = { disableRuleComment = { enable = true, location = "separateLine" }, showDocumentation = { enable = true } }
-# codeActionOnSave = { mode = "all" }
-experimental = {}
-problems = { shortenToSingleLine = false }
-# workingDirectory = { mode = "auto" }
 
 [[language]]
 name = "bash"
