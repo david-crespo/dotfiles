@@ -108,7 +108,12 @@ alias e2es='npx playwright test --project=safari'
 alias lint='npm run lint'
 alias lint-fast='npm run lint-fast'
 alias oxlint='./node_modules/.bin/oxlint'
-alias outdated='npm outdated | awk "{print \$1, \$2, \$3, \$4}" | column -t'
+
+# -v includes homepage, which is very wide
+alias outdated='npm outdated --long --json | dq "R.pipe(data, R.entries, R.map(([k, v]) => [k, v.type.startsWith(\"dev\") ? \"dev\" : \"\", v.current, v.wanted, v.latest]), table)"'
+
+alias outdated-v='npm outdated --long --json | dq "R.pipe(data, R.entries, R.map(([k, v]) => [k, v.type.startsWith(\"dev\") ? \"dev\" : \"\", v.current, v.wanted, v.latest, v.homepage]), table)"'
+
 alias api-diff='~/oxide/console/tools/deno/api-diff.ts'
 alias npm-clean='dust --no-percent-bars --depth 0 node_modules && echo "Deleting..." && rm -rf node_modules'
 

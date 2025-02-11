@@ -3,6 +3,7 @@
 import { readAll } from "jsr:@std/io@0.224"
 import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
 import * as R from "npm:remeda@2.18.0"
+import { Table } from "jsr:@cliffy/table@1.0.0-rc.7"
 
 R.map // this foolishness gets deno not to tree-shake remeda
 
@@ -25,6 +26,9 @@ Options:
   -l, --lines    Assume input is text in lines and split it.
                  data will be an array of strings.
 `.trim()
+
+// deno-lint-ignore no-unused-vars
+const table = (rows: (string | number)[][]) => new Table().body(rows).padding(3).toString()
 
 const args = parseArgs(Deno.args, {
   boolean: ["help", "lines"],
