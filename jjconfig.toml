@@ -32,14 +32,22 @@ merge-editor = "vscode"
 [ui.diff]
 format = "git"
 
+[revset-aliases]
+'closest_bookmark(to)' = 'heads(::to & bookmarks())'
+# Treat commits not authored by me as immutable. The `trunk().. &` bit is an
+# optimization to scan for non-`mine()` commits only among commits that are not
+# in `trunk()`.
+# https://jj-vcs.github.io/jj/v0.26.0/config/#set-of-immutable-commits
+"immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())"
+
 [aliases]
 d = ["diff"]
 dm = ["describe", "-m"]
 dt = ["diff", "--tool", "difft"]
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
-r = ["log"]
 cm = ["commit", "-m"]
+tug = ["bookmark", "move", "--from", "closest_bookmark(@)", "--to", "@-"]
 
 [merge-tools.difft]
 diff-args = ["--color=always", "$left", "$right"]
