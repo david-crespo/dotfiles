@@ -3,7 +3,7 @@
 import $ from "jsr:@david/dax@0.42.0"
 import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
 
-const { r } = parseArgs(Deno.args, { string: ["r"], default: { r: "@" } })
+const { r } = parseArgs(Deno.args, { string: ["r"], default: { r: "@-" } })
 
 await $`jj diff --stat -r ${r}`
 console.log()
