@@ -1,5 +1,8 @@
 // https://zed.dev/docs/configuring-zed
 {
+  "features": {
+    "edit_prediction_provider": "zed"
+  },
   "vim_mode": true,
   "buffer_font_size": 13,
   "buffer_font_family": "Berkeley Mono",

@@ -46,7 +46,7 @@ dm = ["describe", "-m"]
 dt = ["diff", "--tool", "difft"]
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
-cm = ["commit", "-m"]
+cm = ["commit"]
 tug = ["bookmark", "move", "--from", "closest_bookmark(@)", "--to", "@-"]
 
 [merge-tools.difft]
