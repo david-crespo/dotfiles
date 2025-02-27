@@ -35,6 +35,7 @@ function curr_bookmark {
   jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1
 }
 
+alias jpl='jj git fetch -b "$(curr_bookmark)" && jj new "$(curr_bookmark)"'
 alias jdr='jj diff -f "$(curr_bookmark)@origin"'
 alias jbs='jj tug'
 
@@ -115,6 +116,7 @@ alias ts='./node_modules/.bin/tsc'
 alias e2e='npx playwright test'
 alias e2ec='npx playwright test --project=chrome'
 alias e2es='npx playwright test --project=safari'
+alias e2ef='npx playwright test --project=firefox'
 alias lint='npm run lint -- --cache'
 alias oxlint='./node_modules/.bin/oxlint'
 

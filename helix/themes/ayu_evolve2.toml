@@ -4,6 +4,8 @@ inherits = "ayu_evolve"
 "ui.picker.header.column.active" = { underline.style = "line" }
 "ui.statusline" = { bg = "dark_gray" }
 "ui.window" = "gray"
+# for pickers, mostly
+"ui.text.directory" = "cyan"
 
 # same as evolve (inherited from dark) but no italic
 "comment" = { fg = "gray" } 
