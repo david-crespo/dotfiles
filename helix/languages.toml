@@ -39,11 +39,6 @@ name = "css"
 auto-format = false
 language-servers = [ "vscode-css-language-server", "tailwindcss-ls" ]
 
-[language-server.astro-ls]
-command = "astro-ls"
-args = ["--stdio"]
-config = {typescript = {tsdk = "/Users/david/.local/share/fnm/node-versions/v22.12.0/installation/lib/node_modules/typescript/lib"}, environment = "node"}
-
 [language-server.biome]
 command = "biome"
 args = ["lsp-proxy"]
