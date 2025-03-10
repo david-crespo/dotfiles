@@ -22,6 +22,7 @@ jpeg-xl
 leptonica
 libarchive
 libheif
+libidn2
 libomp
 libpq
 libssh2
