@@ -48,6 +48,18 @@ function ps1_jjgit_prompt() {
 
 precmd_functions+=(ps1_jjgit_prompt)
 
+# we're also going to set the title to the abbreviated thing when we open a new shell
+function set_title() {
+  echo -ne "\033]0;$1\007"
+}
+
+# zsh hook to update title on directory change
+function chpwd() {
+  set_title "$(prompt_pwd)"
+}
+
+set_title "$(prompt_pwd)"
+
 # ctrl-xe to edit command in $EDITOR
 autoload -U edit-command-line
 # # Emacs style shortcuts
