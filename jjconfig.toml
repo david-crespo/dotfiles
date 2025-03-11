@@ -51,9 +51,6 @@ ds = ["diff", "--stat"]
 cm = ["commit"]
 tug = ["bookmark", "move", "--from", "closest_bookmark(@)", "--to", "@-"]
 
-[merge-tools.difft]
-diff-args = ["--color=always", "$left", "$right"]
-
 [template-aliases]
 # Username part of the email address
 'format_short_signature(signature)' = 'signature.email().local()'
