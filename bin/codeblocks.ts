@@ -14,12 +14,16 @@ import $ from "jsr:@david/dax@0.42.0"
 // adoc doesn't display right in glow but it does on github
 const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh", "html"]
 
+type Opts = {
+  details?: true | undefined
+  lang?: string | undefined
+  xml?: true | undefined
+}
+
 function printFile(
   filename: string,
   content: string,
-  details: true | undefined,
-  langArg: string | undefined,
-  xml: true | undefined,
+  { details, lang, xml }: Opts = {},
 ) {
   if (xml) {
     console.log(`<file>`)
@@ -38,15 +42,15 @@ function printFile(
 
   const ext = filename ? extname(filename).slice(1) : ""
 
-  if (ext === "md" || langArg === "md") {
+  if (ext === "md" || lang === "md") {
     // for markdown, just render the contents directly
     console.log(content)
     console.log()
     return
   }
 
-  const lang = langArg || (LANGS.includes(ext) ? ext : "")
-  console.log(`\`\`\`${lang}\n${content}\n\`\`\`\n`)
+  const calcLang = lang || (LANGS.includes(ext) ? ext : "")
+  console.log(`\`\`\`${calcLang}\n${content}\n\`\`\`\n`)
 
   if (details) console.log("</details>")
 }
@@ -60,9 +64,10 @@ async function getStdin() {
 await new Command()
   .name("cb")
   .description(`
-This script takes a set of file paths as positional args and prints their
-contents, wrapped in markdown code blocks with the right language key based
-on the extension. Used for piping files to my LLM CLI.`.trim())
+Pass file paths as positional args to print their contents, wrapped in XML tags
+or markdown code blocks with the right language key based on the extension. Used
+for piping files to my LLM CLI.
+`.trim())
   .helpOption("-h, --help", "Show help")
   .help({ hints: false }) // hides ugly (Conflicts: persona) hint
   .example("1)", "cb script.ts")
@@ -76,23 +81,19 @@ on the extension. Used for piping files to my LLM CLI.`.trim())
   .option("-x, --xml", "Wrap files in XML for claude")
   .action(async (opts, ...files) => {
     const stdin = await getStdin()
-    if (stdin) printFile("[stdin]", stdin, opts.details, opts.lang, opts.xml)
+    if (stdin) printFile("[stdin]", stdin, opts)
 
     // pull from clipboard if paste flag is passed OR automatically if
     // there is no stdin or files
     if (opts.paste || (!stdin && files.length === 0)) {
       const content = await $`pbpaste`.text()
-      if (content) {
-        printFile("[clipboard contents]", content, opts.details, opts.lang, opts.xml)
-      }
+      if (content) printFile("[clipboard contents]", content, opts)
     }
 
-    for (const file of files) {
-      if (!(await Deno.lstat(file)).isFile) continue
-      const content = await Deno.readTextFile(file)
-      const ext = extname(file).slice(1)
-      const lang = LANGS.includes(ext) ? ext : "" // files ignore lang arg
-      printFile(file, content, opts.details, lang, opts.xml)
+    for (const filename of files) {
+      if (!(await Deno.lstat(filename)).isFile) continue
+      const content = await Deno.readTextFile(filename)
+      printFile(filename, content, opts)
     }
   })
   .parse(Deno.args)
