@@ -16,6 +16,7 @@ alias gss='git show --stat'
 
 alias js="jj st"
 alias jd="jj d"
+alias jdp="jj d -r @-"
 alias jr="jj log -n 10"
 alias jds="jj ds"
 alias jf="jj git fetch"
