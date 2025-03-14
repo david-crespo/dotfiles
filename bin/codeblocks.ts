@@ -63,22 +63,20 @@ async function getStdin() {
 
 await new Command()
   .name("cb")
-  .description(`
-Pass file paths as positional args to print their contents, wrapped in XML tags
-or markdown code blocks with the right language key based on the extension. Used
-for piping files to my LLM CLI.
-`.trim())
+  .description(`Wrap file or clipboard contents in markdown codeblocks or XML tags.`)
   .helpOption("-h, --help", "Show help")
-  .help({ hints: false }) // hides ugly (Conflicts: persona) hint
-  .example("1)", "cb script.ts")
-  .example("2)", "pbpaste | cb")
-  .example("3)", "pbpaste | cb script.ts")
-  .example("4)", "echo \"console.log('hi')\" | cb -l js data.json")
+  .example("Filename", "cb script.ts")
+  .example("Stdin", "cat script.ts | cb")
+  .example("Auto pbpaste", "cb")
+  .example("Multiple files", "cb script.ts data.json")
+  .example("Specify lang", "echo \"console.log('hi')\" | cb -l js")
+  .example("XML for Claude", "cb --xml script.ts")
+  .example("Details tag", "cb --details script.ts")
   .arguments("[files...]")
   .option("-l, --lang <lang:string>", "Code block lang for stdin")
   .option("-d, --details", "Wrap files in <details>")
-  .option("-p, --paste", "Pull from pbpaste")
-  .option("-x, --xml", "Wrap files in XML for claude")
+  .option("-p, --paste", "Pull from pbpaste (automatic when no other args)")
+  .option("-x, --xml", "Wrap files in XML for Claude")
   .action(async (opts, ...files) => {
     const stdin = await getStdin()
     if (stdin) printFile("[stdin]", stdin, opts)
