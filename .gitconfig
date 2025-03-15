@@ -3,7 +3,7 @@ name = David Crespo
 email = crespo.dm@gmail.com
 
 [includeIf "gitdir:~/oxide"]
-    path = "~/.gitconfig-oxide"
+path = "~/.gitconfig-oxide"
 
 [checkout]
 defaultRemote = origin
