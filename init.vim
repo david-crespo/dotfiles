@@ -48,10 +48,10 @@ map j gj
 " Helix-like keymap
 
 " Map 'x/X' to start visual line mode and select more lines on subsequent presses
-nnoremap x V
-nnoremap X V
-vnoremap x j
-vnoremap X k
+" nnoremap x V
+" nnoremap X V
+" vnoremap x j
+" vnoremap X k
 
 " Map 'd' to delete a single character in normal mode
-nnoremap d x
+" nnoremap d x

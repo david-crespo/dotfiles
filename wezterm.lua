@@ -5,6 +5,10 @@ local config = wezterm.config_builder()
 
 config.font = wezterm.font({ family = 'Berkeley Mono' })
 config.font_size = 13
+config.color_scheme = 'ayu'
+config.colors = {
+  background = '#020202'
+}
 
 -- Removes the title bar, leaving only the tab bar. Keeps
 -- the ability to resize by dragging the window's edges.
