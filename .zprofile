@@ -28,8 +28,7 @@ alias jrm="jj git fetch && (jj new main || jj new master)"
 function zjb() {
   jj b list -T 'separate("\t", name, normal_target.author().name(), normal_target.description())' |
     column -t -s "	" | # that's a tab lol
-    fzf --reverse --height '25%' |
-    awk '{print $1}'
+    fzf --reverse --height '25%' --accept-nth=1
 }
 
 function curr_bookmark {
@@ -61,8 +60,7 @@ function jpr() {
   local branch="$(
     gh pr list --limit 100 --json headRefName,number,title,updatedAt,author --template \
       '{{range .}}{{tablerow .headRefName .number .title .author.name (timeago .updatedAt)}}{{end}}' |
-      fzf --height 25% --reverse --with-nth=2.. |
-      awk '{print $1}'
+      fzf --height 25% --reverse --with-nth=2.. --accept-nth=1
   )"
 
   [[ -z "$branch" ]] && return
@@ -198,8 +196,7 @@ function hxcm() {
 function ghpr() {
   gh pr list --limit 100 --json number,title,updatedAt,author --template \
     '{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}' |
-    fzf --height 25% --reverse |
-    awk '{print $1}' |
+    fzf --height 25% --reverse --accept-nth=1 |
     xargs gh pr checkout
 }
 
@@ -209,8 +206,7 @@ alias prv='gh pr view --web'
 function gcob() {
   git b |
     grep -v " \* " |
-    fzf --ansi --height 25% --reverse |
-    awk '{print $1}' |
+    fzf --ansi --height 25% --reverse --accept-nth=1 |
     xargs git co
 }
 
