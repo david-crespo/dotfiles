@@ -270,10 +270,12 @@ function find-space() {
     echo ~/Library/Caches
   } |
     xargs dust -d 0 -p
-  df -h | head -2
+  df -H /
 }
 
 function clear-space() {
+  brew cleanup
+
   for dir in ~/oxide/dendrite ~/oxide/maghemite; do
     echo "$dir"
     cd "$dir" && cargo clean
