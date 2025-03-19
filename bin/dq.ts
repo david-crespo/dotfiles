@@ -43,15 +43,16 @@ if (args.help) {
 // if no code provided, just pass through the JSON
 const code = args._.join(" ").trim() || "data"
 
-// isTerminal is true when the thing is run without stdin piped in
-if (Deno.stdin.isTerminal()) {
-  console.log("Error: Nothing passed to stdin.\n")
-  console.log(HELP)
-  Deno.exit(1)
-}
+// don't blow up when there's no stdin -- allow dq to be used for evaling code
+const input = Deno.stdin.isTerminal()
+  ? undefined
+  : new TextDecoder().decode(await readAll(Deno.stdin))
 
-const input = new TextDecoder().decode(await readAll(Deno.stdin))
 // deno-lint-ignore no-unused-vars
-const data = args.lines ? input.trim().split("\n") : JSON.parse(input)
+const data = args.lines
+  // fallback value for no input depends on --lines
+  ? (input ? input.trim().split("\n") : [])
+  : (input ? JSON.parse(input) : undefined)
+
 const result = eval(code)
 console.log(result)
