@@ -3,7 +3,7 @@
 import { readAll } from "jsr:@std/io@0.224"
 
 import OpenAI from "npm:openai@4.71"
-import Anthropic from "npm:@anthropic-ai/sdk@0.30"
+import Anthropic from "npm:@anthropic-ai/sdk@0.39.0"
 import * as v from "jsr:@valibot/valibot@0.42"
 import { parseArgs } from "jsr:@std/cli@1.0"
 
@@ -26,7 +26,7 @@ function invariant(condition: unknown, message: string): asserts condition {
 
 async function askClaude(text: string, instructions: string) {
   const response = await new Anthropic().beta.messages.create({
-    model: "claude-3-5-sonnet-latest",
+    model: "claude-3-7-sonnet-latest",
     system:
       `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Use the str_replace command in the str_replace_editor tool to make the requested changes. Return multiple replace calls if making multiple small edits lets you avoid making a large edit. Do not use the view command.`,
     messages: [
@@ -37,8 +37,7 @@ async function askClaude(text: string, instructions: string) {
       },
     ],
     max_tokens: 4096,
-    tools: [{ type: "text_editor_20241022", name: "str_replace_editor" }],
-    betas: ["computer-use-2024-10-22"],
+    tools: [{ type: "text_editor_20250124", name: "str_replace_editor" }],
     tool_choice: { type: "tool", name: "str_replace_editor" },
   })
 
