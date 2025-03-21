@@ -262,6 +262,12 @@ function findrep() {
   echo "Done."
 }
 
+function aijq() {
+  local input=$(cat)
+  local jq_str=$(ai --raw "write jq to $*. output the raw jq string only. no markdown, no codeblock, no backticks, no quotes")
+  echo "$input" | jq "$jq_str"
+}
+
 function find-space() {
   {
     find ~/oxide -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \)
