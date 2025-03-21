@@ -63,10 +63,6 @@ b = [
 r = "@|hxai " # claude by default, pass -m <model> to override
 e = "@|ai-edit "
 f = ":toggle-option auto-format"
-# try to select link under cursor and open it
-l = "@maW:pipe-to xargs open<ret>"
-# open already selected link  (sometimes maW doesn't work)
-L = ":pipe-to xargs open"
 F = "@<C-s>maf<A-;>;"
 
 [keys.select.L]
