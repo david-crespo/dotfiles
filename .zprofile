@@ -14,11 +14,11 @@ alias gdcs='git diff --cached --stat'
 alias grm='(gco main || gco master) && gp && gfp' # git reset main
 alias gss='git show --stat'
 
-alias js="jj st"
-alias jd="jj d"
-alias jdp="jj d -r @-"
+alias js="jj status"
+alias jd="jj diff"
+alias jdp="jj diff -r @-"
 alias jr="jj log -n 10"
-alias jds="jj ds"
+alias jds="jj diff --stat"
 alias jf="jj git fetch"
 alias jp="jj git push"
 # reset on top of main after being done with a PR
@@ -36,7 +36,7 @@ function curr_bookmark {
 }
 
 alias jpl='jj git fetch -b "$(curr_bookmark)" && jj new "$(curr_bookmark)"'
-alias jdr='jj diff -f "$(curr_bookmark)@origin"'
+alias jdr='jj diff --from "$(curr_bookmark)@origin"'
 alias jbs='jj tug'
 
 # when you accidentally edit a revision with a pushed bookmark, this puts the
@@ -79,11 +79,7 @@ function gfp() {
     xargs git b -D 2>/dev/null
 }
 
-alias gb='git b'
-alias gbd='git b -D'
-alias grb='git rb'
 alias gr='git r'
-alias grh='git reset --hard'
 alias gco='git co'
 alias grph='git rev-parse HEAD | ecopy'
 

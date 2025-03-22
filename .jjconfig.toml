@@ -45,7 +45,6 @@ format = "git"
 [aliases]
 d = ["diff"]
 dm = ["describe", "-m"]
-dt = ["diff", "--tool", "difft"]
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
