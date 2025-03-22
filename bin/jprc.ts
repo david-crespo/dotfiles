@@ -6,14 +6,11 @@ import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
 const { r } = parseArgs(Deno.args, { string: ["r"], default: { r: "@-" } })
 
 await $`jj diff --stat -r ${r}`
-console.log()
 
-const bookmarks = await $`jj bookmark list -r ${r} -T 'name++"\n"'`.lines().then((bs) =>
-  bs.filter((x) => !!x)
-)
+const bookmarks = (await $`jj bookmark list -r ${r} -T 'name++"\n"'`.lines())
+  .filter((x) => !!x)
 
 let bookmark: string
-
 if (bookmarks.length === 0) {
   bookmark = (await $.prompt("No bookmarks found. Create one:", { noClear: true })).trim()
   if (!bookmark) Deno.exit()
