@@ -5,8 +5,6 @@ import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
 
 const { r } = parseArgs(Deno.args, { string: ["r"], default: { r: "@-" } })
 
-await $`jj diff --stat -r ${r}`
-
 const bookmarks = (await $`jj bookmark list -r ${r} -T 'name++"\n"'`.lines())
   .filter((x) => !!x)
 
