@@ -39,6 +39,9 @@ name = "css"
 auto-format = false
 language-servers = [ "vscode-css-language-server", "tailwindcss-ls" ]
 
+[language-server.vscode-eslint-language-server.config]
+run = "onSave"
+
 [language-server.biome]
 command = "biome"
 args = ["lsp-proxy"]
