@@ -35,7 +35,12 @@ function curr_bookmark {
   jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1
 }
 
-alias jpl='jj git fetch -b "$(curr_bookmark)" && jj new "$(curr_bookmark)"'
+function jpl() {
+  local b=$(curr_bookmark)
+  jj git fetch --branch "$b"
+  jj new "$b"
+}
+
 alias jdr='jj diff --from "$(curr_bookmark)@origin"'
 alias jbs='jj tug'
 

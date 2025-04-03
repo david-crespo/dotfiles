@@ -13,6 +13,7 @@ whitespace.render.nbsp = "all"
 shell = ["zsh", "-c"]
 popup-border = "all"
 continue-comments = false
+bufferline = 'multiple'
 
 end-of-line-diagnostics = "hint"
 inline-diagnostics.cursor-line = "warning"
