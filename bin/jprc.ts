@@ -13,8 +13,9 @@ const bookmarks = (await $`jj bookmark list -r ${r} -T 'name++"\n"'`.lines())
 
 let bookmark: string
 if (bookmarks.length === 0) {
-  const generated = await $`jj diff -r 'main..${r}' | ai "${prompt}" -m groq-llama --raw`
-    .text()
+  const generated =
+    await $`jj diff -r 'main..${r}' | ai "${prompt}" -m groq-llama --raw --ephemeral`
+      .text()
   bookmark = (await $.prompt(
     "No bookmarks found. Enter name:",
     { noClear: true, default: generated },
