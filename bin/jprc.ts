@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh,ai,cb
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh,ai
 
 import $ from "jsr:@david/dax@0.42.0"
 import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
@@ -21,7 +21,7 @@ console.log(`\nCreating PR on top of %c${base}\n`, "color: blue")
 const range = `${base}..${r}`
 await $`jj log -r ${range}`.printCommand()
 
-const generated = await $`jj diff -r ${range} | cb; jj log -r ${range} | cb`
+const generated = await $`jj diff -r ${range}; jj log -r ${range}`
   .pipe($`ai "${prompt}" -m flash --raw --ephemeral`)
   .text()
 
