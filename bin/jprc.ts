@@ -1,50 +1,38 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh,ai
 
 import $ from "jsr:@david/dax@0.42.0"
-import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
-
-const usage = `
-Usage:
-  jprc [OPTIONS]
-
-Create a PR from a jj revision range. Creates branch at <revision> with name generated from diff using an LLM.
-
-Options:
-  -r <revision>        Tip for the PR (default: @-)
-  -b, --base <branch>  Base branch (default: main)
-  -h, --help           Show this help message and exit.
-`
+import { Command } from "jsr:@cliffy/command@1.0.0-rc.7"
 
 const prompt =
-  "generate a branch name for this change, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just give the branch name, no markdown"
+  "you will receive a diff and commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
 
-const { r, base, help } = parseArgs(Deno.args, {
-  string: ["r", "base"],
-  boolean: ["h", "help"],
-  alias: { b: "base", h: "help" },
-  default: { r: "@-", base: "main" },
-})
+await new Command()
+  .name("jprc")
+  .description($.dedent`
+    Create a PR from a jj revision range. Creates branch at
+    <revision> with name generated from diff using an LLM.`)
+  .option("-r, --revision <revision>", "Tip for the PR", { default: "@-" })
+  .option("-b, --base <branch>", "Base branch", { default: "main" })
+  .helpOption("-h, --help", "Show help")
+  .action(async ({ revision: r, base }) => {
+    // make sure base is a branch
+    const result = await $`jj bookmark list --remote origin ${base}`.text()
+    if (!result) throw `Base '${base}' not found on origin. Base must be a branch.`
 
-if (help) {
-  console.log(usage)
-  Deno.exit(0)
-}
+    console.log(`\nCreating PR on top of %c${base}\n`, "color: blue")
 
-// make sure base is a branch
-const result = await $`jj bookmark list --remote origin ${base}`.text()
-if (!result) throw `Base '${base}' not found on origin. Base must be a branch.`
+    const range = `${base}..${r}`
+    await $`jj log -r ${range}`.printCommand()
 
-console.log(`\nCreating PR on top of %c${base}\n`, "color: blue")
+    const generated = await $`jj diff -r ${range}; jj log -r ${range}`
+      .pipe($`ai --system "${prompt}" -m flash --raw --ephemeral`)
+      .text()
 
-const range = `${base}..${r}`
-await $`jj log -r ${range}`.printCommand()
+    const opts = { noClear: true, default: generated.trim() }
+    const bookmark = await $.prompt("\nCreate branch?", opts)
 
-const generated = await $`jj diff -r ${range}; jj log -r ${range}`
-  .pipe($`ai "${prompt}" -m flash --raw --ephemeral`)
-  .text()
-
-const bookmark = await $.prompt("\nCreate branch?", { noClear: true, default: generated })
-
-await $`jj bookmark create ${bookmark} -r ${r}`.printCommand()
-await $`jj git push -b ${bookmark} --allow-new`.printCommand()
-await $`gh pr create --head ${bookmark} --base ${base} --web`.printCommand()
+    await $`jj bookmark create ${bookmark} -r ${r}`.printCommand()
+    await $`jj git push -b ${bookmark} --allow-new`.printCommand()
+    await $`gh pr create --head ${bookmark} --base ${base} --web`.printCommand()
+  })
+  .parse(Deno.args)
