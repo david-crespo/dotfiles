@@ -3,14 +3,32 @@
 import $ from "jsr:@david/dax@0.42.0"
 import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
 
+const usage = `
+Usage:
+  jprc [OPTIONS]
+
+Create a PR from a jj revision range. Creates branch at <revision> with name generated from diff using an LLM.
+
+Options:
+  -r <revision>        Tip for the PR (default: @-)
+  -b, --base <branch>  Base branch (default: main)
+  -h, --help           Show this help message and exit.
+`
+
 const prompt =
   "generate a branch name for this change, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just give the branch name, no markdown"
 
-const { r, base } = parseArgs(Deno.args, {
+const { r, base, help } = parseArgs(Deno.args, {
   string: ["r", "base"],
-  alias: { b: "base" },
+  boolean: ["h", "help"],
+  alias: { b: "base", h: "help" },
   default: { r: "@-", base: "main" },
 })
+
+if (help) {
+  console.log(usage)
+  Deno.exit(0)
+}
 
 // make sure base is a branch
 const result = await $`jj bookmark list --remote origin ${base}`.text()
