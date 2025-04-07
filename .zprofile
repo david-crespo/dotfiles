@@ -265,7 +265,7 @@ function findrep() {
 
 function aijq() {
   local input=$(cat)
-  local jq_str=$(ai --raw "write jq to $*. output the raw jq string only. no markdown, no codeblock, no backticks, no quotes")
+  local jq_str=$(ai --raw --ephemeral -m sonnet "write jq to $*. output the raw jq string only. no markdown, no codeblock, no backticks, no quotes")
   echo "$input" | jq "$jq_str"
 }
 
