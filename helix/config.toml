@@ -18,13 +18,11 @@ end-of-line-diagnostics = "hint"
 inline-diagnostics.cursor-line = "warning"
 
 statusline.right = [
-  "workspace-diagnostics",
-  "diagnostics",
-  "selections",
   "register",
   "position",
-  "total-line-numbers",
   "search-position",
+  "diagnostics",
+  "workspace-diagnostics",
 ]
 
 # https://github.com/helix-editor/helix/pull/11497
