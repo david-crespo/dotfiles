@@ -32,13 +32,13 @@
   },
 
   "assistant": {
+    "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
       "model": "claude-3-7-sonnet-latest"
     },
     "version": "2",
-    "dock": "right",
-    "enable_experimental_live_diffs": true
+    "dock": "right"
   },
 
   // "theme": "Ayu Dark",

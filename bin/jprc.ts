@@ -49,8 +49,7 @@ await new Command()
     const opts = { noClear: true, default: generated.trim() }
     const bookmark = await $.prompt("\nCreate branch?", opts)
 
-    await $`jj bookmark create ${bookmark} -r ${r}`.printCommand()
-    await $`jj git push -b ${bookmark} --allow-new`.printCommand()
+    await $`jj git push --named ${bookmark}=${r}`.printCommand()
     await $`gh pr create --head ${bookmark} --base ${base} --web`.printCommand()
   })
   .parse(Deno.args)

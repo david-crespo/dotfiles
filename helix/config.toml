@@ -23,6 +23,7 @@ statusline.right = [
   "search-position",
   "diagnostics",
   "workspace-diagnostics",
+  "total-line-numbers"
 ]
 
 # https://github.com/helix-editor/helix/pull/11497
