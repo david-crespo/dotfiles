@@ -1,4 +1,5 @@
-# npm i -g typescript typescript-language-server vscode-langservers-extracted @tailwindcss/language-server @astrojs/language-server
+# vscode langservers must be 4.8 until helix merges pull diagnostics
+# npm i -g typescript typescript-language-server vscode-langservers-extracted@4.8 @tailwindcss/language-server @astrojs/language-server
 
 [[language]]
 name = "typescript"

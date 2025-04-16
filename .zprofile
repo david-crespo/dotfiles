@@ -183,7 +183,7 @@ alias clippy='cargo xtask clippy'
 alias uuid='uuidgen | tr "[:upper:]" "[:lower:]" | ecopy'
 alias sweep='cargo sweep -t 5'
 
-alias cdk='cd ~/oxide/oxide-computer-2'
+alias cdk='cd ~/oxide/oxide-computer'
 alias cdd='cd ~/oxide/docs'
 
 alias ls='eza'

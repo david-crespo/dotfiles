@@ -90,8 +90,10 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 eval "$(atuin init zsh --disable-up-arrow)"
 
+fpath=(~/.zsh/completion $fpath)
 autoload -U compinit
 compinit
 eval "$(zoxide init zsh)"
 
 source <(COMPLETE=zsh jj)
+. "/Users/david/.deno/env"
