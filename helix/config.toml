@@ -59,14 +59,15 @@ b = [
   ':o /tmp/blamecontents',
   ':goto %sh{cat /tmp/blameline}'
 ]
-r = "@|hxai " # claude by default, pass -m <model> to override
-e = "@|ai-edit "
+# pass -m <model> to override. C-b goes back to put cursor between quotes
+r = "@|hxai \"\"<C-b>"
+e = "@|ai-edit \"\"<C-b>"
 f = ":toggle-option auto-format"
 F = "@<C-s>maf<A-;>;"
 
 [keys.select.L]
-r = "@|hxai "
-e = "@|ai-edit "
+r = "@|hxai \"\"<C-b>"
+e = "@|ai-edit \"\"<C-b>"
 t = "@|stag<ret>sxxx<ret>c"
 
 [keys.select]
