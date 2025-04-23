@@ -22,7 +22,7 @@ async function getPrContext(args: PrSelector) {
     "# Body",
     fullPr.data.body,
     "# Diff",
-    cb(diff as unknown as string),
+    cb(diff.data as unknown as string),
   ].join("\n\n") + "\n\n"
 }
 
@@ -80,6 +80,16 @@ const debugCmd = new Command()
     )
   })
 
+const contextCmd = new Command()
+  .description("Print context to stdout")
+  .option("-R,--repo <repo:string>", "Repo (owner/repo)", { required: true })
+  .arguments("<pr:integer>")
+  .action(async (opts, pr) => {
+    const { owner, repo } = getRepoSelector(opts.repo)
+    const prContext = await getPrContext({ owner, repo, pull_number: pr })
+    console.log(prContext)
+  })
+
 // TODO: repomap view and regen and clear
 
 await new Command()
@@ -88,4 +98,5 @@ await new Command()
   .helpOption("-h, --help", "Show help")
   .command("review", reviewCmd)
   .command("debug-ci", debugCmd)
+  .command("context", contextCmd)
   .parse(Deno.args)
