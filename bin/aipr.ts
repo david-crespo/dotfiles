@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh,ai --allow-net=api.github.com
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=gh,ai,fzf --allow-net=api.github.com
 
 import $ from "jsr:@david/dax@0.43.0"
 import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
@@ -8,11 +8,12 @@ const reviewSystemPrompt =
 
 const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 
-type PrSelector = { owner: string; repo: string; pr: number }
+type RepoSel = { owner: string; repo: string }
+type PrSel = RepoSel & { pr: number }
 
-const getPrArgs = (sel: PrSelector) => $.rawArg(`-R ${sel.owner}/${sel.repo} ${sel.pr}`)
+const getPrArgs = (sel: PrSel) => $.rawArg(`-R ${sel.owner}/${sel.repo} ${sel.pr}`)
 
-async function getPrContext(sel: PrSelector) {
+async function getPrContext(sel: PrSel) {
   const [fullPr, diff] = await Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text(),
     $`gh pr diff ${getPrArgs(sel)}`.text(),
@@ -20,9 +21,12 @@ async function getPrContext(sel: PrSelector) {
   return ["# Body", fullPr, "# Diff", cb(diff)].join("\n\n") + "\n\n"
 }
 
-// TODO: need PR picker for when none is specified
+const pickPr = ({ owner, repo }: RepoSel) =>
+  $`gh pr list -R ${owner}/${repo} --limit 100 --json number,title,updatedAt,author --template \
+    '{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}' |
+    fzf --height 25% --reverse --accept-nth=1`.json<number>()
 
-function getRepoSelector(repoStr: string) {
+function getRepoSelector(repoStr: string): RepoSel {
   const parts = repoStr.split("/")
   if (parts.length === 1) {
     return { owner: "oxidecomputer", repo: parts[0] }
@@ -36,13 +40,20 @@ function getRepoSelector(repoStr: string) {
   )
 }
 
+async function getPrSelector(repoStr: string, prArg: number | undefined) {
+  const { owner, repo } = getRepoSelector(repoStr)
+  await $`gh repo view ${owner}/${repo}`.text() // blow up early if repo doesn't exist
+  const pr = prArg ? prArg : await pickPr({ owner, repo })
+  return { owner, repo, pr }
+}
+
 const reviewCmd = new Command()
   .description("Review a PR")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)", { required: true })
-  .arguments("<pr:integer>")
+  .arguments("[pr:integer]")
   .action(async (opts, pr) => {
-    const { owner, repo } = getRepoSelector(opts.repo)
-    const prContext = await getPrContext({ owner, repo, pr })
+    const prSel = await getPrSelector(opts.repo, pr)
+    const prContext = await getPrContext(prSel)
     // cat errors are automatically logged
     const exampleComments = await $`cat ~/comments.txt`.text().catch(() => "")
     await $`ai -e --system ${reviewSystemPrompt}`.stdinText(
@@ -59,13 +70,13 @@ type Run = { conclusion: string; databaseId: number }
 const debugCmd = new Command()
   .description("Debug recent CI failures")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)", { required: true })
-  .arguments("<pr:integer>")
+  .arguments("[pr:integer]")
   .action(async (opts, pr) => {
-    const { owner, repo } = getRepoSelector(opts.repo)
-    const sel = { owner, repo, pr }
+    const sel = await getPrSelector(opts.repo, pr)
     const refArgs = getPrArgs(sel)
     const ref = await $`gh pr view --json headRefName --jq .headRefName ${refArgs}`.text()
 
+    const { owner, repo } = sel
     const [prContext, runs] = await Promise.all([
       getPrContext(sel),
       $`gh run list -R ${owner}/${repo} -b ${ref} --json databaseId,conclusion`
@@ -103,14 +114,16 @@ const debugCmd = new Command()
 const contextCmd = new Command()
   .description("Print context to stdout")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)", { required: true })
-  .arguments("<pr:integer>")
+  .arguments("[pr:integer]")
   .action(async (opts, pr) => {
-    const { owner, repo } = getRepoSelector(opts.repo)
-    const prContext = await getPrContext({ owner, repo, pr })
+    const prSel = await getPrSelector(opts.repo, pr)
+    const prContext = await getPrContext(prSel)
     console.log(prContext)
   })
 
 // TODO: repomap view and regen and clear
+// TODO: make -R and PR number global options and define the commands inline here so the types are right
+// TODO: make -R optional because gh can default to the current repo
 
 await new Command()
   .name("aipr")
