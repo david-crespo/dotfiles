@@ -6,20 +6,21 @@ import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
 const prompt =
   "you will receive a diff and commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
 
-/** If there are bookmarks between main and r, let user pick. Otherwise use main. */
+/** If there are bookmarks between trunk() and r, let user pick. Otherwise use trunk(). */
 async function pickBase(r: string) {
   // Note the - on ${r}-, which means we go up to one change before r
-  const lines = await $`jj bookmark list -r main..${r}- -T 'name++"\n"'`.lines()
-  const existingBookmarks = lines.filter((x) => !!x)
+  const lines = await $`jj bookmark list -r 'trunk()..${r}-|trunk()' -T 'name++"\n"'`
+    .lines()
+  const bookmarks = lines.filter((x) => !!x)
+  console.log({ existingBookmarks: bookmarks })
 
-  if (existingBookmarks.length === 0) return "main"
+  if (bookmarks.length === 1) return bookmarks[0]
 
   // show existing bookmarks (don't log range because there could be too many commits)
-  const options = [...existingBookmarks, "main"]
-  await $`jj log ${options.map((o) => "-r " + o)}`.printCommand()
+  await $`jj log ${bookmarks.map((o) => "-r " + o)}`.printCommand()
 
-  const i = await $.select({ message: "\nChoose base", options, noClear: true })
-  return options[i]
+  const i = await $.select({ message: "\nChoose base", options: bookmarks, noClear: true })
+  return bookmarks[i]
 }
 
 await new Command()
