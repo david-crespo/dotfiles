@@ -12,7 +12,6 @@ async function pickBase(r: string) {
   const lines = await $`jj bookmark list -r 'trunk()..${r}-|trunk()' -T 'name++"\n"'`
     .lines()
   const bookmarks = lines.filter((x) => !!x)
-  console.log({ existingBookmarks: bookmarks })
 
   if (bookmarks.length === 1) return bookmarks[0]
 
@@ -29,10 +28,9 @@ await new Command()
     Create a PR from a jj revision range. Creates branch at
     <revision> with name generated from diff using an LLM.`)
   .option("-r, --revision <revision>", "Tip for the PR", { default: "@-" })
-  .option("-b, --base <branch>", "Base branch")
   .helpOption("-h, --help", "Show help")
-  .action(async ({ revision: r, ...args }) => {
-    const base = args.base || await pickBase(r)
+  .action(async ({ revision: r }) => {
+    const base = await pickBase(r)
 
     // make sure base is a remote branch
     const result = await $`jj bookmark list --remote origin ${base}`.text()
