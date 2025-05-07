@@ -71,6 +71,7 @@ bindkey '\ew' backward-kill-line
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
 
 export HOMEBREW_NO_ENV_HINTS=1
 export EDITOR=hx

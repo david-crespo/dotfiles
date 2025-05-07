@@ -25,6 +25,9 @@ default-command = "st"
 diff-editor = ":builtin"
 merge-editor = "vscode"
 
+[git]
+write-change-id-header = true
+
 # use `delta` for `jj diff` and `jj show`
 # [[--scope]]
 # --when.commands = ["diff", "show"]
