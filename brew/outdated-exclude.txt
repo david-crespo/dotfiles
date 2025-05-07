@@ -31,6 +31,8 @@ libxml2
 dainiusjocas/brew/lmgrep
 luajit-openresty
 mbedtls
+molten-vk
+mpdecimal
 mpg123
 mvfst
 netpbm
