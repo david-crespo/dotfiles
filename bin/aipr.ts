@@ -51,6 +51,7 @@ async function getPrSelector(repoStr: string | undefined, prArg: number | undefi
   const { owner, repo } = repoStr ? parseRepoSelector(repoStr) : await getCurrRepo()
   await $`gh repo view ${owner}/${repo}`.text() // blow up early if repo doesn't exist
   const pr = prArg ? prArg : await pickPr({ owner, repo })
+  if (!prArg) console.log(`Reviewing PR #${pr}\n`)
   return { owner, repo, pr }
 }
 
@@ -138,4 +139,4 @@ await new Command()
   .command("review", reviewCmd)
   .command("debug-ci", debugCmd)
   .command("context", contextCmd)
-  .parse(Deno.args)
+  .parse()
