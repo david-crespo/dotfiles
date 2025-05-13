@@ -78,6 +78,8 @@ export EDITOR=hx
 export HISTSIZE=10000
 
 source <(fzf --zsh)
+# works to exclude a lot but means you can't look inside node_modules
+export FZF_CTRL_T_COMMAND='fd --type f --hidden --follow --exclude .git --exclude .jj'
 
 export DENO_INSTALL="/Users/david/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
