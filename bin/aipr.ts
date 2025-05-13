@@ -26,7 +26,7 @@ const pickPr = ({ owner, repo }: RepoSel) =>
     '{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}' |
     fzf --height 25% --reverse --accept-nth=1`.json<number>()
 
-function getRepoSelector(repoStr: string): RepoSel {
+function parseRepoSelector(repoStr: string): RepoSel {
   const parts = repoStr.split("/")
   if (parts.length === 1) {
     return { owner: "oxidecomputer", repo: parts[0] }
@@ -40,8 +40,15 @@ function getRepoSelector(repoStr: string): RepoSel {
   )
 }
 
-async function getPrSelector(repoStr: string, prArg: number | undefined) {
-  const { owner, repo } = getRepoSelector(repoStr)
+async function getCurrRepo(): Promise<RepoSel> {
+  type Resp = { owner: { login: string }; name: string }
+  const { name, owner } = await $`gh repo view --json name,owner`.json<Resp>()
+  return { repo: name, owner: owner.login }
+}
+
+async function getPrSelector(repoStr: string | undefined, prArg: number | undefined) {
+  // if the repo is not given, try to figure it out from the dir
+  const { owner, repo } = repoStr ? parseRepoSelector(repoStr) : await getCurrRepo()
   await $`gh repo view ${owner}/${repo}`.text() // blow up early if repo doesn't exist
   const pr = prArg ? prArg : await pickPr({ owner, repo })
   return { owner, repo, pr }
@@ -49,7 +56,7 @@ async function getPrSelector(repoStr: string, prArg: number | undefined) {
 
 const reviewCmd = new Command()
   .description("Review a PR")
-  .option("-R,--repo <repo:string>", "Repo (owner/repo)", { required: true })
+  .option("-R,--repo <repo:string>", "Repo (owner/repo)")
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
@@ -69,7 +76,7 @@ type Run = { conclusion: string; databaseId: number }
 
 const debugCmd = new Command()
   .description("Debug recent CI failures")
-  .option("-R,--repo <repo:string>", "Repo (owner/repo)", { required: true })
+  .option("-R,--repo <repo:string>", "Repo (owner/repo)")
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const sel = await getPrSelector(opts.repo, pr)
@@ -113,7 +120,7 @@ const debugCmd = new Command()
 
 const contextCmd = new Command()
   .description("Print context to stdout")
-  .option("-R,--repo <repo:string>", "Repo (owner/repo)", { required: true })
+  .option("-R,--repo <repo:string>", "Repo (owner/repo)")
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
@@ -123,7 +130,6 @@ const contextCmd = new Command()
 
 // TODO: repomap view and regen and clear
 // TODO: make -R and PR number global options and define the commands inline here so the types are right
-// TODO: make -R optional because gh can default to the current repo
 
 await new Command()
   .name("aipr")
