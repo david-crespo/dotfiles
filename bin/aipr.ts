@@ -83,14 +83,17 @@ async function getPrSelector(repoStr: string | undefined, prArg: number | undefi
 const reviewCmd = new Command()
   .description("Review a PR")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)")
+  .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
+    // TODO: do a version of this
+    // await $`gh pr view ${getPrArgs(prSel)}`
     const prContext = await getPrContext(prSel)
     // cat errors are automatically logged
     const exampleComments = await $`cat ~/comments.txt`.text().catch(() => "")
     await $`ai -e --system ${reviewSystemPrompt}`.stdinText(
-      exampleComments + prContext + "Review the above change.",
+      exampleComments + prContext + `Review the above change. ${opts.prompt}`,
     )
   })
 
