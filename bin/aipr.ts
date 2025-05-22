@@ -11,39 +11,15 @@ const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 type RepoSel = { owner: string; repo: string }
 type PrSel = RepoSel & { pr: number }
 
-type Comment = {
-  id: number
-  in_reply_to_id?: number
-  body: string
-  diff_hunk: string
-  user: { login: string }
-}
-
-const replying = (c: Comment) => c.in_reply_to_id ? `(replying to ${c.in_reply_to_id})` : ""
-const commentMd = (c: Comment) =>
-  [
-    `## comment ${c.id} by ${c.user.login} ${replying(c)}`,
-    c.body,
-    cb(c.diff_hunk, "diff"),
-  ].join("\n\n")
-
 const getPrArgs = (sel: PrSel) => $.rawArg(`-R ${sel.owner}/${sel.repo} ${sel.pr}`)
 
 async function getPrContext(sel: PrSel) {
-  const [fullPr, diff, comments] = await Promise.all([
+  const [fullPr, diff] = await Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text(),
     $`gh pr diff ${getPrArgs(sel)}`.text(),
-    $`gh api /repos/${sel.owner}/${sel.repo}/pulls/${sel.pr}/comments`.json<Comment[]>(),
   ])
 
-  return [
-    "# Body",
-    fullPr,
-    "# Diff",
-    cb(diff, "diff"),
-    "# Comments",
-    comments.map(commentMd).join("\n\n"),
-  ].join("\n\n")
+  return ["# Body", fullPr, "# Diff", cb(diff, "diff")].join("\n\n")
 }
 
 const pickPr = ({ owner, repo }: RepoSel) =>
