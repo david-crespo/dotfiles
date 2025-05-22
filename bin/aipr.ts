@@ -11,7 +11,7 @@ const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 type RepoSel = { owner: string; repo: string }
 type PrSel = RepoSel & { pr: number }
 
-const getPrArgs = (sel: PrSel) => $.rawArg(`-R ${sel.owner}/${sel.repo} ${sel.pr}`)
+const getPrArgs = (sel: PrSel) => ["-R", `${sel.owner}/${sel.repo}`, sel.pr]
 
 async function getPrContext(sel: PrSel) {
   const [fullPr, diff] = await Promise.all([
@@ -60,6 +60,7 @@ const reviewCmd = new Command()
   .description("Review a PR")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)")
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
+  .option("-m,--model <model:string>", "Model (passed to ai command)")
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
@@ -68,7 +69,11 @@ const reviewCmd = new Command()
     const prContext = await getPrContext(prSel)
     // cat errors are automatically logged
     const exampleComments = await $`cat ~/comments.txt`.text().catch(() => "")
-    await $`ai -e --system ${reviewSystemPrompt}`.stdinText(
+
+    const aiArgs = ["--ephemeral", "--system", reviewSystemPrompt]
+    if (opts.model) aiArgs.push("-m", opts.model)
+
+    await $`ai ${aiArgs}`.stdinText(
       exampleComments + prContext +
         `Review the above change, focusing on things to change or fix. Don't bother listing what's good about it beyond a sentence or two. ${opts.prompt}`,
     )
@@ -141,6 +146,9 @@ await new Command()
   .name("aipr")
   .description("Review PRs and debug CI failures.")
   .helpOption("-h, --help", "Show help")
+  .action(() => {
+    throw new ValidationError("Subcommand required")
+  })
   .command("review", reviewCmd)
   .command("debug-ci", debugCmd)
   .command("context", contextCmd)
