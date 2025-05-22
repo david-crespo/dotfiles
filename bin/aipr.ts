@@ -69,7 +69,8 @@ const reviewCmd = new Command()
     // cat errors are automatically logged
     const exampleComments = await $`cat ~/comments.txt`.text().catch(() => "")
     await $`ai -e --system ${reviewSystemPrompt}`.stdinText(
-      exampleComments + prContext + `Review the above change. ${opts.prompt}`,
+      exampleComments + prContext +
+        `Review the above change, focusing on things to change or fix. Don't bother listing what's good about it beyond a sentence or two. ${opts.prompt}`,
     )
   })
 
