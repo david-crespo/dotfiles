@@ -1,9 +1,8 @@
-#! /usr/bin/env -S deno run --allow-env=ANTHROPIC_API_KEY,OPENAI_API_KEY --allow-net
+#! /usr/bin/env -S deno run --allow-env --allow-net
 
 import { readAll } from "jsr:@std/io@0.224"
 
-import OpenAI from "npm:openai@4.71"
-import Anthropic from "npm:@anthropic-ai/sdk@0.39.0"
+import Anthropic from "npm:@anthropic-ai/sdk@0.52.0"
 import * as v from "jsr:@valibot/valibot@0.42"
 import { parseArgs } from "jsr:@std/cli@1.0"
 
@@ -25,8 +24,8 @@ function invariant(condition: unknown, message: string): asserts condition {
 }
 
 async function askClaude(text: string, instructions: string) {
-  const response = await new Anthropic().beta.messages.create({
-    model: "claude-3-7-sonnet-latest",
+  const response = await new Anthropic().messages.create({
+    model: "claude-sonnet-4-20250514",
     system:
       `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Use the str_replace command in the str_replace_editor tool to make the requested changes. Return multiple replace calls if making multiple small edits lets you avoid making a large edit. Do not use the view command.`,
     messages: [
@@ -37,8 +36,10 @@ async function askClaude(text: string, instructions: string) {
       },
     ],
     max_tokens: 4096,
-    tools: [{ type: "text_editor_20250124", name: "str_replace_editor" }],
-    tool_choice: { type: "tool", name: "str_replace_editor" },
+    // https://docs.anthropic.com/en/docs/about-claude/models/migrating-to-claude-4#updated-text-editor-tool
+    // @ts-expect-error sdk types are wrong on type key, missing new one
+    tools: [{ type: "text_editor_20250429", name: "str_replace_based_edit_tool" }],
+    tool_choice: { type: "tool", name: "str_replace_based_edit_tool" },
   })
 
   let result = text
@@ -47,28 +48,6 @@ async function askClaude(text: string, instructions: string) {
     const { old_str, new_str } = toolCall.input
     result = result.replace(old_str, new_str)
   }
-  return [response, result]
-}
-
-async function askGpt(text: string, instructions: string) {
-  const response = await new OpenAI().chat.completions.create({
-    model: "gpt-4o-2024-11-20",
-    messages: [
-      {
-        role: "system",
-        content:
-          `You are a text editor assistant. You will receive some text and some instructions about how to modify it. Return only raw text. Do not wrap output in a markdown code block.`,
-      },
-      { role: "user", content: text },
-      {
-        role: "user",
-        content: instructions + ". Do not wrap output in a markdown code block.",
-      },
-    ],
-    prediction: { type: "content", content: text },
-  })
-  const result = response.choices[0].message.content
-  invariant(result, "null response from OpenAI")
   return [response, result]
 }
 
@@ -84,9 +63,7 @@ if (import.meta.main) {
   const instructions = args._.join(" ")
   invariant(instructions, "No instructions provided via positional args")
 
-  const [response, result] = args.gpt
-    ? await askGpt(text, instructions)
-    : await askClaude(text, instructions)
+  const [response, result] = await askClaude(text, instructions)
 
   console.log(result)
 
