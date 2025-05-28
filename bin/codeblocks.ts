@@ -14,33 +14,40 @@ import $ from "jsr:@david/dax@0.42.0"
 // adoc doesn't display right in glow but it does on github
 const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh", "html"]
 
-type Opts = {
-  details?: true | undefined
-  lang?: string | undefined
-  xml?: true | undefined
-}
+// deno-lint-ignore no-explicit-any
+type ExtractOptions<T extends Command<any>> = T extends // deno-lint-ignore no-explicit-any
+Command<any, any, infer TOptions> ? TOptions
+  : never
+
+type Opts = ExtractOptions<typeof command>
 
 function printFile(
-  filename: string,
+  /** Filename for files or label for clipboard or stdin */
+  heading: string,
   content: string,
-  { details, lang, xml }: Opts = {},
+  { details, lang, xml, quote }: Opts = {},
 ) {
   if (xml) {
     console.log(`<file>`)
-    console.log(`  <name>${filename}</name>`)
+    console.log(`  <name>${heading}</name>`)
     console.log(`  <contents>\n${content}</contents>`)
     console.log(`</file>`)
     return
   }
 
-  if (details) {
-    console.log("<details>")
-    console.log(`  <summary>${filename}</summary>\n`)
-  } else {
-    console.log(`\n---\n\n### \`${filename}\`\n\n`)
+  if (quote) {
+    console.log(content.split("\n").map((line) => `> ${line}`).join("\n") + "\n")
+    return
   }
 
-  const ext = filename ? extname(filename).slice(1) : ""
+  if (details) {
+    console.log("<details>")
+    console.log(`  <summary>${heading}</summary>\n`)
+  } else {
+    console.log(`\n---\n\n### \`${heading}\`\n\n`)
+  }
+
+  const ext = heading ? extname(heading).slice(1) : ""
 
   if (ext === "md" || lang === "md") {
     // for markdown, just render the contents directly
@@ -61,7 +68,7 @@ async function getStdin() {
   return stdin || undefined
 }
 
-await new Command()
+const command = new Command()
   .name("cb")
   .description(`Wrap file or clipboard contents in markdown codeblocks or XML tags.`)
   .helpOption("-h, --help", "Show help")
@@ -73,10 +80,11 @@ await new Command()
   .example("XML for Claude", "cb --xml script.ts")
   .example("Details tag", "cb --details script.ts")
   .arguments("[files...]")
-  .option("-l, --lang <lang:string>", "Code block lang for stdin")
+  .option("-l, --lang <lang>", "Code block lang for stdin")
   .option("-d, --details", "Wrap files in <details>")
   .option("-p, --paste", "Pull from pbpaste (automatic when no other args)")
   .option("-x, --xml", "Wrap files in XML for Claude")
+  .option("-q, --quote", "Use > to quote instead of code blocks")
   .action(async (opts, ...files) => {
     const stdin = await getStdin()
     if (stdin) printFile("[stdin]", stdin, opts)
@@ -94,4 +102,5 @@ await new Command()
       printFile(filename, content, opts)
     }
   })
-  .parse(Deno.args)
+
+await command.parse(Deno.args)
