@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 oxclone() {
-  git clone "https://github.com/oxidecomputer/$1.git" "${@:2}"
+  jj git clone "https://github.com/oxidecomputer/$1.git" "${@:2}"
 }
 
 alias gs='git status'
