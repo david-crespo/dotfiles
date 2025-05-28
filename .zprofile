@@ -151,15 +151,7 @@ function brew-why() {
 
 alias cdo='cd ~/oxide/omicron'
 
-# nexus test. gnarly pipe stuff is to extract log file to a tmp file so I can
-# easily print it with ntlog
-function nt() {
-  cargo t --no-fail-fast --color=always -p omicron-nexus -E "test($1)" 2>&1 |
-    tee /dev/tty | rg 'log file:.*0\.log' | awk '{print $NF}' >/tmp/nexus-test.log
-}
-
-alias ntlog='cat $(cat /tmp/nexus-test.log)'
-alias nterror='ntlog | rg error_message | jq'
+alias nt='cargo t -p omicron-nexus --no-fail-fast --success-output immediate'
 
 function ntpick() {
   print -z -- "nt $(ntpicker)"
@@ -174,10 +166,6 @@ function ntpicker() {
 }
 
 alias update-auth='EXPECTORATE=overwrite nt unauthorized'
-
-function ntv() {
-  cargo t -p omicron-nexus -E "test($1)" --success-output immediate
-}
 
 alias clippy='cargo xtask clippy'
 alias uuid='uuidgen | tr "[:upper:]" "[:lower:]" | ecopy'
