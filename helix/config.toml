@@ -65,11 +65,23 @@ r = "@|hxai \"\"<C-b>"
 e = "@|ai-edit \"\"<C-b>"
 f = ":toggle-option auto-format"
 F = "@<C-s>maf<A-;>;"
+# wrap current sel in console.log()
+l = "@_ms(iconsole.log<esc>"
+# wrap current sel in console.dir()
+d = "@_ms(iconsole.dir<esc>"
+# wrap current sel in dbg!()
+D = "@_ms(idbg!<esc>"
 
 [keys.select.L]
 r = "@|hxai \"\"<C-b>"
 e = "@|ai-edit \"\"<C-b>"
 t = "@|stag<ret>sxxx<ret>c"
+# wrap current sel in console.log()
+l = "@_ms(iconsole.log<esc>"
+# wrap current sel in console.dir()
+d = "@_ms(iconsole.dir<esc>"
+# wrap current sel in dbg!()
+D = "@_ms(idbg!<esc>"
 
 [keys.select]
 Cmd-s = ":w"
