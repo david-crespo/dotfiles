@@ -21,7 +21,7 @@ email = "david.crespo@oxidecomputer.com"
 
 [ui]
 pager = "delta"
-default-command = "st"
+default-command = "log"
 diff-editor = ":builtin"
 merge-editor = "vscode"
 

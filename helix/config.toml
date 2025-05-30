@@ -71,6 +71,8 @@ l = "@_ms(iconsole.log<esc>"
 d = "@_ms(iconsole.dir<esc>"
 # wrap current sel in dbg!()
 D = "@_ms(idbg!<esc>"
+# format SQL
+s = ":pipe cockroach sqlfmt --print-width 80 --use-spaces"
 
 [keys.select.L]
 r = "@|hxai \"\"<C-b>"
@@ -82,6 +84,8 @@ l = "@_ms(iconsole.log<esc>"
 d = "@_ms(iconsole.dir<esc>"
 # wrap current sel in dbg!()
 D = "@_ms(idbg!<esc>"
+# format SQL
+s = ":pipe cockroach sqlfmt --print-width 80 --use-spaces"
 
 [keys.select]
 Cmd-s = ":w"
