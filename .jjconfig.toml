@@ -26,6 +26,10 @@ diff-editor = ":builtin"
 merge-editor = "vscode"
 diff-formatter = ":git"
 
+[revsets]
+# default is 2 ancestors and I found it wasn't enough
+log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk())"
+
 [revset-aliases]
 'closest_bookmark(to)' = 'heads(::to & bookmarks())'
 # Treat commits not authored by me as immutable. The `trunk().. &` bit is an
