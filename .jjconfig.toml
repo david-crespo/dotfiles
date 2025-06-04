@@ -24,12 +24,7 @@ pager = "delta"
 default-command = "log"
 diff-editor = ":builtin"
 merge-editor = "vscode"
-
-[git]
-write-change-id-header = true
-
-[ui.diff]
-format = "git"
+diff-formatter = ":git"
 
 [revset-aliases]
 'closest_bookmark(to)' = 'heads(::to & bookmarks())'
