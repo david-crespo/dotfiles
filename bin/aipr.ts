@@ -4,7 +4,7 @@ import $ from "jsr:@david/dax@0.43.0"
 import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
 
 const reviewSystemPrompt =
-  "You are part of a focused, concise pull request review system. You will get example comments to show the kind of feedback we're looking for, plus the description and diff of the PR, plus possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change and listing and describing what the PR does in detail unless it is relevant to a suggested change."
+  "You are part of a focused, concise pull request review system. You will get the description and diff of the PR, plus possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change and listing and describing what the PR does in detail unless it is relevant to a suggested change."
 
 const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 
@@ -64,18 +64,14 @@ const reviewCmd = new Command()
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
-    // TODO: do a version of this
-    // await $`gh pr view ${getPrArgs(prSel)}`
     const prContext = await getPrContext(prSel)
-    // cat errors are automatically logged
-    const exampleComments = await $`cat ~/comments.txt`.text().catch(() => "")
 
     const aiArgs = ["--ephemeral", "--system", reviewSystemPrompt]
     if (opts.model) aiArgs.push("-m", opts.model)
 
     await $`ai ${aiArgs}`.stdinText(
-      exampleComments + prContext +
-        `Review the above change, focusing on things to change or fix. Don't bother listing what's good about it beyond a sentence or two. ${opts.prompt}`,
+      prContext +
+        `Review the above change, focusing on things to change or fix. Don't bother listing what's good about it beyond a sentence or two. Make sure to verify the claims in the PR body. ${opts.prompt}`,
     )
   })
 
