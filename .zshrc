@@ -100,3 +100,5 @@ eval "$(zoxide init zsh)"
 
 source <(COMPLETE=zsh jj)
 . "/Users/david/.deno/env"
+
+alias claude="/Users/david/.claude/local/claude"
