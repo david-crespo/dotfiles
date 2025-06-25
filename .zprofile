@@ -23,7 +23,7 @@ alias jf="jj git fetch"
 alias jp="jj git push"
 alias jpp="jj new && jj tug && jj git push"
 # reset on top of main after being done with a PR
-alias jrm="jj git fetch && (jj new main || jj new master)"
+alias jrm="jj git fetch && jj new 'trunk()'"
 
 # fzf jj bookmark picker
 function zjb() {
