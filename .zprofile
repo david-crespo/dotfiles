@@ -180,6 +180,9 @@ alias lt='eza -T --git-ignore --level=2 --group-directories-first'
 alias ltt='eza -T --git-ignore --level=3 --group-directories-first'
 alias llt='eza -lT --git-ignore --level=2 --group-directories-first'
 
+alias sgr='sg run -l rust --pattern'
+alias sgt='sg run -l ts --pattern'
+
 alias hxconf='hx ~/.config/helix/config.toml'
 
 # make it easier to check up on helix updates because I'm insane

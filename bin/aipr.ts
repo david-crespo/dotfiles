@@ -4,7 +4,7 @@ import $ from "jsr:@david/dax@0.43.0"
 import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
 
 const reviewSystemPrompt =
-  "You are part of a focused, concise pull request review system. You will get the description and diff of the PR, plus possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change and listing and describing what the PR does in detail unless it is relevant to a suggested change."
+  "You are part of a focused, concise pull request review system. You will get the description and diff of the PR, plus possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change and listing and describing what the PR does in detail unless it is relevant to a suggested change. Do not bother praising the change as important or good."
 
 const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 
@@ -52,7 +52,9 @@ async function getPrSelector(repoStr: string | undefined, prArg: number | undefi
   const { owner, repo } = repoStr ? parseRepoSelector(repoStr) : await getCurrRepo()
   await $`gh repo view ${owner}/${repo}`.text() // blow up early if repo doesn't exist
   const pr = prArg ? prArg : await pickPr({ owner, repo })
-  if (!prArg) console.log(`Reviewing PR #${pr}\n`)
+  if (!prArg) {
+    console.log(`Reviewing PR #${pr} (https://github.com/${owner}/${repo}/pull/${pr})\n`)
+  }
   return { owner, repo, pr }
 }
 
@@ -66,7 +68,7 @@ const reviewCmd = new Command()
     const prSel = await getPrSelector(opts.repo, pr)
     const prContext = await getPrContext(prSel)
 
-    const aiArgs = ["--ephemeral", "--system", reviewSystemPrompt]
+    const aiArgs = ["--system", reviewSystemPrompt]
     if (opts.model) aiArgs.push("-m", opts.model)
 
     await $`ai ${aiArgs}`.stdinText(
