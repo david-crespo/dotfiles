@@ -69,6 +69,9 @@ bindkey '^x^e' edit-command-line
 # needed to make cmd+backspace esc:w work in ghostty
 bindkey '\ew' backward-kill-line
 
+# disable history expansion so I can type ! in commit messages with impunity
+setopt NO_BANG_HIST
+
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 export PATH="$HOME/go/bin:$PATH"
