@@ -3,7 +3,7 @@
   "features": {
     "edit_prediction_provider": "zed"
   },
-  "vim_mode": true,
+  "helix_mode": true,
   "buffer_font_size": 13,
   "buffer_font_family": "Berkeley Mono",
   "buffer_line_height": { "custom": 1.3 },
@@ -34,8 +34,8 @@
   "agent": {
     "default_profile": "write",
     "default_model": {
-      "provider": "zed.dev",
-      "model": "claude-3-7-sonnet-latest"
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-latest"
     },
     "version": "2",
     "dock": "right"

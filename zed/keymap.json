@@ -14,46 +14,23 @@
   {
     "context": "Editor && VimControl && !VimWaiting && !menu",
     "bindings": {
-      "j": ["vim::Down", { "displayLines": true }],
-      "k": ["vim::Up", { "displayLines": true }],
+      "j": ["vim::Down", { "display_lines": true }],
+      "k": ["vim::Up", { "display_lines": true }],
       "alt-w": "pane::CloseActiveItem"
     }
   },
   {
-    "context": "VimControl && !menu",
+    "context": "Editor && vim_mode == helix_normal && vim_operator == none && !VimWaiting",
     "bindings": {
-      "space s": "outline::Toggle",
-      "space S": "project_symbols::Toggle"
-    }
-  },
-  {
-    "context": "Editor && vim_mode == normal && vim_operator == none && !VimWaiting",
-    "bindings": {
-      // "d": "vim::DeleteRight",
-      // "x": "vim::ToggleVisualLine",
-      // "X": "vim::ToggleVisualLine",
-      "U": "editor::Redo",
       "R": "vim::Paste",
-      "g e": "vim::EndOfDocument",
-      "g r": "editor::FindAllReferences",
-      "space k": "editor::Hover",
-      "space f": "file_finder::Toggle",
       "space b": "file_finder::Toggle",
-      "space r": "editor::Rename",
-      "space a": "editor::ToggleCodeActions",
       "space g": "editor::ToggleGitBlameInline",
-      "space G": "editor::ToggleGitBlame",
-      "{": "pane::ActivatePrevItem",
+      "space G": "git::Blame",
+      "{": "pane::ActivatePreviousItem",
       "}": "pane::ActivateNextItem",
-      "=": "vim::Rewrap",
-      "%": "editor::SelectAll"
-    }
-  },
-  {
-    "context": "Editor && vim_mode == insert",
-    "bindings": {
-      "cmd-s": ["workspace::SendKeystrokes", "escape cmd-s"],
-      "cmd-shift-enter": "editor::ShowInlineCompletion"
+      "=": "vim::Rewrap"
+      //  need to figure out how to get this back
+      // "X": "vim::ToggleVisualLine",
     }
   },
   {
@@ -63,6 +40,13 @@
       "X": "vim::Up",
       "R": "vim::Paste",
       "=": "vim::Rewrap"
+    }
+  },
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      "cmd-s": ["workspace::SendKeystrokes", "escape cmd-s"],
+      "cmd-shift-enter": "editor::ShowEditPrediction"
     }
   },
   {
@@ -76,30 +60,28 @@
   {
     "context": "Workspace",
     "bindings": {
-      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
-      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown"
     }
   },
   {
     "context": "Editor",
     "bindings": {
-      "ctrl-c": "vim::ToggleComments",
-
-      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
-      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown"
     }
   },
   {
     "context": "Pane",
     "bindings": {
-      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
-      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"],
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown",
 
       "cmd-1": ["pane::ActivateItem", 0],
       "cmd-2": ["pane::ActivateItem", 1],
