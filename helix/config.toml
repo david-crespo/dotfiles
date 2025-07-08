@@ -73,6 +73,8 @@ d = "@_ms(iconsole.dir<esc>"
 D = "@_ms(idbg!<esc>"
 # format SQL
 s = ":pipe cockroach sqlfmt --print-width 80 --use-spaces"
+# copy current file path
+p = ":echo %sh{echo -n %{buffer_name} | pbcopy; echo \"Copied '%{buffer_name}' to system clipboard\"}"
 
 [keys.select.L]
 r = "@|hxai \"\"<C-b>"
