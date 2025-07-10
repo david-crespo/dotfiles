@@ -4,7 +4,7 @@ import $ from "jsr:@david/dax@0.43.0"
 import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
 
 const reviewSystemPrompt =
-  "You are part of a focused, concise pull request review system. You will get the description and diff of the PR, plus possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change and listing and describing what the PR does in detail unless it is relevant to a suggested change. Do not bother praising the change as important or good."
+  "You are part of a focused, concise pull request review system. You will get the description and diff of the PR, plus possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change and listing and describing what the PR does in detail unless it is relevant to a suggested change. Do not bother praising the change as important or good. At the top of your response, include a header like '## Review of [reponame#1234: PR Title Here](https://github.com/owner/reponame/pull/1234)'"
 
 const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 
