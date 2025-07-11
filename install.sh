@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-for f in .gitconfig .gitconfig-oxide .githelpers .gitignore .jjconfig.toml .lesskey .tmux.conf .vimrc .zprofile .zshrc .zshenv; do
+for f in .gitconfig .gitconfig-oxide .githelpers .gitignore .lesskey .tmux.conf .vimrc .zprofile .zshrc .zshenv; do
   ln -sf "$PWD/$f" ~/$f
 done
 
@@ -13,16 +13,17 @@ ln -sf "$PWD/init.vim" ~/.config/nvim/init.vim
 mkdir -p ~/.config/wezterm
 ln -sf "$PWD/wezterm.lua" ~/.config/wezterm/wezterm.lua
 
-# HELIX
 mkdir -p ~/.config/helix/themes
 ln -sf "$HOME/repos/helix/runtime" ~/.config/helix/runtime
 ln -sf "$PWD/helix/config.toml" ~/.config/helix/config.toml
 ln -sf "$PWD/helix/languages.toml" ~/.config/helix/languages.toml
 ln -sf "$PWD/helix/themes/ayu_evolve2.toml" ~/.config/helix/themes/ayu_evolve2.toml
 
-# ZED
 ln -sf "$PWD/zed/keymap.json" ~/.config/zed/keymap.json
 ln -sf "$PWD/zed/settings.json" ~/.config/zed/settings.json
+
+mkdir -p ~/.config/jj
+ln -sf "$PWD/jj/config.toml" ~/.config/jj/config.toml
 
 mkdir -p ~/.config/atuin
 ln -sf "$PWD/atuin/config.toml" ~/.config/atuin/config.toml
