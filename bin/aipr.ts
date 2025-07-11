@@ -13,12 +13,30 @@ type PrSel = RepoSel & { pr: number }
 
 const getPrArgs = (sel: PrSel) => ["-R", `${sel.owner}/${sel.repo}`, sel.pr]
 
+/** Filter out gigantic useless lockfiles from diff */
+function filterDiff(rawDiff: string): string {
+  const lines = rawDiff.split("\n")
+  const filesToExclude = ["/package-lock.json", "/Cargo.lock"]
+
+  const filteredLines = []
+  let skipUntilNextDiff = false
+
+  for (const line of lines) {
+    if (line.startsWith("diff --git ")) {
+      skipUntilNextDiff = filesToExclude.some((filename) => line.includes(filename))
+    }
+
+    if (!skipUntilNextDiff) filteredLines.push(line)
+  }
+
+  return filteredLines.join("\n")
+}
+
 async function getPrContext(sel: PrSel) {
   const [fullPr, diff] = await Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text(),
-    $`gh pr diff ${getPrArgs(sel)}`.text(),
+    $`gh pr diff ${getPrArgs(sel)}`.text().then(filterDiff),
   ])
-
   return ["# Body", fullPr, "# Diff", cb(diff, "diff")].join("\n\n")
 }
 
