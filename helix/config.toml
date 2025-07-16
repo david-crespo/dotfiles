@@ -60,9 +60,9 @@ b = [
   ':o /tmp/blamecontents',
   ':goto %sh{cat /tmp/blameline}'
 ]
-# pass -m <model> to override. C-b goes back to put cursor between quotes
-r = "@|hxai \"\"<C-b>"
-e = "@|ai-edit \"\"<C-b>"
+# pass -m <model> to override
+r = "@|hxai "
+e = "@|ai-edit "
 f = ":toggle-option auto-format"
 F = "@<C-s>maf<A-;>;"
 # wrap current sel in console.log()
@@ -77,8 +77,8 @@ s = ":pipe cockroach sqlfmt --print-width 80 --use-spaces"
 p = ":echo %sh{echo -n %{buffer_name} | pbcopy; echo \"Copied '%{buffer_name}' to system clipboard\"}"
 
 [keys.select.L]
-r = "@|hxai \"\"<C-b>"
-e = "@|ai-edit \"\"<C-b>"
+r = "@|hxai "
+e = "@|ai-edit "
 t = "@|stag<ret>sxxx<ret>c"
 # wrap current sel in console.log()
 l = "@_ms(iconsole.log<esc>"
