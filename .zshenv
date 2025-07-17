@@ -44,3 +44,12 @@ function stag() {
   cat
   echo "</xxx>"
 }
+
+# used in helix, see config
+function copy_path() {
+  local buffer_name="$1"
+  echo -n %{buffer_name} | pbcopy
+  echo "Copied '${buffer_name}' to system clipboard"
+}
+
+alias format_sql='cockroach sqlfmt --print-width 80 --use-spaces'

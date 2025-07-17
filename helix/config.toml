@@ -53,6 +53,16 @@ Cmd-l = "jump_view_right"
 C-b = ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}"
 C-B = ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'"
 
+[keys.normal." "]
+F = "no_op" # remove these from the menu since I don't use them
+G = "no_op"
+q = ":bc"
+
+[keys.select." "]
+F = "no_op"
+G = "no_op"
+q = ":bc"
+
 [keys.normal.L]
 b = [
   ':noop %sh{git blame --date=short "%{buffer_name}" > /tmp/blamecontents}',
@@ -64,6 +74,7 @@ b = [
 r = "@|hxai "
 e = "@|ai-edit "
 f = ":toggle-option auto-format"
+# go to the beginning of the current function
 F = "@<C-s>maf<A-;>;"
 # wrap current sel in console.log()
 l = "@_ms(iconsole.log<esc>"
@@ -72,9 +83,9 @@ d = "@_ms(iconsole.dir<esc>"
 # wrap current sel in dbg!()
 D = "@_ms(idbg!<esc>"
 # format SQL
-s = ":pipe cockroach sqlfmt --print-width 80 --use-spaces"
-# copy current file path
-p = ":echo %sh{echo -n %{buffer_name} | pbcopy; echo \"Copied '%{buffer_name}' to system clipboard\"}"
+s = ":pipe format_sql"
+# copy current file path (copy_path defined in .zshenv)
+p = ":echo %sh{copy_path %{buffer_name}}"
 
 [keys.select.L]
 r = "@|hxai "
@@ -104,11 +115,3 @@ up = "no_op"
 down = "no_op"
 left = "no_op"
 right = "no_op"
-
-# let's clear out some stuff from the space menu
-[keys.select." "]
-F = "no_op"
-G = "no_op"
-[keys.normal." "]
-F = "no_op"
-G = "no_op"

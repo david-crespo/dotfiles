@@ -6,8 +6,10 @@ filter_mode = "directory"
 ## which filter mode to use when atuin is invoked from a shell up-key binding
 ## the accepted values are identical to those of "filter_mode"
 ## leave unspecified to use same mode set in "filter_mode"
-filter_mode_shell_up_key_binding = "directory"
-
+##
+## I am not actually using this setting for now because I have up arrow disabled
+## (see .zshrc)
+filter_mode_shell_up_key_binding = "session"
 
 ## enable or disable showing a preview of the selected command
 ## useful when the command is longer than the terminal width and is cut off
