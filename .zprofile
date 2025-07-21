@@ -5,7 +5,7 @@
 oxclone() {
   local repo_name="$1"
   local target_dir="${2:-$1}" # accept a second arg but fall back to first
-  jj git clone "https://github.com/oxidecomputer/$repo_name.git" "$target_dir" "${@:3}"
+  jj git clone --colocate "https://github.com/oxidecomputer/$repo_name.git" "$target_dir" "${@:3}"
   cd "$target_dir"
 }
 
