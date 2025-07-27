@@ -14,9 +14,6 @@ shell = ["zsh", "-c"]
 popup-border = "all"
 continue-comments = false
 
-end-of-line-diagnostics = "hint"
-inline-diagnostics.cursor-line = "warning"
-
 statusline.right = [
   "register",
   "position",
