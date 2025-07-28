@@ -71,7 +71,7 @@ async function getPrContext(sel: PrSel) {
     linkedIssuesRaw.data.repository.pullRequest.closingIssuesReferences.nodes
   const linkedIssuesMd = linkedIssues.map((i) =>
     `## ${i.title} (${i.repository.name}#${i.number})\n\n${i.body}`
-  )
+  ).join("\n\n")
   return ["# Body", fullPr, "# Linked issues", linkedIssuesMd, "# Diff", cb(diff, "diff")]
     .join("\n\n")
 }
