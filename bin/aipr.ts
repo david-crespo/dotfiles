@@ -4,12 +4,40 @@ import $ from "jsr:@david/dax@0.43.0"
 import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
 
 const reviewSystemPrompt =
-  "You are an experienced software engineer reviewing a pull request. You will get the description and diff of the PR, plus possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Also consider whether the PR description adequately explains the goals of the code change and whether the code is the best way of achieving those goals. Have high standards and be a harsh critic. We want really high-quality code. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change piece by piece and describe what the PR does in detail unless it is needed to explain a suggestion. Do not bother praising the change as necessary or important or good. At the top of your response, include a header like '## Review of [reponame#1234: PR Title Here](https://github.com/owner/reponame/pull/1234)'"
+  "You are an experienced software engineer reviewing a pull request. You will get the description and diff of the PR, plus linked issues, and possibly more files for context. Review the change for correctness, convention-following, elegance, and good user experience. Also consider whether the PR description adequately explains the goals of the code change and whether the code is the best way of achieving those goals. Have high standards and be a harsh critic. We want really high-quality code. Do not reproduce the diff except in small parts in order to comment on a few lines. Do not reproduce large chunks of the diff. Focus on substantive suggestions that improve correctness or clarity. Do NOT go through the change piece by piece and describe what the PR does in detail unless it is needed to explain a suggestion. Do not bother praising the change as necessary or important or good. At the top of your response, include a header like '## Review of [reponame#1234: PR Title Here](https://github.com/owner/reponame/pull/1234)'"
+
+const linkedIssuesGraphql = `
+  query($owner: String!, $repo: String!, $pr_number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr_number) {
+        closingIssuesReferences(first: 50) {
+          nodes {
+            repository { name }
+            number
+            title
+            body
+          }
+        }
+      }
+    }
+  }
+ `
 
 const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 
 type RepoSel = { owner: string; repo: string }
 type PrSel = RepoSel & { pr: number }
+type LinkedIssue = {
+  repository: { name: string }
+  number: number
+  title: string
+  body: string
+}
+type LinkedIssues = {
+  data: {
+    repository: { pullRequest: { closingIssuesReferences: { nodes: LinkedIssue[] } } }
+  }
+}
 
 const getPrArgs = (sel: PrSel) => ["-R", `${sel.owner}/${sel.repo}`, sel.pr]
 
@@ -33,11 +61,19 @@ function filterDiff(rawDiff: string): string {
 }
 
 async function getPrContext(sel: PrSel) {
-  const [fullPr, diff] = await Promise.all([
+  const [fullPr, diff, linkedIssuesRaw] = await Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text(),
     $`gh pr diff ${getPrArgs(sel)}`.text().then(filterDiff),
+    $`gh api graphql -f owner=${sel.owner} -f repo=${sel.repo} -F pr_number=${sel.pr} -f query=${linkedIssuesGraphql}`
+      .json<LinkedIssues>(),
   ])
-  return ["# Body", fullPr, "# Diff", cb(diff, "diff")].join("\n\n")
+  const linkedIssues =
+    linkedIssuesRaw.data.repository.pullRequest.closingIssuesReferences.nodes
+  const linkedIssuesMd = linkedIssues.map((i) =>
+    `## ${i.title} (${i.repository.name}#${i.number})\n\n${i.body}`
+  )
+  return ["# Body", fullPr, "# Linked issues", linkedIssuesMd, "# Diff", cb(diff, "diff")]
+    .join("\n\n")
 }
 
 const pickPr = ({ owner, repo }: RepoSel) =>
