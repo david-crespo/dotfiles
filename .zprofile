@@ -9,15 +9,15 @@ oxclone() {
   cd "$target_dir"
 }
 
-alias gs='git status'
-alias gd='git diff'
-alias gp='git pull'
-alias gacm="git commit -am"
-alias gds='git diff --stat'
-alias gdc='git diff --cached'
-alias gdcs='git diff --cached --stat'
-alias grm='(gco main || gco master) && gp && gfp' # git reset main
-alias gss='git show --stat'
+# alias gs='git status'
+# alias gd='git diff'
+# alias gp='git pull'
+# alias gacm="git commit -am"
+# alias gds='git diff --stat'
+# alias gdc='git diff --cached'
+# alias gdcs='git diff --cached --stat'
+# alias grm='(gco main || gco master) && gp && gfp' # git reset main
+# alias gss='git show --stat'
 
 alias js="jj status"
 alias jd="jj diff"
