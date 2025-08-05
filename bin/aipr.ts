@@ -156,56 +156,6 @@ const localCmd = new Command()
     await aiReview(stdin, opts)
   })
 
-const LOG_LINE_PREFIX = /^.+\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z/g
-
-// TODO: picker for which workflow run to debug
-
-type Run = { conclusion: string; databaseId: number }
-
-const debugCmd = new Command()
-  .description("Debug recent CI failures")
-  .option("-R,--repo <repo:string>", "Repo (owner/repo)")
-  .arguments("[pr:integer]")
-  .action(async (opts, pr) => {
-    const sel = await getPrSelector(opts.repo, pr)
-    const refArgs = getPrArgs(sel)
-    const ref = await $`gh pr view --json headRefName --jq .headRefName ${refArgs}`.text()
-
-    const { owner, repo } = sel
-    const [prContext, runs] = await Promise.all([
-      getPrContext(sel),
-      $`gh run list -R ${owner}/${repo} -b ${ref} --json databaseId,conclusion`
-        .json<Run[]>(),
-    ])
-
-    const failureIds = runs
-      .filter((r) => r.conclusion === "failure")
-      .map((f) => f.databaseId)
-
-    // first is most recent
-    const failureId = failureIds.at(0)
-    if (!failureId) {
-      console.log("No run failures found")
-      return
-    }
-
-    const log = (await $`gh run view -R ${owner}/${repo} ${failureId} --log-failed`.text()
-      // eat errors and log them
-      .catch((e) => {
-        console.warn(`Error fetching log for run ${failureId}`, e)
-        return ""
-      }))
-      // remove prefixes and cap number of lines
-      .split("\n")
-      .map((line) => line.replace(LOG_LINE_PREFIX, ""))
-      .slice(-1000)
-      .join("\n")
-
-    await $`ai -e 'Figure out why the diff might be causing this test failure.'`.stdinText(
-      prContext + cb(log),
-    )
-  })
-
 const contextCmd = new Command()
   .description("Print context to stdout")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)")
@@ -227,7 +177,6 @@ await new Command()
     throw new ValidationError("Subcommand required")
   })
   .command("review", reviewCmd)
-  .command("debug-ci", debugCmd)
-  .command("context", contextCmd)
   .command("local", localCmd)
+  .command("context", contextCmd)
   .parse()
