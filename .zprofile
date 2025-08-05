@@ -187,6 +187,8 @@ alias llt='eza -lT --git-ignore --level=2 --group-directories-first'
 
 alias sgr='sg run -l rust --pattern'
 alias sgt='sg run -l ts --pattern'
+alias sgx='sg run -l tsx --pattern'
+alias sga='sg run --pattern'
 
 alias hxconf='hx ~/.config/helix/config.toml'
 
