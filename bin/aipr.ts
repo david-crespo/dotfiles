@@ -1,6 +1,7 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=gh,ai,fzf --allow-net=api.github.com
 
 import $ from "jsr:@david/dax@0.43.0"
+import { readAll } from "jsr:@std/io@0.225.2"
 import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
 
 const today = new Date().toISOString().slice(0, 10)
@@ -121,6 +122,18 @@ async function getPrSelector(repoStr: string | undefined, prArg: number | undefi
   return { owner, repo, pr }
 }
 
+const basePrompt =
+  "Review the above change, focusing on things to change or fix. Don't bother listing what's good about it beyond a sentence or two."
+
+type Opts = { prompt: string; model?: string }
+
+async function aiReview(change: string, opts: Opts) {
+  const args = ["--system", reviewSystemPrompt]
+  if (opts.model) args.push("-m", opts.model)
+  const prompt = [change, basePrompt, opts.prompt].filter((x) => x).join("\n\n")
+  await $`ai ${args}`.stdinText(prompt)
+}
+
 const reviewCmd = new Command()
   .description("Review a PR")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)")
@@ -130,14 +143,17 @@ const reviewCmd = new Command()
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
     const prContext = await getPrContext(prSel)
+    await aiReview(prContext, opts)
+  })
 
-    const aiArgs = ["--system", reviewSystemPrompt]
-    if (opts.model) aiArgs.push("-m", opts.model)
-
-    await $`ai ${aiArgs}`.stdinText(
-      prContext +
-        `\n\nReview the above change, focusing on things to change or fix. Don't bother listing what's good about it beyond a sentence or two. Make sure to verify the claims in the PR body. ${opts.prompt}`,
-    )
+const localCmd = new Command()
+  .description("Review code from stdin instead of a PR")
+  .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
+  .option("-m,--model <model:string>", "Model (passed to ai command)")
+  .action(async (opts) => {
+    const stdin = new TextDecoder().decode(await readAll(Deno.stdin)).trim()
+    if (!stdin) throw new ValidationError("Input through stdin is required")
+    await aiReview(stdin, opts)
   })
 
 const LOG_LINE_PREFIX = /^.+\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z/g
@@ -213,4 +229,5 @@ await new Command()
   .command("review", reviewCmd)
   .command("debug-ci", debugCmd)
   .command("context", contextCmd)
+  .command("local", localCmd)
   .parse()
