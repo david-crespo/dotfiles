@@ -68,7 +68,8 @@ b = [
   ':goto %sh{cat /tmp/blameline}'
 ]
 # pass -m <model> to override
-r = "@|hxai "
+r = "@|hxai -m sonnet "
+R = "@|hxai -m 120b "
 e = "@|ai-edit "
 f = ":toggle-option auto-format"
 # go to the beginning of the current function
