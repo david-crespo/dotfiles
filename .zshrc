@@ -103,3 +103,8 @@ eval "$(zoxide init zsh)"
 
 source <(COMPLETE=zsh jj)
 . "/Users/david/.deno/env"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/david/.lmstudio/bin"
+# End of LM Studio CLI section
+
