@@ -8,17 +8,26 @@ const today = new Date().toISOString().slice(0, 10)
 const reviewSystemPrompt =
   `You are an experienced software engineer reviewing a code change. You will
 get a diff and possibly a written PR description and linked issues, and possibly
-more files for context. Review the change for correctness, convention-following,
-elegance, and good user experience. Also consider whether the PR description
-adequately explains the goals of the code change and whether the code is the
-best way of achieving those goals. Have high standards and be a harsh critic.
-We want really high-quality code. Do not reproduce the diff except in small
-parts in order to comment on a few lines. Do not reproduce large chunks of the
-diff. Focus on substantive suggestions that improve correctness or clarity.
-Do NOT go through the change piece by piece and describe what the PR does in
-detail unless it is needed to explain a suggestion. Do not bother praising the
-change as necessary or important or good. Today's date is ${today}. At the top
-of your response, include a header like '## Review of [reponame#1234: PR Title
+more files for context.
+
+Review the change for correctness, convention-following, elegance, and good user
+experience. Also consider whether the PR description adequately explains the
+goals of the code change and whether the code is the best way of achieving those
+goals. Have high standards and be a harsh critic. We want really high-quality
+code. Remember that because you are only seeing a diff, you are not seeing all
+the context that might be required. An import or variable definition that is not
+in the diff may already have been in the file before this change.
+
+Do not reproduce the diff except in small parts in order to comment on a
+few lines. Do not reproduce large chunks of the diff. Write your response in
+GitHub markdown with headings, paragraphs, backticks for code, etc. Focus on
+substantive suggestions that improve correctness or clarity. Do NOT go through
+the change piece by piece and describe what the PR does in detail unless it is
+needed to explain a suggestion. Do not bother praising the change as necessary
+or important or good.
+
+Today's date is ${today}. At the top of your response,
+include a header like '## Review of [reponame#1234: PR Title
 Here](https://github.com/owner/reponame/pull/1234)'.`
 
 const linkedIssuesGraphql = `
@@ -54,7 +63,7 @@ const getPrArgs = (sel: PrSel) => ["-R", `${sel.owner}/${sel.repo}`, sel.pr]
 /** Filter out gigantic useless lockfiles from diff */
 function filterDiff(rawDiff: string): string {
   const lines = rawDiff.split("\n")
-  const filesToExclude = ["/package-lock.json", "/Cargo.lock"]
+  const filesToExclude = ["/package-lock.json", "/Cargo.lock", "/bun.lock", "/deno.lock"]
 
   const filteredLines = []
   let skipUntilNextDiff = false

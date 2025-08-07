@@ -49,11 +49,13 @@ C-B = ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E '
 
 # hxai is defined in bin/hxai.ts
 [keys.normal.L]
-r = "@|hxai "
-s = "@|hxai -m sonnet "
-S = "@|hxai -m sonnet -f %{buffer_name} "
-g = "@|hxai -m 120b "
-G = "@|hxai -m 120b -f %{buffer_name} "
+r = "@:pipe hxai "
+s = "@:pipe hxai -m sonnet "
+S = "@:pipe hxai -m sonnet -f %{buffer_name} "
+g = "@:pipe hxai -m gpt-5 "
+G = "@:pipe hxai -m gpt-5 -f %{buffer_name} "
+o = "@:pipe hxai -m 120b "
+O = "@:pipe hxai -m 120b -f %{buffer_name} "
 
 [keys.normal.M]
 f = ":toggle-option auto-format"
