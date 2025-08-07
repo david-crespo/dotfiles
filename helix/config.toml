@@ -24,16 +24,11 @@ statusline.right = [
   "selections"
 ]
 
-# https://github.com/helix-editor/helix/pull/11497
-# leaving out of my local thing for now
-# rounded-corners = true
-
-# https://github.com/helix-editor/helix/pull/11700
+# See https://github.com/helix-editor/helix/pull/11700
 search.max-matches = 1000
 
 [keys.normal]
 Cmd-s = ":w"
-Cmd-p = "file_picker"
 A-w = ":bc"
 "=" = ":reflow"
 X = "select_line_above"
@@ -47,47 +42,41 @@ Cmd-j = "jump_view_down"
 Cmd-k = "jump_view_up"
 Cmd-l = "jump_view_right"
 
+# open current line on github.com
 C-b = ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}"
+# show blame for current line
 C-B = ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'"
 
-[keys.normal." "]
-F = "no_op" # remove these from the menu since I don't use them
-G = "no_op"
-q = ":bc"
-
-[keys.select." "]
-F = "no_op"
-G = "no_op"
-q = ":bc"
-
+# hxai is defined in bin/hxai.ts
 [keys.normal.L]
 r = "@|hxai "
 s = "@|hxai -m sonnet "
 S = "@|hxai -m sonnet -f %{buffer_name} "
 g = "@|hxai -m 120b "
 G = "@|hxai -m 120b -f %{buffer_name} "
-e = "@|ai-edit "
 
 [keys.normal.M]
 f = ":toggle-option auto-format"
-# wrap current sel in console.log()
-l = "@_ms(iconsole.log<esc>"
-# wrap current sel in console.dir()
-d = "@_ms(iconsole.dir<esc>"
-# wrap current sel in dbg!()
-D = "@_ms(idbg!<esc>"
-s = ":pipe format_sql"
-# copy current file path (copy_path defined in .zshenv)
-p = ":echo %sh{copy_path %{buffer_name}}"
+l = "@_ms(iconsole.log<esc>" # wrap current sel in console.log()
+d = "@_ms(iconsole.dir<esc>" # wrap current sel in console.dir()
+D = "@_ms(idbg!<esc>" # wrap current sel in dbg!()
+s = ":pipe format_sql" # format_sql defined in .zshenv
+c = ":echo %sh{copy_path %{buffer_name}}" #  copy_path defined in .zshenv
+
+[keys.normal." "]
+q = ":bc"
+# remove these from the menu since I don't use them
+F = "no_op"
+G = "no_op"
+p = "no_op"
+P = "no_op"
+R = "no_op"
+Y = "no_op"
+A-c = "no_op"
 
 [keys.select]
-Cmd-s = ":w"
 x = "select_line_below"
 X = "select_line_above"
-Cmd-h = "jump_view_left"
-Cmd-j = "jump_view_down"
-Cmd-k = "jump_view_up"
-Cmd-l = "jump_view_right"
 
 [keys.insert]
 Cmd-s = ["normal_mode", ":w"]
