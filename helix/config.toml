@@ -61,42 +61,24 @@ G = "no_op"
 q = ":bc"
 
 [keys.normal.L]
-b = [
-  ':noop %sh{git blame --date=short "%{buffer_name}" > /tmp/blamecontents}',
-  ':noop %sh{echo "%{cursor_line}" > /tmp/blameline}',
-  ':o /tmp/blamecontents',
-  ':goto %sh{cat /tmp/blameline}'
-]
-# pass -m <model> to override
-r = "@|hxai -m sonnet "
-R = "@|hxai -m 120b "
+r = "@|hxai "
+s = "@|hxai -m sonnet "
+S = "@|hxai -m sonnet -f %{buffer_name} "
+g = "@|hxai -m 120b "
+G = "@|hxai -m 120b -f %{buffer_name} "
 e = "@|ai-edit "
+
+[keys.normal.M]
 f = ":toggle-option auto-format"
-# go to the beginning of the current function
-F = "@<C-s>maf<A-;>;"
 # wrap current sel in console.log()
 l = "@_ms(iconsole.log<esc>"
 # wrap current sel in console.dir()
 d = "@_ms(iconsole.dir<esc>"
 # wrap current sel in dbg!()
 D = "@_ms(idbg!<esc>"
-# format SQL
 s = ":pipe format_sql"
 # copy current file path (copy_path defined in .zshenv)
 p = ":echo %sh{copy_path %{buffer_name}}"
-
-[keys.select.L]
-r = "@|hxai "
-e = "@|ai-edit "
-t = "@|stag<ret>sxxx<ret>c"
-# wrap current sel in console.log()
-l = "@_ms(iconsole.log<esc>"
-# wrap current sel in console.dir()
-d = "@_ms(iconsole.dir<esc>"
-# wrap current sel in dbg!()
-D = "@_ms(idbg!<esc>"
-# format SQL
-s = ":pipe cockroach sqlfmt --print-width 80 --use-spaces"
 
 [keys.select]
 Cmd-s = ":w"
