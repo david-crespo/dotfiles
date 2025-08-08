@@ -65,6 +65,23 @@ D = "@_ms(idbg!<esc>" # wrap current sel in dbg!()
 s = ":pipe format_sql" # format_sql defined in .zshenv
 c = ":echo %sh{copy_path %{buffer_name}}" #  copy_path defined in .zshenv
 
+[keys.select.L]
+r = "@:pipe hxai "
+s = "@:pipe hxai -m sonnet "
+S = "@:pipe hxai -m sonnet -f %{buffer_name} "
+g = "@:pipe hxai -m gpt-5 "
+G = "@:pipe hxai -m gpt-5 -f %{buffer_name} "
+o = "@:pipe hxai -m 120b "
+O = "@:pipe hxai -m 120b -f %{buffer_name} "
+
+[keys.select.M]
+f = ":toggle-option auto-format"
+l = "@_ms(iconsole.log<esc>" # wrap current sel in console.log()
+d = "@_ms(iconsole.dir<esc>" # wrap current sel in console.dir()
+D = "@_ms(idbg!<esc>" # wrap current sel in dbg!()
+s = ":pipe format_sql" # format_sql defined in .zshenv
+c = ":echo %sh{copy_path %{buffer_name}}" #  copy_path defined in .zshenv
+
 [keys.normal." "]
 q = ":bc"
 # remove these from the menu since I don't use them

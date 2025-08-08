@@ -108,3 +108,6 @@ source <(COMPLETE=zsh jj)
 export PATH="$PATH:/Users/david/.lmstudio/bin"
 # End of LM Studio CLI section
 
+
+# opencode
+export PATH=/Users/david/.opencode/bin:$PATH
