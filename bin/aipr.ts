@@ -13,10 +13,10 @@ more files for context.
 Review the change for correctness, convention-following, elegance, and good user
 experience. Also consider whether the PR description adequately explains the
 goals of the code change and whether the code is the best way of achieving those
-goals. Have high standards and be a harsh critic. We want really high-quality
-code. Remember that because you are only seeing a diff, you are not seeing all
-the context that might be required. An import or variable definition that is not
-in the diff may already have been in the file before this change.
+goals. Have high standards and be a serious critic, but avoid nitpicks or call
+them out as such. Remember that because you are only seeing a diff, you are not
+seeing all the context that might be required. An import or variable definition
+that is not in the diff may already have been in the file before this change.
 
 Do not reproduce the diff except in small parts in order to comment on a
 few lines. Do not reproduce large chunks of the diff. Write your response in
