@@ -31,6 +31,10 @@ ln -sf "$PWD/atuin/config.toml" ~/.config/atuin/config.toml
 mkdir -p ~/.config/ghostty
 ln -sf "$PWD/ghostty/config" ~/.config/ghostty/config
 
+mkdir -p ~/.config/nushell
+ln -sf "$PWD/nushell/env.nu" ~/.config/nushell/env.nu
+ln -sf "$PWD/nushell/config.nu" ~/.config/nushell/config.nu
+
 mkdir -p ~/.local/bin
 ln -sf "$PWD/bin/codeblocks.ts" ~/.local/bin/cb
 ln -sf "$PWD/bin/gh-rel.nu" ~/.local/bin/gh-rel

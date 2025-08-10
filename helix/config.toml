@@ -56,6 +56,8 @@ g = "@:pipe hxai -m gpt-5 "
 G = "@:pipe hxai -m gpt-5 -f %{buffer_name} "
 o = "@:pipe hxai -m 120b "
 O = "@:pipe hxai -m 120b -f %{buffer_name} "
+q = "@:pipe hxai -m 480b "
+Q = "@:pipe hxai -m 480b -f %{buffer_name} "
 
 [keys.normal.M]
 f = ":toggle-option auto-format"
@@ -73,6 +75,8 @@ g = "@:pipe hxai -m gpt-5 "
 G = "@:pipe hxai -m gpt-5 -f %{buffer_name} "
 o = "@:pipe hxai -m 120b "
 O = "@:pipe hxai -m 120b -f %{buffer_name} "
+q = "@:pipe hxai -m 480b "
+Q = "@:pipe hxai -m 480b -f %{buffer_name} "
 
 [keys.select.M]
 f = ":toggle-option auto-format"
