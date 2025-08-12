@@ -12,6 +12,7 @@ oxclone() {
 alias js="jj status"
 alias jd="jj diff"
 alias jdp="jj diff -r @-"
+alias jdps="jj diff -r @- --stat"
 alias jr="jj log -n 10"
 alias jds="jj diff --stat"
 alias jf="jj git fetch"
@@ -116,7 +117,6 @@ function ecopy() {
 
 alias server='python3 -m http.server 8000'
 
-alias cdc='cd ~/oxide/console'
 alias dev='npm run dev'
 alias ts='./node_modules/.bin/tsc'
 alias e2e='npx playwright test'
@@ -144,8 +144,6 @@ function brew-why() {
   done
 }
 
-alias cdo='cd ~/oxide/omicron'
-
 alias nt='cargo t -p omicron-nexus --no-fail-fast --success-output immediate'
 
 function ntpick() {
@@ -164,16 +162,16 @@ alias update-auth='EXPECTORATE=overwrite nt unauthorized'
 
 alias clippy='cargo xtask clippy'
 alias uuid='uuidgen | tr "[:upper:]" "[:lower:]" | ecopy'
-alias sweep='cargo sweep -t 5'
 
 alias cdk='cd ~/oxide/oxide-computer'
 alias cdd='cd ~/oxide/docs'
+alias cdo='cd ~/oxide/omicron'
+alias cdc='cd ~/oxide/console'
 
-alias ls='eza'
-alias l='eza -l --all --group-directories-first --git'
-alias lt='eza -T --git-ignore --level=2 --group-directories-first'
-alias ltt='eza -T --git-ignore --level=3 --group-directories-first'
-alias llt='eza -lT --git-ignore --level=2 --group-directories-first'
+alias ls= 'eza'
+alias l=  'eza --long --group-directories-first --git'
+alias lt= 'eza --tree --group-directories-first --git-ignore --level=2'
+alias ltt='eza --tree --group-directories-first --git-ignore --level=3'
 
 alias sgr='sg run -l rust --pattern'
 alias sgt='sg run -l ts --pattern'
@@ -181,17 +179,6 @@ alias sgx='sg run -l tsx --pattern'
 alias sga='sg run --pattern'
 
 alias hxconf='hx ~/.config/helix/config.toml'
-
-# make it easier to check up on helix updates because I'm insane
-alias hxpr='gh search prs -R helix-editor/helix --sort updated --state open --limit 20'
-alias hxprw="open 'https://github.com/helix-editor/helix/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-desc'"
-
-function hxcm() {
-  gh api '/repos/helix-editor/helix/commits?per_page=20' |
-    jq -r '.[] | [(.commit.message | split("\n")[0]), .author.login, .commit.committer.date] | @tsv' |
-    rg -v 'dependabot' |
-    gum table --print --separator "	" -c Message,Author,Date
-}
 
 function ghpr() {
   gh pr list --limit 100 --json number,title,updatedAt,author --template \
@@ -203,32 +190,6 @@ function ghpr() {
 alias prc='git push -u && gh pr create --web'
 alias prv='gh pr view --web'
 
-function gcob() {
-  git b |
-    grep -v " \* " |
-    fzf --ansi --height 25% --reverse --accept-nth=1 |
-    xargs git co
-}
-
-# delete branch (with picker)
-function gdlb() {
-  git b |
-    grep -v "^\* " |
-    fzf --ansi --height 25% --reverse |
-    awk '{print $1}' |
-    xargs git b -D
-}
-
-function gdsnl() {
-  git diff --stat $1 -- . :^package-lock.json :^yarn.lock
-}
-
-function aip() {
-  pbpaste | cb | ai "$@"
-}
-
-alias fp='files-to-prompt'
-
 # play happy sound on success and error sound on error
 function bell() {
   "$@"
@@ -236,60 +197,10 @@ function bell() {
   (afplay "/System/Library/Sounds/$SOUND.aiff" &)
 }
 
-function findrep() {
-  local old_pattern="$1"
-  local new_pattern="$2"
-  local glob_pattern="$3"
-  local matching_files
-
-  matching_files=($(rg -l "$old_pattern" "$glob_pattern"))
-  match_count=$(rg "$old_pattern" "$glob_pattern" | wc -l | xargs echo)
-
-  if ((!${#matching_files})); then
-    echo "No matches found."
-    return
-  fi
-
-  rg --color always "$old_pattern" "$glob_pattern"
-
-  echo ''
-  read "response?Replace all $match_count matches? (y/N) "
-  [[ "$response" == [yY] ]] || return
-
-  for file in $matching_files; do
-    sd "$old_pattern" "$new_pattern" "$file"
-  done
-  echo "Done."
-}
-
 function aijq() {
   local input=$(cat)
   local jq_str=$(ai --raw --ephemeral -m sonnet "write jq to $*. output the raw jq string only. no markdown, no codeblock, no backticks, no quotes")
   echo "$input" | jq "$jq_str"
-}
-
-function find-space() {
-  {
-    find ~/oxide -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \)
-    find ~/repos -maxdepth 3 -type d \( -name "node_modules" -o -name "target" \)
-    ls -d ~/.rustup/toolchains/*
-    echo ~/Library/Caches
-  } |
-    xargs dust -d 0 -p
-  df -H /
-}
-
-function clear-space() {
-  brew cleanup
-
-  for dir in ~/oxide/dendrite ~/oxide/maghemite; do
-    echo "$dir"
-    cd "$dir" && cargo clean
-  done
-  for dir in ~/oxide/docs ~/oxide/rfd-site; do
-    echo "$dir"
-    cd "$dir" && npm-clean
-  done
 }
 
 alias tviz='~/repos/things-viz/main.ts'
