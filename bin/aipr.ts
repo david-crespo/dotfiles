@@ -26,6 +26,11 @@ the change piece by piece and describe what the PR does in detail unless it is
 needed to explain a suggestion. Do not bother praising the change as necessary
 or important or good.
 
+The length of the review should be proportionate to the length and complexity
+of the change. A short and simple change might require very little commentary,
+especially if it's easy to tell whether it's working as intended. Even a long
+change might not need much review if it is very straightforward.
+
 Today's date is ${today}. At the top of your response,
 include a header like '## Review of [reponame#1234: PR Title
 Here](https://github.com/owner/reponame/pull/1234)'.`
@@ -43,6 +48,10 @@ const linkedIssuesGraphql = `
  `
 
 const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
+
+/** Stick `s` under a section heading if truthy*/
+const mdSection = (s: string | undefined, label: string) =>
+  s ? `# ${label}\n\n${s}` : undefined
 
 type RepoSel = { owner: string; repo: string }
 type PrSel = RepoSel & { pr: number }
@@ -91,8 +100,11 @@ async function getPrContext(sel: PrSel) {
   const linkedIssuesMd = linkedIssues.map((i) =>
     `## ${i.title} (${i.repository.name}#${i.number})\n\n${i.body}`
   ).join("\n\n")
-  return ["# Body", fullPr, "# Linked issues", linkedIssuesMd, "# Diff", cb(diff, "diff")]
-    .join("\n\n")
+  return [
+    mdSection(fullPr, "Body"),
+    mdSection(linkedIssuesMd, "Linked issues"),
+    mdSection(cb(diff, "diff"), "Diff"),
+  ].filter((x) => x).join("\n\n")
 }
 
 const pickPr = ({ owner, repo }: RepoSel) =>
@@ -131,15 +143,15 @@ async function getPrSelector(repoStr: string | undefined, prArg: number | undefi
   return { owner, repo, pr }
 }
 
-const basePrompt =
-  "Review the above change, focusing on things to change or fix. Don't bother listing what's good about it beyond a sentence or two."
+async function getStdin() {
+  if (Deno.stdin.isTerminal()) return undefined
+  return new TextDecoder().decode(await readAll(Deno.stdin)).trim() || undefined
+}
 
-type Opts = { prompt: string; model?: string }
-
-async function aiReview(change: string, opts: Opts) {
+async function aiReview(model: string | undefined, inputs: (string | undefined)[]) {
   const args = ["--system", reviewSystemPrompt]
-  if (opts.model) args.push("-m", opts.model)
-  const prompt = [change, basePrompt, opts.prompt].filter((x) => x).join("\n\n")
+  if (model) args.push("-m", model)
+  const prompt = inputs.filter((x) => x).join("\n\n")
   await $`ai ${args}`.stdinText(prompt)
 }
 
@@ -148,31 +160,29 @@ const reviewCmd = new Command()
   .option("-R,--repo <repo:string>", "Repo (owner/repo)")
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
   .option("-m,--model <model:string>", "Model (passed to ai command)")
+  .option("-d, --dry-run", "Print PR context to stdout without calling LLM")
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
     const prContext = await getPrContext(prSel)
-    await aiReview(prContext, opts)
+    if (opts.dryRun) {
+      console.log(prContext)
+      return
+    }
+    const stdin = mdSection(await getStdin(), "Additional context")
+    await aiReview(opts.model, [prContext, stdin, opts.prompt])
   })
+
+// in review, stdin is just for additional context, but in local, it's the whole thing
 
 const localCmd = new Command()
   .description("Review code from stdin instead of a PR")
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
   .option("-m,--model <model:string>", "Model (passed to ai command)")
   .action(async (opts) => {
-    const stdin = new TextDecoder().decode(await readAll(Deno.stdin)).trim()
+    const stdin = await getStdin()
     if (!stdin) throw new ValidationError("Input through stdin is required")
-    await aiReview(stdin, opts)
-  })
-
-const contextCmd = new Command()
-  .description("Print context to stdout")
-  .option("-R,--repo <repo:string>", "Repo (owner/repo)")
-  .arguments("[pr:integer]")
-  .action(async (opts, pr) => {
-    const prSel = await getPrSelector(opts.repo, pr)
-    const prContext = await getPrContext(prSel)
-    console.log(prContext)
+    await aiReview(opts.model, [stdin, opts.prompt])
   })
 
 // TODO: repomap view and regen and clear
@@ -187,5 +197,4 @@ await new Command()
   })
   .command("review", reviewCmd)
   .command("local", localCmd)
-  .command("context", contextCmd)
   .parse()

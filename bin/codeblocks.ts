@@ -64,8 +64,7 @@ function printFile(
 
 async function getStdin() {
   if (Deno.stdin.isTerminal()) return undefined
-  const stdin = new TextDecoder().decode(await readAll(Deno.stdin)).trim()
-  return stdin || undefined
+  return new TextDecoder().decode(await readAll(Deno.stdin)).trim() || undefined
 }
 
 const command = new Command()
