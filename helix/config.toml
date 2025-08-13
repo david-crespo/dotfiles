@@ -41,6 +41,8 @@ Cmd-h = "jump_view_left"
 Cmd-j = "jump_view_down"
 Cmd-k = "jump_view_up"
 Cmd-l = "jump_view_right"
+"{" = "goto_prev_paragraph"
+"}" = "goto_next_paragraph"
 
 # open current line on github.com
 C-b = ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}"
@@ -100,6 +102,8 @@ A-c = "no_op"
 [keys.select]
 x = "select_line_below"
 X = "select_line_above"
+"{" = "goto_prev_paragraph"
+"}" = "goto_next_paragraph"
 
 [keys.insert]
 Cmd-s = ["normal_mode", ":w"]
