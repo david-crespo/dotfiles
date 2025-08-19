@@ -12,7 +12,7 @@ import { Command } from "jsr:@cliffy/command@1.0.0-rc.7"
 import $ from "jsr:@david/dax@0.42.0"
 
 // adoc doesn't display right in glow but it does on github
-const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh", "html"]
+const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh", "html", "md"]
 
 // deno-lint-ignore no-explicit-any
 type ExtractOptions<T extends Command<any>> = T extends // deno-lint-ignore no-explicit-any
@@ -25,9 +25,9 @@ function printFile(
   /** Filename for files or label for clipboard or stdin */
   heading: string,
   content: string,
-  { details, lang, xml, quote }: Opts = {},
+  opts: Opts = {},
 ) {
-  if (xml) {
+  if (opts.xml) {
     console.log(`<file>`)
     console.log(`  <name>${heading}</name>`)
     console.log(`  <contents>\n${content}</contents>`)
@@ -35,12 +35,12 @@ function printFile(
     return
   }
 
-  if (quote) {
+  if (opts.quote) {
     console.log(content.split("\n").map((line) => `> ${line}`).join("\n") + "\n")
     return
   }
 
-  if (details) {
+  if (opts.details) {
     console.log("<details>")
     console.log(`  <summary>${heading}</summary>\n`)
   } else {
@@ -48,18 +48,18 @@ function printFile(
   }
 
   const ext = heading ? extname(heading).slice(1) : ""
+  // only fall back to opts.lang if file ext isn't good
+  const lang = ext && LANGS.includes(ext) ? ext : opts.lang
 
-  if (ext === "md" || lang === "md") {
-    // for markdown, just render the contents directly
-    console.log(content)
-    console.log()
+  // for markdown, just render the contents directly, no block
+  if (lang === "md") {
+    console.log(content + "\n")
     return
   }
 
-  const calcLang = lang || (LANGS.includes(ext) ? ext : "")
-  console.log(`\`\`\`${calcLang}\n${content}\n\`\`\`\n`)
+  console.log(`\`\`\`${lang}\n${content}\n\`\`\`\n`)
 
-  if (details) console.log("</details>")
+  if (opts.details) console.log("</details>")
 }
 
 async function getStdin() {

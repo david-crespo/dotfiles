@@ -61,3 +61,4 @@ vulkan-loader
 wangle
 watchman
 wxwidgets
+zimg

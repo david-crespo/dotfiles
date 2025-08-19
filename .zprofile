@@ -178,6 +178,12 @@ alias sgt='sg run -l ts --pattern'
 alias sgx='sg run -l tsx --pattern'
 alias sga='sg run --pattern'
 
+# default divisor is 4 and it seems pretty good, but you can pass a different one
+function tok() {
+  local div=${1:-4}
+  wc -m | awk -v d="$div" '{printf("%.0f\n",$1/d)}'
+}
+
 alias hxconf='hx ~/.config/helix/config.toml'
 
 function ghpr() {
