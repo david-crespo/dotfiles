@@ -49,7 +49,7 @@ function printFile(
 
   const ext = heading ? extname(heading).slice(1) : ""
   // only fall back to opts.lang if file ext isn't good
-  const lang = ext && LANGS.includes(ext) ? ext : opts.lang
+  const lang = ext && LANGS.includes(ext) ? ext : opts.lang || ""
 
   // for markdown, just render the contents directly, no block
   if (lang === "md") {
