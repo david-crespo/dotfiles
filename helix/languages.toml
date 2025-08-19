@@ -58,5 +58,6 @@ auto-format = true
 formatter = { command = "shfmt", args = ["--indent", "2"] }
 
 [language-server.rust-analyzer.config]
+cargo.targetDir = true
 # completion.autoimport.enable = false
 imports.granularity.group = "item"
