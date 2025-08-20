@@ -41,6 +41,7 @@ log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk())"
 [aliases]
 d = ["diff"]
 dm = ["describe", "-m"]
+dmp = ["describe", "-r", "@-", "-m"]
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
