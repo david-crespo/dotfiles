@@ -26,6 +26,11 @@ language-servers = ["astro-ls"]
 auto-format = true
 
 [[language]]
+name = "svelte"
+formatter = { command = "prettierd", args = ["--stdin-filepath", "x.svelte"] }
+auto-format = true
+
+[[language]]
 name = "json"
 auto-format = false
 # formatter = { command = "npx", args = ["prettier", "--parser", "json"] }
