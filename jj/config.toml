@@ -26,6 +26,9 @@ diff-editor = ":builtin"
 merge-editor = "vscode"
 diff-formatter = ":git"
 
+[git]
+colocate = true
+
 [revsets]
 # default is 2 ancestors and I found it wasn't enough
 log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk())"
