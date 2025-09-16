@@ -82,7 +82,9 @@ function filterDiff(rawDiff: string): string {
       skipUntilNextDiff = filesToExclude.some((filename) => line.includes(filename))
     }
 
-    if (!skipUntilNextDiff) filteredLines.push(line)
+    // filtering out super log lines is meant to avoid context bloat due to,
+    // e.g., proptest regressions files
+    if (!skipUntilNextDiff && line.length < 500) filteredLines.push(line)
   }
 
   return filteredLines.join("\n")
