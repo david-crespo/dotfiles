@@ -201,6 +201,7 @@ function bell() {
   "$@"
   (($?)) && SOUND="Sosumi" || SOUND="Funk"
   (afplay "/System/Library/Sounds/$SOUND.aiff" &)
+  echo -e '\a' # terminal bell
 }
 
 function aijq() {

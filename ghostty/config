@@ -13,6 +13,7 @@ adjust-cursor-thickness = 1
 adjust-box-thickness = -1
 
 macos-titlebar-style = tabs
+macos-window-buttons = hidden
 unfocused-split-opacity = 0.9
 window-save-state = always
 window-padding-x = 4
