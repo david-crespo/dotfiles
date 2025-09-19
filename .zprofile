@@ -56,30 +56,20 @@ function jab() {
   jj abandon -r "trunk()..$1" && jj bookmark forget "$1"
 }
 
-function pick_branch() {
+function pick_pr() {
   gh pr list --limit 100 --json headRefName,number,title,updatedAt,author --template \
-    '{{range .}}{{tablerow .headRefName .number .title .author.name (timeago .updatedAt)}}{{end}}' |
-    fzf --height 25% --reverse --with-nth=2.. --accept-nth=1
+    '{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}' |
+    fzf --height 25% --reverse --accept-nth=1
 }
 
-# same as ghpr except we need the branch name, so we include it in each line,
-# hide it from the UI with --with-nth, and then extract it from the output
+
 function jpr() {
-  local branch="$(pick_branch)"
-  [[ -z "$branch" ]] && return
-  echo "Branch name: '$branch'"
-  jj git fetch
-  jj new "$branch@origin"
-}
-
-# same as jpr but tracks the branch too
-function jprt() {
-  local branch="$(pick_branch)"
-  [[ -z "$branch" ]] && return
-  echo "Branch name: '$branch'"
-  jj git fetch
-  jj bookmark track "$branch@origin"
-  jj new "$branch@origin"
+  local pr="$(pick_pr)"
+  [[ -z "$pr" ]] && return
+  echo "PR #$pr"
+  gh pr checkout "$pr"
+  jj git import
+  jj log -n 2 # show current rev and parent
 }
 
 # prune branches, get list of delete remote references,
