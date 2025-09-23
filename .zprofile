@@ -56,6 +56,7 @@ function jab() {
   jj abandon -r "trunk()..$1" && jj bookmark forget "$1"
 }
 
+# choose a PR, returning the PR number only
 function pick_pr() {
   gh pr list --limit 100 --json headRefName,number,title,updatedAt,author --template \
     '{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}' |
@@ -66,7 +67,7 @@ function pick_pr() {
 function jpr() {
   local pr="$(pick_pr)"
   [[ -z "$pr" ]] && return
-  echo "PR #$pr"
+  echo "Checking out PR #$pr"
   gh pr checkout "$pr"
   jj git import
   jj log -n 2 # show current rev and parent
@@ -83,14 +84,10 @@ function gfp() {
 
 alias gr='git r'
 alias gco='git co'
-alias grph='git rev-parse HEAD | ecopy'
 
 function grp() {
-  if [ -z "$1" ]; then
-    echo "Error: missing argument" >&2
-    return 1
-  fi
-  git rev-parse "$1" | ecopy
+  local ref="${1:-HEAD}"
+  git rev-parse "$ref" | ecopy
 }
 
 # Execute a command, echo output, and also copy it to the clipboard
@@ -167,6 +164,9 @@ alias sgr='sg run -l rust --pattern'
 alias sgt='sg run -l ts --pattern'
 alias sgx='sg run -l tsx --pattern'
 alias sga='sg run --pattern'
+
+alias ais='ai -t search'
+alias cbd='cb -l diff'
 
 # default divisor is 4 and it seems pretty good, but you can pass a different one
 function tok() {

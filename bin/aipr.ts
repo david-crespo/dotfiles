@@ -31,8 +31,8 @@ of the change. A short and simple change might require very little commentary,
 especially if it's easy to tell whether it's working as intended. Even a long
 change might not need much review if it is very straightforward.
 
-Today's date is ${today}. At the top of your response,
-include a header like '## Review of [reponame#1234: PR Title
+Today's date is ${today}. If given a repo and PR number, include a header
+at the top of your response like '## Review of [reponame#1234: PR Title
 Here](https://github.com/owner/reponame/pull/1234)'.`
 
 const linkedIssuesGraphql = `

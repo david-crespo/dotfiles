@@ -1,5 +1,4 @@
-# vscode langservers must be 4.8 until helix merges pull diagnostics
-# npm i -g typescript typescript-language-server vscode-langservers-extracted@4.8 @tailwindcss/language-server @astrojs/language-server
+# npm i -g typescript typescript-language-server vscode-langservers-extracted @tailwindcss/language-server @astrojs/language-server
 
 [[language]]
 name = "typescript"
@@ -56,6 +55,16 @@ args = ["lsp-proxy"]
 command = "deno"
 args = ["lsp"]
 environment = { NO_COLOR = "1" }
+
+# attempt to fix issues with eslint lang server after pull diagnostics got in,
+# theoretically allowing me to use 4.10 instead of 4.8. but nodePath doesn't do it
+[language-server.eslint]
+command = "vscode-eslint-language-server"
+args = ["--stdio"]
+
+[language-server.eslint.config]
+nodePath = ""
+experimental = {}
 
 [[language]]
 name = "bash"
