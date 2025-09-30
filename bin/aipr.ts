@@ -152,7 +152,11 @@ async function getStdin() {
 
 async function aiReview(model: string | undefined, inputs: (string | undefined)[]) {
   const args = ["--system", reviewSystemPrompt]
-  if (model) args.push("-m", model)
+  if (model) {
+    args.push("-m", model)
+  } else {
+    args.push("-m", "sonnet", "-t", "think2")
+  }
   const prompt = inputs.filter((x) => x).join("\n\n")
   await $`ai ${args}`.stdinText(prompt)
 }
