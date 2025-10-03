@@ -165,7 +165,7 @@ alias sgt='sg run -l ts --pattern'
 alias sgx='sg run -l tsx --pattern'
 alias sga='sg run --pattern'
 
-alias ais='ai -t search'
+alias ais='ai -t search -m gpt-5-thinking'
 alias cbd='cb -l diff'
 
 # default divisor is 4 and it seems pretty good, but you can pass a different one
@@ -174,7 +174,28 @@ function tok() {
   wc -m | awk -v d="$div" '{printf("%.0f\n",$1/d)}'
 }
 
-alias hxconf='hx ~/.config/helix/config.toml'
+# vipe: open $VISUAL/$EDITOR on a temp file, then emit contents to stdout
+function vipe() {
+  local tmp
+  tmp="$(mktemp -t vipe)" || return
+
+  # prefill from stdin if present, else start empty
+  if [ -t 0 ]; then : >"$tmp"; else cat >"$tmp"; fi
+
+  # choose editor: VISUAL > EDITOR > vi (supports quoted args)
+  local -a cmd
+  if [[ -n $VISUAL ]]; then
+    cmd=("${(z)VISUAL}")
+  elif [[ -n $EDITOR ]]; then
+    cmd=("${(z)EDITOR}")
+  else
+    cmd=(vi)
+  fi
+
+  "${cmd[@]}" "$tmp" || { rm -f "$tmp"; return $?; }
+  cat "$tmp"
+  rm -f "$tmp"
+}
 
 function ghpr() {
   gh pr list --limit 100 --json number,title,updatedAt,author --template \
