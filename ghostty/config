@@ -1,10 +1,32 @@
 theme = ayu
 # lighten error red a bit (prob too similar to 9, though)
 palette = 1=#ff5555
-# lighten dark gray for faded bits in jj
-palette = 8=#5B5B5B
+
+# override the entire theme to the old one until we can figure out what happened
+# https://gist.github.com/david-crespo/cbca281a96a964672b0aed6d4854e02c
+# https://github.com/mbadolato/iTerm2-Color-Schemes/issues/621
+palette = 0=#000000
+# palette = 1=#ff3333
+palette = 2=#b8cc52
+palette = 3=#e7c547
+palette = 4=#36a3d9
+palette = 5=#f07178
+palette = 6=#95e6cb
+palette = 7=#ffffff
+# their 8 (bright black) is fine
+palette = 9=#ff6565
+palette = 10=#eafe84
+palette = 11=#fff779
+palette = 12=#68d5ff
+palette = 13=#ffa3aa
+palette = 14=#c7fffd
+palette = 15=#ffffff
+selection-background = #68d5ff
 # darker black to match helix
 background = 020202
+# brighter white than theme' #bfbdb6
+foreground = e6e1cf
+
 split-divider-color = #777
 
 font-family = Berkeley Mono
@@ -43,3 +65,4 @@ keybind = cmd+d=new_split:auto
 
 keybind = cmd+backspace=esc:w
 
+keybind = shift+enter=text:\x1b\r
