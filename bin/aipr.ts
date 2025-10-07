@@ -155,7 +155,7 @@ async function aiReview(model: string | undefined, inputs: (string | undefined)[
   if (model) {
     args.push("-m", model)
   } else {
-    args.push("-m", "sonnet", "-t", "think2")
+    args.push("-m", "sonnet", "-t", "think-high")
   }
   const prompt = inputs.filter((x) => x).join("\n\n")
   await $`ai ${args}`.stdinText(prompt)
