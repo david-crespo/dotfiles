@@ -93,7 +93,15 @@ type LinkedIssues = {
   }
 }
 type Actor = { login: string }
-type Commit = { oid: string }
+
+type Commit = {
+  authors: Actor[]
+  committedDate: string
+  messageBody: string
+  messageHeadline: string
+  oid: string
+}
+
 type Comment = {
   body: string
   author: Actor
@@ -103,7 +111,7 @@ type Comment = {
   originalLine: number | null
   diffHunk: string
   createdAt: string
-  commit: Commit
+  commit: { oid: string }
 }
 type Review = {
   author: Actor
@@ -152,6 +160,20 @@ const getLinkedIssues = (sel: PrSel) =>
     ).join("\n\n")
   })
 
+const fetchCommits = (sel: PrSel) =>
+  $`gh pr view ${getPrArgs(sel)} --json commits`.json<{ commits: Commit[] }>().then(
+    ({ commits }) =>
+      commits.flatMap((
+        c,
+      ) => [
+        `## ${c.oid}`,
+        `**Authors**: ${c.authors.map((a) => a.login).join(", ")}`,
+        `**Date**: ${c.committedDate}`,
+        c.messageHeadline,
+        c.messageBody,
+      ]).join("\n\n"),
+  )
+
 const fetchComments = (sel: PrSel) =>
   graphql<Reviews>(sel, reviewsGraphql).then((raw) =>
     raw.data.repository.pullRequest.reviews.nodes.flatMap((r) =>
@@ -171,6 +193,7 @@ const fetchComments = (sel: PrSel) =>
 const getPrContext = (sel: PrSel, includeComments: boolean) =>
   Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text().then(mdSection("Body")),
+    fetchCommits(sel).then(mdSection("Commits")),
     getLinkedIssues(sel).then(mdSection("Linked issues")),
     $`gh pr diff ${getPrArgs(sel)}`.text().then(filterDiff).then(mdSection("Diff")),
     includeComments
