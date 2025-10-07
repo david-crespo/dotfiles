@@ -47,10 +47,36 @@ const linkedIssuesGraphql = `
   }
  `
 
+const reviewsGraphql = `
+  query($owner: String!, $repo: String!, $pr_number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr_number) {
+        reviews(first: 100) {
+          nodes {
+            comments(first: 100) {
+              nodes {
+                body
+                outdated
+                path
+                line
+                originalLine
+                diffHunk
+                commit { oid }
+                author { login }
+                createdAt
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
 const cb = (s: string, lang = "") => `\`\`\`${lang}\n${s}\n\`\`\``
 
 /** Stick `s` under a section heading if truthy*/
-const mdSection = (s: string | undefined, label: string) =>
+const mdSection = (label: string) => (s: string | undefined) =>
   s ? `# ${label}\n\n${s}` : undefined
 
 type RepoSel = { owner: string; repo: string }
@@ -64,6 +90,30 @@ type LinkedIssue = {
 type LinkedIssues = {
   data: {
     repository: { pullRequest: { closingIssuesReferences: { nodes: LinkedIssue[] } } }
+  }
+}
+type Actor = { login: string }
+type Commit = { oid: string }
+type Comment = {
+  body: string
+  author: Actor
+  outdated: boolean
+  path: string
+  line: number | null
+  originalLine: number | null
+  diffHunk: string
+  createdAt: string
+  commit: Commit
+}
+type Review = {
+  author: Actor
+  state: string
+  submittedAt: string
+  comments: { nodes: Comment[] }
+}
+type Reviews = {
+  data: {
+    repository: { pullRequest: { reviews: { nodes: Review[] } } }
   }
 }
 
@@ -87,27 +137,46 @@ function filterDiff(rawDiff: string): string {
     if (!skipUntilNextDiff && line.length < 500) filteredLines.push(line)
   }
 
-  return filteredLines.join("\n")
+  return cb(filteredLines.join("\n"), "diff")
 }
 
-async function getPrContext(sel: PrSel) {
-  const [fullPr, diff, linkedIssuesRaw] = await Promise.all([
-    $`gh pr view ${getPrArgs(sel)}`.text(),
-    $`gh pr diff ${getPrArgs(sel)}`.text().then(filterDiff),
-    $`gh api graphql -f owner=${sel.owner} -f repo=${sel.repo} -F pr_number=${sel.pr} -f query=${linkedIssuesGraphql}`
-      .json<LinkedIssues>(),
-  ])
-  const linkedIssues =
-    linkedIssuesRaw.data.repository.pullRequest.closingIssuesReferences.nodes
-  const linkedIssuesMd = linkedIssues.map((i) =>
-    `## ${i.title} (${i.repository.name}#${i.number})\n\n${i.body}`
-  ).join("\n\n")
-  return [
-    mdSection(fullPr, "Body"),
-    mdSection(linkedIssuesMd, "Linked issues"),
-    mdSection(cb(diff, "diff"), "Diff"),
-  ].filter((x) => x).join("\n\n")
-}
+const graphql = <T>(sel: PrSel, query: string) =>
+  $`gh api graphql -f owner=${sel.owner} -f repo=${sel.repo} -F pr_number=${sel.pr} -f query=${query}`
+    .json<T>()
+
+const getLinkedIssues = (sel: PrSel) =>
+  graphql<LinkedIssues>(sel, linkedIssuesGraphql).then((raw) => {
+    const linkedIssues = raw.data.repository.pullRequest.closingIssuesReferences.nodes
+    return linkedIssues.map((i) =>
+      `## ${i.title} (${i.repository.name}#${i.number})\n\n${i.body}`
+    ).join("\n\n")
+  })
+
+const fetchComments = (sel: PrSel) =>
+  graphql<Reviews>(sel, reviewsGraphql).then((raw) =>
+    raw.data.repository.pullRequest.reviews.nodes.flatMap((r) =>
+      r.comments.nodes.map((c) =>
+        [
+          `## ${c.author.login} (${c.createdAt}${c.outdated ? ", outdated" : ""})`,
+          `**Path**: ${c.path}`,
+          `**Line**: ${c.line || c.originalLine}`,
+          `**Commit**: ${c.commit.oid}`,
+          cb(c.diffHunk.split("\n").slice(-4).join("\n"), "diff"),
+          c.body,
+        ].join("\n\n")
+      )
+    ).join("\n\n")
+  )
+
+const getPrContext = (sel: PrSel, includeComments: boolean) =>
+  Promise.all([
+    $`gh pr view ${getPrArgs(sel)}`.text().then(mdSection("Body")),
+    getLinkedIssues(sel).then(mdSection("Linked issues")),
+    $`gh pr diff ${getPrArgs(sel)}`.text().then(filterDiff).then(mdSection("Diff")),
+    includeComments
+      ? fetchComments(sel).then(mdSection("Comments"))
+      : Promise.resolve(undefined),
+  ]).then((results) => results.filter((x) => !!x).join("\n\n"))
 
 const pickPr = ({ owner, repo }: RepoSel) =>
   $`gh pr list -R ${owner}/${repo} --limit 100 --json number,title,updatedAt,author --template \
@@ -167,15 +236,18 @@ const reviewCmd = new Command()
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
   .option("-m,--model <model:string>", "Model (passed to ai command)")
   .option("-d, --dry-run", "Print PR context to stdout without calling LLM")
+  .option("-c, --comments", "Include existing PR comments in review context", {
+    default: false,
+  })
   .arguments("[pr:integer]")
   .action(async (opts, pr) => {
     const prSel = await getPrSelector(opts.repo, pr)
-    const prContext = await getPrContext(prSel)
+    const prContext = await getPrContext(prSel, opts.comments)
     if (opts.dryRun) {
       console.log(prContext)
       return
     }
-    const stdin = mdSection(await getStdin(), "Additional context")
+    const stdin = mdSection("Additional context")(await getStdin())
     await aiReview(opts.model, [prContext, stdin, opts.prompt])
   })
 
