@@ -57,9 +57,18 @@ const reviewsGraphql = `
       pullRequest(number: $pr_number) {
         reviews(first: 100) {
           nodes {
+            author { login }
+            body
+            submittedAt
+          }
+        }
+        reviewThreads(first: 100) {
+          nodes {
+            isCollapsed
             comments(first: 100) {
               nodes {
                 body
+                isMinimized
                 outdated
                 path
                 line
@@ -110,6 +119,7 @@ type Comment = {
   body: string
   author: Actor
   outdated: boolean
+  isMinimized: boolean
   path: string
   line: number | null
   originalLine: number | null
@@ -119,13 +129,22 @@ type Comment = {
 }
 type Review = {
   author: Actor
-  state: string
+  body: string
   submittedAt: string
+}
+type ReviewThread = {
+  isCollapsed: boolean
   comments: { nodes: Comment[] }
 }
+
 type Reviews = {
   data: {
-    repository: { pullRequest: { reviews: { nodes: Review[] } } }
+    repository: {
+      pullRequest: {
+        reviews: { nodes: Review[] }
+        reviewThreads: { nodes: ReviewThread[] }
+      }
+    }
   }
 }
 
@@ -156,44 +175,53 @@ const graphql = <T>(sel: PrSel, query: string) =>
   $`gh api graphql -f owner=${sel.owner} -f repo=${sel.repo} -F pr_number=${sel.pr} -f query=${query}`
     .json<T>()
 
-const getLinkedIssues = (sel: PrSel) =>
-  graphql<LinkedIssues>(sel, linkedIssuesGraphql).then((raw) => {
-    const linkedIssues = raw.data.repository.pullRequest.closingIssuesReferences.nodes
-    return linkedIssues.map((i) =>
-      `## ${i.title} (${i.repository.name}#${i.number})\n\n${i.body}`
-    ).join("\n\n")
-  })
+const getLinkedIssues = async (sel: PrSel) => {
+  const raw = await graphql<LinkedIssues>(sel, linkedIssuesGraphql)
+  const linkedIssues = raw.data.repository.pullRequest.closingIssuesReferences.nodes
+  return linkedIssues.map((i) =>
+    `## ${i.title} (${i.repository.name}#${i.number})\n\n${i.body}`
+  ).join("\n\n")
+}
 
-const fetchCommits = (sel: PrSel) =>
-  $`gh pr view ${getPrArgs(sel)} --json commits`.json<{ commits: Commit[] }>().then(
-    ({ commits }) =>
-      commits.flatMap((
-        c,
-      ) => [
-        `## ${c.oid}`,
-        `**Authors**: ${c.authors.map((a) => a.login).join(", ")}`,
-        `**Date**: ${c.committedDate}`,
-        c.messageHeadline,
-        c.messageBody,
-      ]).join("\n\n"),
-  )
+const fetchCommits = async (sel: PrSel) => {
+  const { commits } = await $`gh pr view ${getPrArgs(sel)} --json commits`.json<
+    { commits: Commit[] }
+  >()
+  return commits.flatMap((c) => [
+    `## ${c.oid}`,
+    `**Authors**: ${c.authors.map((a) => a.login).join(", ")}`,
+    `**Date**: ${c.committedDate}`,
+    c.messageHeadline,
+    c.messageBody,
+  ]).join("\n\n")
+}
 
-const fetchComments = (sel: PrSel) =>
-  graphql<Reviews>(sel, reviewsGraphql).then((raw) =>
-    raw.data.repository.pullRequest.reviews.nodes.flatMap((r) =>
-      r.comments.nodes.map((c) =>
-        [
-          `## ${c.author.login} (${c.createdAt}${c.outdated ? ", outdated" : ""})`,
+const fetchComments = async (sel: PrSel) => {
+  const raw = await graphql<Reviews>(sel, reviewsGraphql)
+
+  const reviews = raw.data.repository.pullRequest.reviews.nodes
+    .filter((r) => r.body)
+    .flatMap((r) => [`## Review by ${r.author.login} (${r.submittedAt})`, r.body])
+
+  const reviewComments = raw.data.repository.pullRequest.reviewThreads.nodes
+    .filter((r) => !r.isCollapsed)
+    .flatMap((r) =>
+      r.comments.nodes
+        .filter((c) => !c.isMinimized)
+        .flatMap((c) => [
+          `## Comment by ${c.author.login} (${c.createdAt}${
+            c.outdated ? ", outdated" : ""
+          })`,
           `**Path**: ${c.path}`,
           `**Line**: ${c.line || c.originalLine}`,
           `**Commit**: ${c.commit.oid}`,
           cb(c.diffHunk.split("\n").slice(-4).join("\n"), "diff"),
           c.body,
-        ].join("\n\n")
-      )
-    ).join("\n\n")
-  )
+        ])
+    )
 
+  return [...reviews, ...reviewComments].join("\n\n")
+}
 const getPrContext = (sel: PrSel, includeComments: boolean) =>
   Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text().then(mdSection("Body")),
@@ -203,7 +231,8 @@ const getPrContext = (sel: PrSel, includeComments: boolean) =>
     includeComments
       ? fetchComments(sel).then(mdSection("Comments"))
       : Promise.resolve(undefined),
-  ]).then((results) => results.filter((x) => !!x).join("\n\n"))
+  ])
+    .then((results) => results.filter((x) => !!x).join("\n\n"))
 
 const pickPr = ({ owner, repo }: RepoSel) =>
   $`gh pr list -R ${owner}/${repo} --limit 100 --json number,title,updatedAt,author --template \
