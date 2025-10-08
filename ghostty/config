@@ -7,6 +7,7 @@ palette = 1=#ff5555
 # https://github.com/mbadolato/iTerm2-Color-Schemes/issues/621
 palette = 0=#000000
 # palette = 1=#ff3333
+# this green is really the bad one
 palette = 2=#b8cc52
 palette = 3=#e7c547
 palette = 4=#36a3d9
