@@ -43,46 +43,23 @@ Cmd-k = "jump_view_up"
 Cmd-l = "jump_view_right"
 "{" = "goto_prev_paragraph"
 "}" = "goto_next_paragraph"
+tab = "@:pipe hxai -m 480b "
 C-r = ":rla"
 
 # open current line on github.com
 C-b = ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}"
 # show blame for current line
 C-B = ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'"
-tab = "@:pipe hxai -m 235b "
 
-# hxai is defined in bin/hxai.ts
+# hxai is bin/hxai.ts. Add -f %{buffer_name} to include the whole file.
 [keys.normal.L]
 r = "@:pipe hxai "
 s = "@:pipe hxai -m sonnet "
-S = "@:pipe hxai -m sonnet -f %{buffer_name} "
 g = "@:pipe hxai -m gpt-5 "
-G = "@:pipe hxai -m gpt-5 -f %{buffer_name} "
 o = "@:pipe hxai -m 120b "
-O = "@:pipe hxai -m 120b -f %{buffer_name} "
 q = "@:pipe hxai -m 235b "
-Q = "@:pipe hxai -m 235b -f %{buffer_name} "
-
-[keys.select.L]
-r = "@:pipe hxai "
-s = "@:pipe hxai -m sonnet "
-S = "@:pipe hxai -m sonnet -f %{buffer_name} "
-g = "@:pipe hxai -m gpt-5 "
-G = "@:pipe hxai -m gpt-5 -f %{buffer_name} "
-o = "@:pipe hxai -m 120b "
-O = "@:pipe hxai -m 120b -f %{buffer_name} "
-q = "@:pipe hxai -m 235b "
-Q = "@:pipe hxai -m 235b -f %{buffer_name} "
 
 [keys.normal.M]
-f = ":toggle-option auto-format"
-l = "@_ms(iconsole.log<esc>" # wrap current sel in console.log()
-d = "@_ms(iconsole.dir<esc>" # wrap current sel in console.dir()
-D = "@_ms(idbg!<esc>" # wrap current sel in dbg!()
-s = ":pipe format_sql" # format_sql defined in .zshenv
-c = ":echo %sh{copy_path %{buffer_name}}" #  copy_path defined in .zshenv
-
-[keys.select.M]
 f = ":toggle-option auto-format"
 l = "@_ms(iconsole.log<esc>" # wrap current sel in console.log()
 d = "@_ms(iconsole.dir<esc>" # wrap current sel in console.dir()
@@ -106,8 +83,6 @@ x = "select_line_below"
 X = "select_line_above"
 "{" = "goto_prev_paragraph"
 "}" = "goto_next_paragraph"
-tab = "@:pipe hxai -m 235b "
-C-r = ":rla"
 
 [keys.insert]
 Cmd-s = ["normal_mode", ":w"]
