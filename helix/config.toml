@@ -43,6 +43,7 @@ Cmd-k = "jump_view_up"
 Cmd-l = "jump_view_right"
 "{" = "goto_prev_paragraph"
 "}" = "goto_next_paragraph"
+C-r = ":rla"
 
 # open current line on github.com
 C-b = ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}"
@@ -106,6 +107,7 @@ X = "select_line_above"
 "{" = "goto_prev_paragraph"
 "}" = "goto_next_paragraph"
 tab = "@:pipe hxai -m 235b "
+C-r = ":rla"
 
 [keys.insert]
 Cmd-s = ["normal_mode", ":w"]
