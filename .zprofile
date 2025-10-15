@@ -63,7 +63,6 @@ function pick_pr() {
     fzf --height 25% --reverse --accept-nth=1
 }
 
-
 function jpr() {
   local pr="$(pick_pr)"
   [[ -z "$pr" ]] && return
@@ -71,6 +70,16 @@ function jpr() {
   gh pr checkout "$pr"
   jj git import
   jj log -n 2 # show current rev and parent
+}
+
+# track bookmark. optional -r arg
+function jbt() {
+  local -A opts
+  zparseopts -D -A opts r:
+  local revision="${opts[-r]:-@-}"
+  
+  local bookmark=$(jj b l -r "$revision" -T 'name')
+  jj bookmark track "$bookmark@origin"
 }
 
 # prune branches, get list of delete remote references,
