@@ -81,6 +81,7 @@ function nu-alias {
 }
 
 nu-alias jbt
+nu-alias upgrade-ra
 
 # prune branches, get list of delete remote references,
 # attempt to delete local copies, ignoring errors
