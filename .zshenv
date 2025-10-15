@@ -32,3 +32,6 @@ function copy_path() {
 }
 
 alias format_sql='cockroach sqlfmt --print-width 80 --use-spaces'
+
+# this is here for nushell
+export XDG_CONFIG_HOME="$HOME/.config"

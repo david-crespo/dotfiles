@@ -34,6 +34,7 @@ ln -sf "$PWD/ghostty/config" ~/.config/ghostty/config
 mkdir -p ~/.config/nushell
 ln -sf "$PWD/nushell/env.nu" ~/.config/nushell/env.nu
 ln -sf "$PWD/nushell/config.nu" ~/.config/nushell/config.nu
+ln -sf "$PWD/nushell/zsh-functions.nu" ~/.config/nushell/zsh-functions.nu
 
 mkdir -p ~/.local/bin
 ln -sf "$PWD/bin/codeblocks.ts" ~/.local/bin/cb

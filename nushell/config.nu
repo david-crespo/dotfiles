@@ -17,10 +17,3 @@
 # options using:
 #     config nu --doc | nu-highlight | less -R
 
-# TODO: in order for this to work, I either have to change nushell's config
-# location or change install.sh to copy it to the default spot.
-#
-#   ~/repos/dotfiles> $nu.default-config-dir
-#   /Users/david/Library/Application Support/nushell
-#
-# There is apparently an env var I can use.

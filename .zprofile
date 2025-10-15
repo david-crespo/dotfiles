@@ -72,15 +72,15 @@ function jpr() {
   jj log -n 2 # show current rev and parent
 }
 
-# track bookmark. optional -r arg
-function jbt() {
-  local -A opts
-  zparseopts -D -A opts r:
-  local revision="${opts[-r]:-@-}"
-  
-  local bookmark=$(jj b l -r "$revision" -T 'name')
-  jj bookmark track "$bookmark@origin"
+function nu-run {
+  nu -c "source ~/.config/nushell/zsh-functions.nu; $*"
 }
+
+function nu-alias {
+  alias "$1"="nu-run $1"
+}
+
+nu-alias jbt
 
 # prune branches, get list of delete remote references,
 # attempt to delete local copies, ignoring errors
