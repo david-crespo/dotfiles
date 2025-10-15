@@ -38,7 +38,7 @@ ln -sf "$PWD/nushell/zsh-functions.nu" ~/.config/nushell/zsh-functions.nu
 
 mkdir -p ~/.local/bin
 ln -sf "$PWD/bin/codeblocks.ts" ~/.local/bin/cb
-ln -sf "$PWD/bin/gh-rel.nu" ~/.local/bin/gh-rel
+ln -sf "$PWD/bin/ghrel.nu" ~/.local/bin/ghrel
 ln -sf "$PWD/bin/dq.ts" ~/.local/bin/dq
 ln -sf "$PWD/bin/jprc.ts" ~/.local/bin/jprc
 ln -sf "$PWD/bin/aipr.ts" ~/.local/bin/aipr
