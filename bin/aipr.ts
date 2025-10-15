@@ -277,7 +277,9 @@ async function getStdin() {
 
 async function aiReview(model: string | undefined, inputs: (string | undefined)[]) {
   const args = ["--system", reviewSystemPrompt]
-  if (model) {
+  if (model === "gpt-5-pro") {
+    args.push("-m", model, "--background")
+  } else if (model) {
     args.push("-m", model)
   } else {
     args.push("-m", "sonnet", "-t", "think-high")
