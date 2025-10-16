@@ -48,4 +48,4 @@ ln -sf "$PWD/bin/edit-cmd.sh" ~/.local/bin/ecmd
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
 mkdir -p ~/.claude
-ln -sf "$PWD/.claude/CLAUDE.md" ~/.claude/CLAUDE.md
+ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
