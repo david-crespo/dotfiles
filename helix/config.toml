@@ -66,6 +66,7 @@ d = "@_ms(iconsole.dir<esc>" # wrap current sel in console.dir()
 D = "@_ms(idbg!<esc>" # wrap current sel in dbg!()
 s = ":pipe format_sql" # format_sql defined in .zshenv
 c = ":echo %sh{copy_path %{buffer_name}}" #  copy_path defined in .zshenv
+h = ":toggle-option lsp.display-inlay-hints"
 
 [keys.normal." "]
 q = ":bc"
