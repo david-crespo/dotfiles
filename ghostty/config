@@ -56,10 +56,10 @@ quick-terminal-animation-duration = 0
 keybind = cmd+opt+right=next_tab
 keybind = cmd+opt+left=previous_tab
 
-keybind = ctrl+h=goto_split:left
-keybind = ctrl+j=goto_split:bottom
-keybind = ctrl+k=goto_split:top
-keybind = ctrl+l=goto_split:right
+keybind = performable:ctrl+h=goto_split:left
+keybind = performable:ctrl+j=goto_split:bottom
+keybind = performable:ctrl+k=goto_split:top
+keybind = performable:ctrl+l=goto_split:right
 
 # auto covers me pretty much all the time
 keybind = cmd+d=new_split:auto
