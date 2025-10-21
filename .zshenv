@@ -35,3 +35,13 @@ alias format_sql='cockroach sqlfmt --print-width 80 --use-spaces'
 
 # this is here for nushell
 export XDG_CONFIG_HOME="$HOME/.config"
+
+function oxfmt-stdin() {
+  local ext="${1:-ts}"
+  local temp_file="$(mktemp /tmp/oxfmt.${ext})"
+ 
+  cat > "$temp_file"
+  bunx oxfmt "$temp_file" > /dev/null
+  cat "$temp_file"
+  rm "$temp_file"
+}
