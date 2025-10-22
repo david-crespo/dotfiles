@@ -20,7 +20,8 @@ email = "david.crespo@oxidecomputer.com"
 # https://github.com/gwsw/less/issues/36#issuecomment-913200056
 
 [ui]
-pager = "delta"
+# side by side diff if screen is wide enough
+pager = ["zsh", "-c", '[ "${COLUMNS}" -ge 160 ] && delta --side-by-side || delta']
 default-command = "log"
 diff-editor = ":builtin"
 merge-editor = "vscode"
