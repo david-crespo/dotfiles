@@ -1,7 +1,7 @@
 ## With workspace filtering enabled, Atuin will filter for commands executed
 ## in any directory within a git repository tree (default: false)
 workspaces = true
-filter_mode = "directory"
+filter_mode = "workspace"
 
 ## which filter mode to use when atuin is invoked from a shell up-key binding
 ## the accepted values are identical to those of "filter_mode"
@@ -10,10 +10,6 @@ filter_mode = "directory"
 ## I am not actually using this setting for now because I have up arrow disabled
 ## (see .zshrc)
 filter_mode_shell_up_key_binding = "session"
-
-## enable or disable showing a preview of the selected command
-## useful when the command is longer than the terminal width and is cut off
-show_preview = true
 
 command_chaining = true
 
@@ -28,7 +24,7 @@ command_chaining = true
 ## https://docs.rs/regex/latest/regex/#syntax
 history_filter = [
   "oxide-token-",
-  "OPENAI_API_KEY=",
+  "_API_KEY=",
 #   "^secret-cmd",
 #   "^innocuous-cmd .*--secret=.+"
 ]
