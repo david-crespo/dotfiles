@@ -49,6 +49,7 @@ ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
 mkdir -p ~/.claude
 ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
+ln -sf "$PWD/claude/commands" ~/.claude
 
 mkdir -p ~/.config/opencode
 ln -sf "$PWD/claude/CLAUDE.md" ~/.config/opencode/AGENTS.md
