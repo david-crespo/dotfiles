@@ -217,6 +217,18 @@ function ghpr() {
 alias prc='git push -u && gh pr create --web'
 alias prv='gh pr view --web'
 
+function oxdocs() {
+  (cd ~/oxide/docs/content && claude "/answer $*")
+}
+
+function jjdocs() {
+  (cd ~/repos/jj/docs && claude "/answer $*")
+}
+
+function hxdocs() {
+  (cd ~/repos/helix/book/src && claude "/answer $*")
+}
+
 # play happy sound on success and error sound on error
 function bell() {
   "$@"
