@@ -47,6 +47,8 @@ rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
 tug = ["bookmark", "move", "--from", "closest_bookmark(@)", "--to", "@-"]
+# second arg optional. if left out does all descendants
+collapse = ["util", "exec", "--", "zsh", "-c", 'jj squash -f "$0"::"$1" -t "$0"']
 
 [template-aliases]
 # Username part of the email address
