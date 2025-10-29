@@ -53,3 +53,4 @@ ln -sf "$PWD/claude/commands" ~/.claude
 
 mkdir -p ~/.config/opencode
 ln -sf "$PWD/claude/CLAUDE.md" ~/.config/opencode/AGENTS.md
+ln -sf "$PWD/claude/CLAUDE.md" ~/.codex/AGENTS.md
