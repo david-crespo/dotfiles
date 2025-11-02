@@ -44,8 +44,25 @@ name = "css"
 auto-format = false
 language-servers = [ "vscode-css-language-server", "tailwindcss-ls" ]
 
+# have to copy all this from the default config so I can do run onSave
+# https://github.com/helix-editor/helix/blob/78957195/languages.toml#L258-L278
 [language-server.vscode-eslint-language-server.config]
+validate = "on"
+experimental = { useFlatConfig = false }
+rulesCustomizations = []
 run = "onSave"
+problems = { shortenToSingleLine = false }
+nodePath = ""
+
+[language-server.vscode-eslint-language-server.config.codeAction.disableRuleComment]
+enable = true
+location = "separateLine"
+
+[language-server.vscode-eslint-language-server.config.codeAction.showDocumentation]
+enable = true
+
+[language-server.vscode-eslint-language-server.config.workingDirectory]
+mode = "location"
 
 [language-server.biome]
 command = "biome"
@@ -55,16 +72,6 @@ args = ["lsp-proxy"]
 command = "deno"
 args = ["lsp"]
 environment = { NO_COLOR = "1" }
-
-# attempt to fix issues with eslint lang server after pull diagnostics got in,
-# theoretically allowing me to use 4.10 instead of 4.8. but nodePath doesn't do it
-[language-server.eslint]
-command = "vscode-eslint-language-server"
-args = ["--stdio"]
-
-[language-server.eslint.config]
-nodePath = ""
-experimental = {}
 
 [[language]]
 name = "bash"
