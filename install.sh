@@ -18,6 +18,8 @@ ln -sf "$HOME/repos/helix/runtime" ~/.config/helix/runtime
 ln -sf "$PWD/helix/config.toml" ~/.config/helix/config.toml
 ln -sf "$PWD/helix/languages.toml" ~/.config/helix/languages.toml
 ln -sf "$PWD/helix/themes/ayu_evolve2.toml" ~/.config/helix/themes/ayu_evolve2.toml
+ln -sf "$PWD/helix/helix.scm" ~/.config/helix/helix.scm
+ln -sf "$PWD/helix/init.scm" ~/.config/helix/init.scm
 
 ln -sf "$PWD/zed/keymap.json" ~/.config/zed/keymap.json
 ln -sf "$PWD/zed/settings.json" ~/.config/zed/settings.json
