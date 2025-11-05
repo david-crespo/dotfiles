@@ -21,30 +21,36 @@ Command<any, any, infer TOptions> ? TOptions
 
 type Opts = ExtractOptions<typeof command>
 
-function printFile(
+type FileSource = {
+  heading: string | undefined
+  content: string
+}
+
+function formatFile(
   /** Filename for files or label for clipboard or stdin */
-  heading: string,
+  heading: string | undefined,
   content: string,
   opts: Opts = {},
-) {
+): string {
+  const lines: string[] = []
+
   if (opts.xml) {
-    console.log(`<file>`)
-    console.log(`  <name>${heading}</name>`)
-    console.log(`  <contents>\n${content}</contents>`)
-    console.log(`</file>`)
-    return
+    lines.push("<file>")
+    if (heading) lines.push(`  <name>${heading}</name>`)
+    lines.push(`  <contents>\n${content}</contents>`)
+    lines.push("</file>")
+    return lines.join("\n")
   }
 
   if (opts.quote) {
-    console.log(content.split("\n").map((line) => `> ${line}`).join("\n") + "\n")
-    return
+    return content.split("\n").map((line) => `> ${line}`).join("\n") + "\n"
   }
 
   if (opts.details) {
-    console.log("<details>")
-    console.log(`  <summary>${heading}</summary>\n`)
-  } else {
-    console.log(`\n---\n\n### \`${heading}\`\n\n`)
+    lines.push("<details>")
+    if (heading) lines.push(`  <summary>${heading}</summary>\n`)
+  } else if (heading) {
+    lines.push(`\n### \`${heading}\`\n\n`)
   }
 
   const ext = heading ? extname(heading).slice(1) : ""
@@ -53,13 +59,14 @@ function printFile(
 
   // for markdown, just render the contents directly, no block
   if (lang === "md") {
-    console.log(content + "\n")
-    return
+    lines.push(content + "\n")
+  } else {
+    lines.push(`\`\`\`${lang}\n${content}\n\`\`\`\n`)
   }
 
-  console.log(`\`\`\`${lang}\n${content}\n\`\`\`\n`)
+  if (opts.details) lines.push("</details>")
 
-  if (opts.details) console.log("</details>")
+  return lines.join("\n")
 }
 
 async function getStdin() {
@@ -81,24 +88,50 @@ const command = new Command()
   .arguments("[files...]")
   .option("-l, --lang <lang>", "Code block lang for stdin")
   .option("-d, --details", "Wrap files in <details>")
-  .option("-p, --paste", "Pull from pbpaste (automatic when no other args)")
+  .option("-p, --paste", "Pull from pbpaste (automatic when no stdin or files)")
   .option("-x, --xml", "Wrap files in XML for Claude")
   .option("-q, --quote", "Use > to quote instead of code blocks")
   .action(async (opts, ...files) => {
-    const stdin = await getStdin()
-    if (stdin) printFile("[stdin]", stdin, opts)
+    const sources: FileSource[] = []
 
-    // pull from clipboard if paste flag is passed OR automatically if
-    // there is no stdin or files
-    if (opts.paste || (!stdin && files.length === 0)) {
-      const content = await $`pbpaste`.text()
-      if (content) printFile("[clipboard contents]", content, opts)
+    // Collect stdin
+    const stdin = await getStdin()
+    const willUsePaste = opts.paste || (!stdin && files.length === 0)
+    if (stdin) {
+      // only show heading when it needs to be distinguished from other inputs
+      const heading = !willUsePaste && files.length === 0 ? undefined : "[stdin]"
+      sources.push({ heading, content: stdin })
     }
 
+    // Collect clipboard if paste flag is passed OR automatically if
+    // there is no stdin or files
+    if (willUsePaste) {
+      const content = await $`pbpaste`.text()
+      if (content) {
+        // only show heading when it needs to be distinguished from other inputs
+        const heading = stdin || files.length > 0 ? "[clipboard contents]" : undefined
+        sources.push({ heading, content })
+      }
+    }
+
+    // Collect files
     for (const filename of files) {
       if (!(await Deno.lstat(filename)).isFile) continue
       const content = await Deno.readTextFile(filename)
-      printFile(filename, content, opts)
+      sources.push({ heading: filename, content })
+    }
+
+    // Print all sources with dividers between them
+    for (let i = 0; i < sources.length; i++) {
+      const { heading, content } = sources[i]
+      const isFirst = i === 0
+
+      // Print divider before this file (but not before the first one)
+      if (!isFirst && !opts.xml && !opts.details && heading) {
+        console.log("\n---\n")
+      }
+
+      console.log(formatFile(heading, content, opts))
     }
   })
 
