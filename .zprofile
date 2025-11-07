@@ -9,8 +9,17 @@ oxclone() {
   cd "$target_dir"
 }
 
+ghclone() {
+  local org="$1"
+  local repo_name="$2"
+  local target_dir="${3:-$2}" # accept a third arg but fall back to second
+  jj git clone "https://github.com/$org/$repo_name.git" "$target_dir" "${@:4}"
+  cd "$target_dir"
+}
+
 alias js="jj status"
 alias jd="jj diff"
+alias jdnl="jj diff '~package-lock.json & ~Cargo.lock'"
 alias jdp="jj diff -r @-"
 alias jdps="jj diff -r @- --stat"
 alias jr="jj log -n 10"
