@@ -323,8 +323,21 @@ const localCmd = new Command()
     await aiReview(opts.model, [stdin, opts.prompt])
   })
 
-// TODO: repomap view and regen and clear
-// TODO: make -R and PR number global options and define the commands inline here so the types are right
+const discussionCmd = new Command()
+  .description("Print PR discussion w/o diff (body, linked issues, comments)")
+  .option("-R,--repo <repo:string>", "Repo (owner/repo)")
+  .arguments("[pr:integer]")
+  .action(async (opts, pr) => {
+    const prSel = await getPrSelector(opts.repo, pr)
+    const prContext = await Promise.all([
+      $`gh pr view ${getPrArgs(prSel)}`.text().then(mdSection("Body")),
+      fetchCommits(prSel).then(mdSection("Commits")),
+      getLinkedIssues(prSel).then(mdSection("Linked issues")),
+      fetchComments(prSel).then(mdSection("Comments")),
+    ])
+      .then((results) => results.filter((x) => !!x).join("\n\n"))
+    console.log(prContext)
+  })
 
 await new Command()
   .name("aipr")
@@ -335,4 +348,5 @@ await new Command()
   })
   .command("review", reviewCmd)
   .command("local", localCmd)
+  .command("discussion", discussionCmd)
   .parse()
