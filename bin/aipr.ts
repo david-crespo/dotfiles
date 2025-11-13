@@ -278,14 +278,7 @@ async function getStdin() {
 }
 
 async function aiReview(model: string | undefined, inputs: (string | undefined)[]) {
-  const args = ["--system", reviewSystemPrompt]
-  if (model === "gpt-5-pro") {
-    args.push("-m", model, "--background")
-  } else if (model) {
-    args.push("-m", model)
-  } else {
-    args.push("-m", "sonnet", "-t", "think-high")
-  }
+  const args = ["--system", reviewSystemPrompt, "--model", model]
   const prompt = inputs.filter((x) => x).join("\n\n")
   await $`ai ${args}`.stdinText(prompt)
 }
@@ -294,7 +287,7 @@ const reviewCmd = new Command()
   .description("Review a PR")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)")
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
-  .option("-m,--model <model:string>", "Model (passed to ai command)")
+  .option("-m,--model <model:string>", "Model (passed to ai command)", { default: "gpt-5" })
   .option("-d, --dry-run", "Print PR context to stdout without calling LLM")
   .option("-c, --comments", "Include existing PR comments in review context", {
     default: false,
