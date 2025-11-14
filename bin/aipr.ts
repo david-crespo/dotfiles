@@ -309,7 +309,7 @@ const reviewCmd = new Command()
 const localCmd = new Command()
   .description("Review code from stdin instead of a PR")
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
-  .option("-m,--model <model:string>", "Model (passed to ai command)")
+  .option("-m,--model <model:string>", "Model (passed to ai command)", { default: "gpt-5" })
   .action(async (opts) => {
     const stdin = await getStdin()
     if (!stdin) throw new ValidationError("Input through stdin is required")
