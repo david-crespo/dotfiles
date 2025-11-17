@@ -35,7 +35,7 @@ or maintainability.
 
 The length of the review should be proportionate to the number of issues found,
 not the size of the change. A large PR with no problems should receive a minimal
-response.
+response. Write concisely: assume the reader is very familiar with the change.
 
 Today's date is ${today}. If given a repo and PR number, include a header
 at the top of your response like '## Review of [reponame#1234: PR Title
