@@ -10,15 +10,15 @@ const reviewSystemPrompt =
 get a diff and possibly a written PR description and linked issues, and possibly
 more files for context.
 
-Review the change for correctness, convention-following, elegance, and good user
-experience. Also consider whether the PR description adequately explains the
-goals of the code change and whether the code is the best way of achieving those
-goals. Have high standards and be a serious critic, but avoid nitpicks or call
-them out as such. Remember that because you are only seeing a diff, you are not
-seeing all the context that might be required. An import or variable definition
-that is not in the diff may already have been in the file before this change.
-Assume that the code compiles and lints -- we only use this tool after such
-obvious issues are fixed.
+Review the change for correctness, convention-following, elegance, security,
+and good user experience. Also consider whether the PR description adequately
+explains the goals of the code change and whether the code is the best way of
+achieving those goals. Have high standards and be a serious critic, but avoid
+nitpicks or call them out as such. Remember that because you are only seeing a
+diff, you are not seeing all the context that might be required. An import or
+variable definition that is not in the diff may already have been in the file
+before this change. Assume that the code compiles and lints -- we only use this
+tool after such obvious issues are fixed.
 
 CRITICAL: Only provide actionable feedback. If code is correct and follows
 conventions, say nothing about it. Do not describe what the code does or
@@ -283,11 +283,15 @@ async function aiReview(model: string | undefined, inputs: (string | undefined)[
   await $`ai ${args}`.stdinText(prompt)
 }
 
+const DEFAULT_MODEL = "gemini-3-pro"
+
 const reviewCmd = new Command()
   .description("Review a PR")
   .option("-R,--repo <repo:string>", "Repo (owner/repo)")
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
-  .option("-m,--model <model:string>", "Model (passed to ai command)", { default: "gpt-5" })
+  .option("-m,--model <model:string>", "Model (passed to ai command)", {
+    default: DEFAULT_MODEL,
+  })
   .option("-d, --dry-run", "Print PR context to stdout without calling LLM")
   .option("-c, --comments", "Include existing PR comments in review context", {
     default: false,
@@ -309,7 +313,9 @@ const reviewCmd = new Command()
 const localCmd = new Command()
   .description("Review code from stdin instead of a PR")
   .option("-p,--prompt <prompt:string>", "Additional instructions", { default: "" })
-  .option("-m,--model <model:string>", "Model (passed to ai command)", { default: "gpt-5" })
+  .option("-m,--model <model:string>", "Model (passed to ai command)", {
+    default: DEFAULT_MODEL,
+  })
   .action(async (opts) => {
     const stdin = await getStdin()
     if (!stdin) throw new ValidationError("Input through stdin is required")
