@@ -9,13 +9,13 @@ inherits = "ayu_evolve"
 "ui.text.directory" = "cyan"
 
 # same as evolve (inherited from dark) but no italic
-"comment" = { fg = "gray" } 
+"comment" = { fg = "gray" }
 # same as evolve but no italic
 "type.builtin" = { fg = "blue" }
 
 [palette]
 black = "#131721" # bring back lighter black from ayu_dark
-red = "#ff5540" # tone down red a bit
+red = "#ff5540"   # tone down red a bit
 
 # from ghostty's ayu (or at least it used to be. they changed the colors)
 green = "#b8cc52"

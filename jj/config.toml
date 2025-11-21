@@ -21,7 +21,11 @@ email = "david.crespo@oxidecomputer.com"
 
 [ui]
 # side by side diff if screen is wide enough
-pager = ["zsh", "-c", '[ "${COLUMNS}" -ge 160 ] && delta --side-by-side || delta']
+pager = [
+  "zsh",
+  "-c",
+  '[ "${COLUMNS}" -ge 160 ] && delta --side-by-side || delta',
+]
 default-command = "log"
 diff-editor = ":builtin"
 merge-editor = "vscode"
@@ -47,8 +51,12 @@ rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
 tug = ["bookmark", "move", "--from", "closest_bookmark(@)", "--to", "@-"]
-# second arg optional. if left out does all descendants
-collapse = ["util", "exec", "--", "zsh", "-c", 'jj squash -f "$0"::"$1" -t "$0"']
+# jj collapse START [END]
+# squash START::END into START
+# second arg optional. if left out does all descendants of START
+collapse = ["util", "exec", "--", "zsh", "-c", '''
+   jj squash -f "$1"::"$2" -t "$1"
+   ''', 'jj collapse']
 
 [template-aliases]
 # Username part of the email address

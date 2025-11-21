@@ -3,7 +3,7 @@
 [[language]]
 name = "typescript"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.ts"] }
-language-servers = [ "typescript-language-server", "vscode-eslint-language-server" ]
+language-servers = ["typescript-language-server", "vscode-eslint-language-server"]
 auto-format = true
 
 [[language]]
@@ -14,7 +14,11 @@ auto-format = true
 [[language]]
 name = "tsx"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.tsx"] }
-language-servers = [ "typescript-language-server", "tailwindcss-ls", "vscode-eslint-language-server" ]
+language-servers = [
+  "typescript-language-server",
+  "tailwindcss-ls",
+  "vscode-eslint-language-server",
+]
 auto-format = true
 block-comment-tokens = ["{/*", "*/}"]
 
@@ -42,11 +46,7 @@ auto-format = true
 [[language]]
 name = "css"
 auto-format = false
-language-servers = [ "vscode-css-language-server", "tailwindcss-ls" ]
-
-[language-server.biome]
-command = "biome"
-args = ["lsp-proxy"]
+language-servers = ["vscode-css-language-server", "tailwindcss-ls"]
 
 [language-server.deno-lsp]
 command = "deno"
@@ -55,10 +55,16 @@ environment = { NO_COLOR = "1" }
 
 [[language]]
 name = "bash"
-auto-format = true
-formatter = { command = "shfmt", args = ["--indent", "2"] }
+# auto-format = true
+# formatter = { command = "shfmt", args = ["--indent", "2"] }
 
 [language-server.rust-analyzer.config]
 cargo.targetDir = true
 # completion.autoimport.enable = false
 imports.granularity.group = "item"
+
+# brew install taplo
+[[language]]
+name = "toml"
+formatter = { command = "taplo", args = ["fmt", "--option", "column_width=92", "-"] }
+auto-format = true
