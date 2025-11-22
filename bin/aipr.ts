@@ -227,9 +227,9 @@ const fetchComments = async (sel: PrSel) => {
 const getPrContext = (sel: PrSel, includeComments: boolean) =>
   Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text().then(mdSection("Body")),
-    fetchCommits(sel).then(mdSection("Commits")),
     getLinkedIssues(sel).then(mdSection("Linked issues")),
     $`gh pr diff ${getPrArgs(sel)}`.text().then(filterDiff).then(mdSection("Diff")),
+    fetchCommits(sel).then(mdSection("Commits")),
     includeComments
       ? fetchComments(sel).then(mdSection("Comments"))
       : Promise.resolve(undefined),
