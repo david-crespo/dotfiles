@@ -53,6 +53,25 @@ const linkedIssuesGraphql = `
   }
  `
 
+const trackingIssueGraphql = `
+  query($owner: String!, $repo: String!, $issue_number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      issue(number: $issue_number) {
+        title
+        body
+        subIssues(first: 100) {
+          nodes {
+            number
+            title
+            state
+            repository { nameWithOwner }
+          }
+        }
+      }
+    }
+  }
+`
+
 const reviewsGraphql = `
   query($owner: String!, $repo: String!, $pr_number: Int!) {
     repository(owner: $owner, name: $repo) {
@@ -150,6 +169,24 @@ type Reviews = {
   }
 }
 
+type SubIssue = {
+  number: number
+  title: string
+  state: string
+  repository: { nameWithOwner: string }
+}
+type TrackingIssue = {
+  data: {
+    repository: {
+      issue: {
+        title: string
+        body: string
+        subIssues: { nodes: SubIssue[] }
+      }
+    }
+  }
+}
+
 const getPrArgs = (sel: PrSel) => ["-R", `${sel.owner}/${sel.repo}`, sel.pr]
 
 /** Filter out gigantic useless lockfiles from diff */
@@ -175,6 +212,11 @@ function filterDiff(rawDiff: string): string {
 
 const graphql = <T>(sel: PrSel, query: string) =>
   $`gh api graphql -f owner=${sel.owner} -f repo=${sel.repo} -F pr_number=${sel.pr} -f query=${query}`
+    .json<T>()
+
+type IssueSel = RepoSel & { issue: number }
+const issueGraphql = <T>(sel: IssueSel, query: string) =>
+  $`gh api graphql -f owner=${sel.owner} -f repo=${sel.repo} -F issue_number=${sel.issue} -f query=${query}`
     .json<T>()
 
 const getLinkedIssues = async (sel: PrSel) => {
@@ -338,6 +380,25 @@ const discussionCmd = new Command()
     console.log(prContext)
   })
 
+const trackingCmd = new Command()
+  .description("Print tracking issue with subissues")
+  .option("-R,--repo <repo:string>", "Repo (owner/repo)")
+  .arguments("<issue:integer>")
+  .action(async (opts, issue) => {
+    const { owner, repo } = opts.repo ? parseRepoSelector(opts.repo) : await getCurrRepo()
+    const sel: IssueSel = { owner, repo, issue }
+    const raw = await issueGraphql<TrackingIssue>(sel, trackingIssueGraphql)
+    const { title, body, subIssues } = raw.data.repository.issue
+
+    console.log(`# ${title}\n`)
+    console.log(body)
+    console.log("\n## Subissues\n")
+    for (const sub of subIssues.nodes) {
+      const state = sub.state === "OPEN" ? "[ ]" : "[x]"
+      console.log(`- ${state} ${sub.repository.nameWithOwner}#${sub.number}: ${sub.title}`)
+    }
+  })
+
 await new Command()
   .name("aipr")
   .description("Review PRs and debug CI failures.")
@@ -348,4 +409,5 @@ await new Command()
   .command("review", reviewCmd)
   .command("local", localCmd)
   .command("discussion", discussionCmd)
+  .command("tracking", trackingCmd)
   .parse()
