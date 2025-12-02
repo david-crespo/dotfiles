@@ -1,9 +1,9 @@
-# npm i -g typescript typescript-language-server vscode-langservers-extracted @tailwindcss/language-server @astrojs/language-server
+# npm i -g typescript @typescript/native-preview vscode-langservers-extracted @tailwindcss/language-server @astrojs/language-server
 
 [[language]]
 name = "typescript"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.ts"] }
-language-servers = ["typescript-language-server", "vscode-eslint-language-server"]
+language-servers = ["tsgo-lsp", "vscode-eslint-language-server"]
 auto-format = true
 
 [[language]]
@@ -14,11 +14,7 @@ auto-format = true
 [[language]]
 name = "tsx"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.tsx"] }
-language-servers = [
-  "typescript-language-server",
-  "tailwindcss-ls",
-  "vscode-eslint-language-server",
-]
+language-servers = ["tsgo-lsp", "tailwindcss-ls", "vscode-eslint-language-server"]
 auto-format = true
 block-comment-tokens = ["{/*", "*/}"]
 
@@ -47,6 +43,10 @@ auto-format = true
 name = "css"
 auto-format = false
 language-servers = ["vscode-css-language-server", "tailwindcss-ls"]
+
+[language-server.tsgo-lsp]
+command = "tsgo"
+args = ["--lsp", "--stdio"]
 
 [language-server.deno-lsp]
 command = "deno"
