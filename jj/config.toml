@@ -55,8 +55,11 @@ tug = ["bookmark", "move", "--from", "closest_bookmark(@)", "--to", "@-"]
 # squash START::END into START
 # second arg optional. if left out does all descendants of START
 collapse = ["util", "exec", "--", "zsh", "-c", '''
-   jj squash -f "$1"::"$2" -t "$1"
-   ''', 'jj collapse']
+  jj squash -f "$1"::"$2" -t "$1"
+  ''', 'jj collapse']
+watch = ["util", "exec", "--", "zsh", "-c", '''
+  watchexec --quiet --clear --restart --watch=.jj/repo/op_heads/heads --ignore-nothing --wrap-process=none -- jj --ignore-working-copy
+  ''', 'jj watch']
 
 [template-aliases]
 # log with diff stats for working copy or revs without descriptions

@@ -17,6 +17,7 @@ ghclone() {
   cd "$target_dir"
 }
 
+alias jw="jj watch"
 alias js="jj status"
 alias jd="jj diff"
 alias jdnl="jj diff '~package-lock.json & ~Cargo.lock'"
