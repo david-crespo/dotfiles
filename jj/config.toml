@@ -62,11 +62,13 @@ watch = ["util", "exec", "--", "zsh", "-c", '''
   ''', 'jj watch']
 
 [template-aliases]
-# log with diff stats for working copy or revs without descriptions
+# log with diff stats for working copy or revs without descriptions. The  |
+# separator has to be swapped out because jjui uses | as a separator when
+# parsing lines
 'home' = '''
 builtin_log_compact ++ if(
   (self.current_working_copy() || self.description().len() == 0) && !self.empty(),
-  "\n" ++ self.diff().stat() ++ "\n"
+  "\n" ++ stringify(self.diff().stat()).replace("|", "｜") ++ "\n"
 )
 '''
 

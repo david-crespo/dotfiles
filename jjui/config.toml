@@ -1,0 +1,5 @@
+[revisions]
+template = "home"
+
+[ui.colors]
+"selected" = { bg = "#292929" }

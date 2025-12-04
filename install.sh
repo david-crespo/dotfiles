@@ -27,6 +27,9 @@ ln -sf "$PWD/zed/settings.json" ~/.config/zed/settings.json
 mkdir -p ~/.config/jj
 ln -sf "$PWD/jj/config.toml" ~/.config/jj/config.toml
 
+mkdir -p ~/.config/jjui
+ln -sf "$PWD/jjui/config.toml" ~/.config/jjui/config.toml
+
 mkdir -p ~/.config/atuin
 ln -sf "$PWD/atuin/config.toml" ~/.config/atuin/config.toml
 
