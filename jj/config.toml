@@ -26,7 +26,7 @@ pager = [
   "-c",
   '[ "${COLUMNS}" -ge 160 ] && delta --side-by-side || delta',
 ]
-default-command = "log"
+default-command = ["log", "--template", "home"]
 diff-editor = ":builtin"
 merge-editor = "vscode"
 diff-formatter = ":git"
@@ -59,6 +59,14 @@ collapse = ["util", "exec", "--", "zsh", "-c", '''
    ''', 'jj collapse']
 
 [template-aliases]
+# log with diff stats for working copy or revs without descriptions
+'home' = '''
+builtin_log_compact ++ if(
+  (self.current_working_copy() || self.description().len() == 0) && !self.empty(),
+  "\n" ++ self.diff().stat() ++ "\n"
+)
+'''
+
 # Username part of the email address
 'format_short_signature(signature)' = 'signature.email().local()'
 
