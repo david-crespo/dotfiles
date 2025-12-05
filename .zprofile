@@ -267,10 +267,6 @@ function tts() {
 
 source "$HOME/.cargo/env"
 
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"
-
 export PATH="$HOME/.local/bin:$PATH"
 
 # omicron things obviously
@@ -278,3 +274,8 @@ export PATH="/Users/david/oxide/omicron/out/dendrite-stub/root/opt/oxide/dendrit
 export PATH="/Users/david/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin:$PATH"
 export PATH="/Users/david/oxide/omicron/out/clickhouse:$PATH"
 export PATH="/Users/david/oxide/omicron/out/cockroachdb/bin:$PATH"
+
+# gate these to suppress noisy warnings whenever codex runs things
+[[ -o interactive ]] || return
+eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"
