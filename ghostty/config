@@ -28,7 +28,7 @@ background = 020202
 # brighter white than theme' #bfbdb6
 foreground = e6e1cf
 
-split-divider-color = #777
+split-divider-color = #666
 
 font-family = Berkeley Mono
 adjust-cell-height = 2
