@@ -13,6 +13,7 @@ Some information about the user's coding environment:
 - Terminal: Ghostty
 - Text editor: Helix
 - Shell: zsh
+- Non-standard bash commands available: rg, ast-grep (sg), tokei
 
 ### TypeScript projects
 
