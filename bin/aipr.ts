@@ -325,7 +325,7 @@ async function aiReview(model: string | undefined, inputs: (string | undefined)[
   await $`ai ${args}`.stdinText(prompt)
 }
 
-const DEFAULT_MODEL = "gemini-3-pro"
+const DEFAULT_MODEL = "gpt-5"
 
 const reviewCmd = new Command()
   .description("Review a PR")
