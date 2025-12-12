@@ -1,6 +1,5 @@
 ---
-allowed-tools: Bash, Read, Edit, Write, Grep, Glob, WebFetch
-description: Interact with Helix editor through tmux
+description: Test Helix editor config changes, debug LSP issues, or observe editor behavior by running Helix in a tmux session. Use when iterating on helix config.toml, languages.toml, Steel scripts, or troubleshooting language server problems.
 ---
 
 Interact with the Helix editor through tmux, typically to iterate on configuration changes or fix config problems. Also useful for testing LSP functionality or observing editor behavior.
