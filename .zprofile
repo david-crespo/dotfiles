@@ -177,9 +177,9 @@ alias cdo='cd ~/oxide/omicron'
 alias cdc='cd ~/oxide/console'
 
 alias ls='eza'
-alias l='eza --long --group-directories-first --git'
-alias lt='eza --tree --group-directories-first --git-ignore --level=2'
-alias ltt='eza --tree --group-directories-first --git-ignore --level=3'
+alias l='eza --all --long --group-directories-first --git'
+alias lt='eza --all --tree --group-directories-first --git-ignore --level=2'
+alias ltt='eza --all --tree --group-directories-first --git-ignore --level=3'
 
 alias sgr='sg run -l rust --pattern'
 alias sgt='sg run -l ts --pattern'
