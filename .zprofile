@@ -188,6 +188,7 @@ alias sga='sg run --pattern'
 
 alias ais='ai -t search -m gpt-5'
 alias aisf='ai -t search -m flash'
+alias aif='ai -m flash'
 alias cbd='cb -l diff'
 
 # default divisor is 4 and it seems pretty good, but you can pass a different one
