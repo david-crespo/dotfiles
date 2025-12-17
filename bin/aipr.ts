@@ -114,6 +114,7 @@ const mdSection = (label: string) => (s: string | undefined) =>
   s ? `# ${label}\n\n${s}` : undefined
 
 type RepoSel = { owner: string; repo: string }
+const toRepoStr = (repoSel: RepoSel) => `${repoSel.owner}/${repoSel.repo}`
 type PrSel = RepoSel & { pr: number }
 type LinkedIssue = {
   repository: { name: string }
@@ -187,19 +188,36 @@ type TrackingIssue = {
   }
 }
 
-const getPrArgs = (sel: PrSel) => ["-R", `${sel.owner}/${sel.repo}`, sel.pr]
+const getPrArgs = (sel: PrSel) => ["-R", toRepoStr(sel), sel.pr]
+
+const REPO_EXCLUDES: Record<string, RegExp[]> = {
+  "oxidecomputer/omicron": [
+    // exclude giant schema files in omicron because the new versioning setup
+    // makes and entire new schema file instead of modifying the existing one
+    // TODO: be smart and get the actual schema diff
+    // https://github.com/oxidecomputer/console/blob/main/tools/deno/api-diff.ts
+    /^openapi\/[^\/]+\/.+\.json$/,
+  ],
+}
 
 /** Filter out gigantic useless lockfiles from diff */
-function filterDiff(rawDiff: string): string {
+function filterDiff(rawDiff: string, sel?: RepoSel): string {
   const lines = rawDiff.split("\n")
-  const filesToExclude = ["/package-lock.json", "/Cargo.lock", "/bun.lock", "/deno.lock"]
+  const excludes = [/package-lock\.json$/, /Cargo\.lock$/, /bun\.lock$/, /deno\.lock$/]
+
+  const repoStr = sel ? toRepoStr(sel) : undefined
+  if (repoStr && REPO_EXCLUDES[repoStr]) {
+    excludes.push(...REPO_EXCLUDES[repoStr])
+  }
 
   const filteredLines = []
   let skipUntilNextDiff = false
 
   for (const line of lines) {
     if (line.startsWith("diff --git ")) {
-      skipUntilNextDiff = filesToExclude.some((filename) => line.includes(filename))
+      // diff --git a/file b/file
+      const filename = line.split(" ").pop()?.substring(2) || ""
+      skipUntilNextDiff = excludes.some((re) => re.test(filename))
     }
 
     // filtering out super log lines is meant to avoid context bloat due to,
@@ -270,7 +288,9 @@ const getPrContext = (sel: PrSel, includeComments: boolean) =>
   Promise.all([
     $`gh pr view ${getPrArgs(sel)}`.text().then(mdSection("Body")),
     getLinkedIssues(sel).then(mdSection("Linked issues")),
-    $`gh pr diff ${getPrArgs(sel)}`.text().then(filterDiff).then(mdSection("Diff")),
+    $`gh pr diff ${getPrArgs(sel)}`.text().then((d) => filterDiff(d, sel)).then(
+      mdSection("Diff"),
+    ),
     fetchCommits(sel).then(mdSection("Commits")),
     includeComments
       ? fetchComments(sel).then(mdSection("Comments"))
@@ -278,8 +298,10 @@ const getPrContext = (sel: PrSel, includeComments: boolean) =>
   ])
     .then((results) => results.filter((x) => !!x).join("\n\n"))
 
-const pickPr = ({ owner, repo }: RepoSel) =>
-  $`gh pr list -R ${owner}/${repo} --limit 100 --json number,title,updatedAt,author --template \
+const pickPr = (sel: RepoSel) =>
+  $`gh pr list -R ${
+    toRepoStr(sel)
+  } --limit 100 --json number,title,updatedAt,author --template \
     '{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}' |
     fzf --height 25% --reverse --accept-nth=1`.json<number>()
 
@@ -303,15 +325,16 @@ async function getCurrRepo(): Promise<RepoSel> {
   return { repo: name, owner: owner.login }
 }
 
-async function getPrSelector(repoStr: string | undefined, prArg: number | undefined) {
+async function getPrSelector(repoArg: string | undefined, prArg: number | undefined) {
   // if the repo is not given, try to figure it out from the dir
-  const { owner, repo } = repoStr ? parseRepoSelector(repoStr) : await getCurrRepo()
-  await $`gh repo view ${owner}/${repo}`.text() // blow up early if repo doesn't exist
-  const pr = prArg ? prArg : await pickPr({ owner, repo })
+  const repoSel = repoArg ? parseRepoSelector(repoArg) : await getCurrRepo()
+  const repoStr = toRepoStr(repoSel)
+  await $`gh repo view ${repoStr}`.text() // blow up early if repo doesn't exist
+  const pr = prArg ? prArg : await pickPr(repoSel)
   if (!prArg) {
-    console.log(`Reviewing PR #${pr} (https://github.com/${owner}/${repo}/pull/${pr})\n`)
+    console.log(`Reviewing PR #${pr} (https://github.com/${repoStr}/pull/${pr})\n`)
   }
-  return { owner, repo, pr }
+  return { ...repoSel, pr }
 }
 
 async function getStdin() {
