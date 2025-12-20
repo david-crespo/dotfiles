@@ -17,9 +17,6 @@ Some information about the user's coding environment:
 
 ### TypeScript projects
 
-- IMPORTANT: start with the online docs for libraries to understand how to use them
-- When using library code, work to find the actual type declaration files of the library so you can use their types correctly instead of doing things like writing your own types and casting values to them
-  - Start with online docs
-  - If only docs are insufficient, with npm packages in deno, use commands like `ls -la "$(deno info --json | jq -r '.npmCache')/registry.npmjs.org/@package-name/version/"` to figure out where the declaration files live and read them, following the import chain until you find the type definitions
+- Read online docs for libraries to understand how to use them
 - When asked to fix type errors, work hard to avoid casting. Do it right.
 
