@@ -9,7 +9,9 @@ Use the `tviz` CLI to query the user's Things 3 todos and help them work through
 ## Available commands
 
 - `tviz areas -f tsv` - list all areas
-- `tviz projects -f tsv` - list all projects with incomplete todos
+- `tviz projects -f tsv` - list all incomplete projects
+- `tviz projects -c -f tsv` - show only completed projects
+- `tviz projects --all -f tsv` - show all projects regardless of status
 - `tviz projects -a <area> -f tsv` - list projects in a specific area
 - `tviz todo -f tsv` - list all incomplete todos
 - `tviz todo -a <area> -f tsv` - filter by area
@@ -17,7 +19,9 @@ Use the `tviz` CLI to query the user's Things 3 todos and help them work through
 - `tviz todo -s <text> -f tsv` - search title and notes
 - `tviz todo -d -f tsv` - only items with deadlines
 - `tviz todo -r <days> -f tsv` - items modified in last N days
-- `tviz todo -v` - verbose output including notes (don't use tsv with this)
+- `tviz todo -c -p <project> -f tsv` - show completed items from a project (useful for viewing past projects)
+- `tviz todo --all -p <project> -f tsv` - show all items from a project regardless of status
+- `tviz todo -v` - verbose output including notes and checklists (don't use tsv with this)
 - `tviz done [area]` - list recently completed items
 
 Use `-f tsv` for compact output. Omit it or use `-v` when the user wants to see notes.
@@ -35,10 +39,8 @@ For checking status of issues and PRs referenced in todos:
 
 - **Read-only**: tviz can only query Things 3 data. To make changes (complete, edit, delete,
   or create todos), direct the user to make the change in the Things 3 app.
-- Look for areas of improvement to tviz that would let you do this skill better. For
-  example:
-  - **No task IDs in output**: Would be useful to have task IDs to fetch individual tasks by
-    ID (e.g., `tviz todo --id <id>`)
+- **No task IDs in output**: Would be useful to have task IDs to fetch individual tasks by
+  ID (e.g., `tviz todo --id <id>`)
 
 ## Things 3 philosophy
 
