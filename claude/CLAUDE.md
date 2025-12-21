@@ -6,6 +6,7 @@
 - use `npm info` or similar to find the latest version of a package when adding
 - use jj, not git. jj status, jj diff, jj diff -r @-, etc
 - Code comments should be more about why than what
+- After making changes, run linters, formatters, and typecheckers. Check package.json for commands, or for Deno projects use `deno fmt`, `deno lint`, `deno check`
 
 Some information about the user's coding environment:
 

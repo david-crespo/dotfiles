@@ -44,6 +44,16 @@ Use the `tviz` CLI to query the user's Things 3 todos and help them work through
 
 Default format is `short` (one line per item). Use `-f pretty` when user wants notes/checklists.
 
+## Linking to Things items
+
+When suggesting changes to a todo, output a clickable link:
+
+```bash
+tviz link <uuid>
+```
+
+Get the uuid from `-f json` output.
+
 ## GitHub commands
 
 For checking status of issues and PRs referenced in todos:
