@@ -4,24 +4,42 @@ description: Todo assistant using tviz to query and work through Things 3 tasks
 
 # tviz Todo Assistant
 
-Use the `tviz` CLI to query the user's Things 3 todos and help them work through tasks.
+Use the `tviz` CLI to query the user's Things 3 todos and help them work through tasks. The user controls tviz (in `~/repos/things-viz`) and can modify it as needed.
+
+## Task principles
+
+- Tasks must be concrete next actions (not "plan party" but "email guests about date")
+- 2-minute rule: do it now if quick, otherwise schedule it
+- Today list is primary; review it each morning
+- Weekly review: process inbox, check projects have next actions, simplify
 
 ## Available commands
+
+### Things views
+
+- `tviz today` - today's tasks (primary working view)
+- `tviz inbox` - unprocessed items (empty daily)
+- `tviz anytime` - tasks without schedule
+- `tviz upcoming` - future scheduled tasks
+- `tviz someday` - deferred/low priority
+
+### Other tviz commands
 
 - `tviz areas` - list all areas
 - `tviz projects` - list all incomplete projects
 - `tviz projects -c` - show only completed projects
 - `tviz projects --all` - show all projects regardless of status
 - `tviz projects -a <area>` - list projects in a specific area
-- `tviz todo` - list all incomplete todos (short format, one line each)
-- `tviz todo -a <area>` - filter by area
-- `tviz todo -p <project>` - filter by project
-- `tviz todo -s <text>` - search title and notes
-- `tviz todo -d` - only items with deadlines
-- `tviz todo -r <days>` - items modified in last N days
-- `tviz todo -c -p <project>` - show completed items from a project
-- `tviz todo --all -p <project>` - show all items from a project regardless of status
-- `tviz todo -f pretty` - full detail with notes and checklists
+- `tviz todos` - list all incomplete todos (short format, one line each)
+- `tviz todos -a <area>` - filter by area
+- `tviz todos -p <project>` - filter by project
+- `tviz todos -s <text>` - search title and notes
+- `tviz todos -d` - only items with deadlines
+- `tviz todos -r <days>` - items modified in last N days
+- `tviz todos -c -p <project>` - show completed items from a project
+- `tviz todos --all -p <project>` - show all items from a project regardless of status
+- `tviz todos -f pretty` - full detail with notes and checklists
+- `tviz todos -f json` - JSON with uuid for linking
 - `tviz done [area]` - list recently completed items
 
 Default format is `short` (one line per item). Use `-f pretty` when user wants notes/checklists.
@@ -35,45 +53,31 @@ For checking status of issues and PRs referenced in todos:
 - `aipr tracking -R <repo> <issue>` - view tracking issue with subissue status
 - `aipr discussion -R <repo> <pr>` - view PR discussion/review status
 
-## tviz limitations / potential improvements
-
-- **Read-only**: tviz can only query Things 3 data. To make changes (complete, edit, delete,
-  or create todos), direct the user to make the change in the Things 3 app.
-- **No task IDs in output**: Would be useful to have task IDs to fetch individual tasks by
-  ID (e.g., `tviz todo --id <id>`)
-
-## Things 3 philosophy
+## Things 3 concepts
 
 **Areas** = ongoing life domains. **Projects** = completable goals with a clear end. If it
 never ends (blog, software maintenance), it shouldn't be a project.
 
-**Today/Upcoming views** are meant to be primary. Todos without start dates never surface
-there, forcing you into Area views where projects are collapsed. The fix: schedule things.
-
 ## Workflows
+
+### Daily review
+
+1. Check `tviz today` - what's on the plate?
+2. Check `tviz inbox` - process or defer everything
+3. If today is light, pull from `tviz anytime`
 
 ### Work through tasks
 
-1. Start by getting an overview: run `tviz areas` or `tviz projects`
-2. Ask the user which area or project to focus on
-3. List todos in that area/project
-4. For each todo, help the user think through what needs to be done
-5. If a todo needs more detail, use `-f pretty` to see notes and checklists
-6. After discussing a task, ask if they want to move on to the next one
+1. Start with `tviz today`
+2. For each task, check linked issues/PRs with GitHub commands
+3. If a todo needs more detail, use `tviz todos -s <text> -f pretty`
+4. Help user think through blockers, next actions, whether it's still relevant
+5. After discussing, ask if they want to move on to the next one
 
 ### Annotation pass
 
-Go through todos and add context that helps with future assistance. Can be scoped globally,
-by area, by project, or more narrowly. The user makes changes in Things 3 as you go.
-
-Types of annotations:
-
-- **Notes**: Add details about what the task involves, why it matters, blockers, or next
-  steps
-- **Tagging**: Organize by type (e.g., "make-issue", "call", "buy", "research")
-- **Other organization**: Restructure into projects, adjust deadlines, etc.
-
-For each todo, consider asking:
+Go through todos and add context. Can be scoped by area, project, or more narrowly.
+The user makes changes in Things 3 as you go. For each todo, consider:
 
 - What's the actual next action here?
 - Is there context that would help (links, names, details)?
@@ -81,8 +85,6 @@ For each todo, consider asking:
 - Does it belong in a project or different area?
 
 ### Deadline planning
-
-Help schedule tasks for a deadline:
 
 1. Identify scope (project, area, or ad-hoc list)
 2. Use GitHub commands to check status of referenced PRs/issues
