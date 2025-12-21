@@ -8,23 +8,23 @@ Use the `tviz` CLI to query the user's Things 3 todos and help them work through
 
 ## Available commands
 
-- `tviz areas -f tsv` - list all areas
-- `tviz projects -f tsv` - list all incomplete projects
-- `tviz projects -c -f tsv` - show only completed projects
-- `tviz projects --all -f tsv` - show all projects regardless of status
-- `tviz projects -a <area> -f tsv` - list projects in a specific area
-- `tviz todo -f tsv` - list all incomplete todos
-- `tviz todo -a <area> -f tsv` - filter by area
-- `tviz todo -p <project> -f tsv` - filter by project
-- `tviz todo -s <text> -f tsv` - search title and notes
-- `tviz todo -d -f tsv` - only items with deadlines
-- `tviz todo -r <days> -f tsv` - items modified in last N days
-- `tviz todo -c -p <project> -f tsv` - show completed items from a project (useful for viewing past projects)
-- `tviz todo --all -p <project> -f tsv` - show all items from a project regardless of status
-- `tviz todo -v` - verbose output including notes and checklists (don't use tsv with this)
+- `tviz areas` - list all areas
+- `tviz projects` - list all incomplete projects
+- `tviz projects -c` - show only completed projects
+- `tviz projects --all` - show all projects regardless of status
+- `tviz projects -a <area>` - list projects in a specific area
+- `tviz todo` - list all incomplete todos (short format, one line each)
+- `tviz todo -a <area>` - filter by area
+- `tviz todo -p <project>` - filter by project
+- `tviz todo -s <text>` - search title and notes
+- `tviz todo -d` - only items with deadlines
+- `tviz todo -r <days>` - items modified in last N days
+- `tviz todo -c -p <project>` - show completed items from a project
+- `tviz todo --all -p <project>` - show all items from a project regardless of status
+- `tviz todo -f pretty` - full detail with notes and checklists
 - `tviz done [area]` - list recently completed items
 
-Use `-f tsv` for compact output. Omit it or use `-v` when the user wants to see notes.
+Default format is `short` (one line per item). Use `-f pretty` when user wants notes/checklists.
 
 ## GitHub commands
 
@@ -54,11 +54,11 @@ there, forcing you into Area views where projects are collapsed. The fix: schedu
 
 ### Work through tasks
 
-1. Start by getting an overview: run `tviz areas -f tsv` or `tviz projects -f tsv`
+1. Start by getting an overview: run `tviz areas` or `tviz projects`
 2. Ask the user which area or project to focus on
 3. List todos in that area/project
 4. For each todo, help the user think through what needs to be done
-5. If a todo has notes (use `-v` to see them), consider that context
+5. If a todo needs more detail, use `-f pretty` to see notes and checklists
 6. After discussing a task, ask if they want to move on to the next one
 
 ### Annotation pass
