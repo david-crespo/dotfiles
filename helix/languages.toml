@@ -68,3 +68,8 @@ imports.granularity.group = "item"
 name = "toml"
 formatter = { command = "taplo", args = ["fmt", "--option", "column_width=92", "-"] }
 auto-format = true
+
+[[language]]
+name = "racket"
+formatter = { command = "raco", args = ["fmt", "-i"] }
+auto-format = true

@@ -131,7 +131,7 @@ alias e2e='npx playwright test'
 alias e2ec='npx playwright test --project=chrome'
 alias e2es='npx playwright test --project=safari'
 alias e2ef='npx playwright test --project=firefox'
-alias lint='npm run lint -- --cache'
+alias lint='npm run lint'
 alias oxlint='./node_modules/.bin/oxlint'
 
 # -v includes homepage, which is very wide

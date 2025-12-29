@@ -76,15 +76,15 @@
                 ("}" "goto_next_paragraph"))
         (insert (C-ret "completion")))
 
-(keymap (extension "rs") (normal (M (d ":wrap-dbg"))))
+(keymap (extension "rs") (normal ("'" (d ":wrap-dbg"))))
 
 (define (ecma-keymap ext)
-  (keymap (extension ext) (normal (M (l ":wrap-console-log") (d ":wrap-console-dir")))))
+  (keymap (extension ext) (normal ("'" (l ":wrap-console-log") (d ":wrap-console-dir")))))
 
 (map ecma-keymap '("ts" "tsx" "js"))
 
 ; format_sql defined in .zshenv
-(keymap (extension "sql") (normal (M (s ":pipe format_sql"))))
+(keymap (extension "sql") (normal ("'" (s ":pipe format_sql"))))
 
 ; remove from space menu since I don't use them
 (define (space-noop key)
