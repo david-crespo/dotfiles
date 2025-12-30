@@ -76,15 +76,19 @@
                 ("}" "goto_next_paragraph"))
         (insert (C-ret "completion")))
 
-(keymap (extension "rs") (normal ("'" (d ":wrap-dbg"))))
+; Language-specific keybindings using ' as the minor mode
+(define (lang-keymap ext binds)
+  (eval `(keymap (extension ,ext) (normal ("'" ,@binds)))))
 
-(define (ecma-keymap ext)
-  (keymap (extension ext) (normal ("'" (l ":wrap-console-log") (d ":wrap-console-dir")))))
+(lang-keymap "rs" '((d ":wrap-dbg")))
 
-(map ecma-keymap '("ts" "tsx" "js"))
+(define ecma-binds '((l ":wrap-console-log") (d ":wrap-console-dir")))
+(lang-keymap "ts" ecma-binds)
+(lang-keymap "tsx" ecma-binds)
+(lang-keymap "js" ecma-binds)
 
 ; format_sql defined in .zshenv
-(keymap (extension "sql") (normal ("'" (s ":pipe format_sql"))))
+(lang-keymap "sql" '((s ":pipe format_sql")))
 
 ; remove from space menu since I don't use them
 (define (space-noop key)
