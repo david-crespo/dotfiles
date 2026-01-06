@@ -12,7 +12,7 @@
 (shell '("zsh" "-c"))
 (popup-border "all")
 (continue-comments #f)
-(lsp (hash 'display-messages #t 'display-progress-messages #t))
+(lsp (hash 'display-messages #t 'display-progress-messages #t 'goto-reference-include-declaration #f))
 (whitespace (ws-render (hash "nbsp" #t)))
 (auto-pairs #f)
 

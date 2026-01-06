@@ -25,6 +25,12 @@
 (define wrap-dbg (make-wrapper "dbg!(" ")"))
 
 ;;@doc
-;; Copy current buffer path to clipboard
+;; Copy current buffer path (relative to cwd) to clipboard
 (define (copy-path)
-  (helix.run-shell-command (string-append "echo -n '" (helix.static.cx->current-file) "' | pbcopy")))
+  (let* ((abs-path (helix.static.cx->current-file))
+         (cwd (helix.static.get-helix-cwd))
+         (cwd-with-slash (if (ends-with? cwd "/") cwd (string-append cwd "/")))
+         (rel-path (if (starts-with? abs-path cwd-with-slash)
+                       (substring abs-path (string-length cwd-with-slash))
+                       abs-path)))
+    (helix.run-shell-command (string-append "echo -n '" rel-path "' | pbcopy"))))
