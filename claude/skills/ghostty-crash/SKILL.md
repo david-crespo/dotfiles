@@ -12,11 +12,13 @@ A `.ghosttycrash` file has two parts:
 1. **JSON header** - Sentry event data with build info, OS version, session duration
 2. **Minidump** - Binary starting with `MDMP` magic
 
-Read JSON metadata (everything before `MDMP`):
+Read JSON metadata (everything before `MDMP`). The header contains multiple JSON lines; the last line is the main Sentry event:
+
 ```bash
-OFFSET=`LC_ALL=C grep -ob 'MDMP' <crashfile> | head -1 | cut -d: -f1`
-head -c $OFFSET <crashfile> | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin), indent=2))"
-```
+OFFSET=$(LC_ALL=C grep -ob 'MDMP' <crashfile> | head -1 | cut -d: -f1)
+head -c $OFFSET <crashfile> | tail -1 | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin), indent=2))"
+
+This replaces the current "Read JSON metadata" section. The key change is adding `| tail -1` to grab only the last JSON line (the main Sentry event), avoiding the `Extra data` parse error from the multi-line format.
 
 Extract the minidump:
 ```bash
@@ -67,3 +69,7 @@ zig build test -Dtest-filter="PageList"  # filter tests by name
 **Threading model**: Terminal state is protected by `renderer_state.mutex` (defined in `src/renderer/State.zig`). The renderer locks it during frame updates; termio locks it during resize and input processing. Look for `renderer_state.mutex.lock()` to trace critical sections.
 
 **Finding callers**: Use grep for function names. Zig uses `foo.bar()` method syntax but defines as `fn bar(self: *Foo)`, so search for both the method name and struct type.
+
+## Report
+
+Record findings in CRASH.md, including the dump filename and the commands required to reproduce the analysis.
