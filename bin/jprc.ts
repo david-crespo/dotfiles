@@ -42,7 +42,7 @@ await new Command()
     await $`jj log -r ${range}`.printCommand()
 
     const generated = await $`jj diff -r ${range}; jj log -r ${range}`
-      .pipe($`ai --system "${prompt}" -m flash --tools no-think --raw --ephemeral`)
+      .pipe($`ai --system "${prompt}" --model flash --quick --raw --ephemeral`)
       .text()
 
     const opts = { noClear: true, default: generated.trim() }

@@ -186,8 +186,8 @@ alias sgt='sg run -l ts --pattern'
 alias sgx='sg run -l tsx --pattern'
 alias sga='sg run --pattern'
 
-alias ais='ai -t search -m gpt-5'
-alias aisf='ai -t search -m flash'
+alias ais='ai --search -m gpt-5'
+alias aisf='ai --search -m flash'
 alias aif='ai -m flash'
 alias cbd='cb -l diff'
 
