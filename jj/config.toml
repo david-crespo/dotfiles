@@ -87,7 +87,7 @@ builtin_log_compact ++ if(
 # https://github.com/jj-vcs/jj/blob/faa689a7/cli/src/config/templates.toml#L192C1
 'zsh_prompt_summary(commit, refs)' = '''
 separate(" ",
-  format_short_change_id_with_hidden_and_divergent_info(commit),
+  format_short_change_id_with_change_offset(commit),
   if(commit.conflict(), label("conflict", "(conflict)")),
   if(commit.empty(),
     label("empty", "(empty)"),

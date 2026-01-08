@@ -7,6 +7,7 @@
 - use jj, not git. jj status, jj diff, jj diff -r @-, etc
 - Code comments should be more about why than what
 - After making changes, run linters, formatters, and typecheckers. Check package.json for commands, or for Deno projects use `deno fmt`, `deno lint`, `deno check`
+- When given a GitHub link, prefer using the `gh` CLI to fetch the same data in plaintext if possible
 
 Some information about the user's coding environment:
 
@@ -14,7 +15,7 @@ Some information about the user's coding environment:
 - Terminal: Ghostty
 - Text editor: Helix
 - Shell: zsh
-- Non-standard bash commands available: rg, ast-grep (sg), tokei
+- Non-standard bash commands available: rg, ast-grep (sg), tokei, gh
 
 ### TypeScript projects
 
