@@ -16,7 +16,7 @@ async function pickBase(r: string) {
   if (bookmarks.length === 1) return bookmarks[0]
 
   // show existing bookmarks (don't log range because there could be too many commits)
-  await $`jj log ${bookmarks.map((o) => "-r " + o)}`.printCommand()
+  await $`jj log ${bookmarks.flatMap((o) => ["-r", o])}`.printCommand()
 
   const i = await $.select({ message: "\nChoose base", options: bookmarks, noClear: true })
   return bookmarks[i]
