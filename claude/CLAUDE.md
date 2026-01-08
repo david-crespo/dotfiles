@@ -20,5 +20,5 @@ Some information about the user's coding environment:
 ### TypeScript projects
 
 - Read online docs for libraries to understand how to use them
-- When asked to fix type errors, work hard to avoid casting. Do it right.
+- When working on types, work hard to avoid casting or `any`. Do it right.
 
