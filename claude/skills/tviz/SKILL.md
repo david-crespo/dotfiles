@@ -1,4 +1,5 @@
 ---
+name: tviz
 description: Todo assistant using tviz to query and work through Things 3 tasks
 ---
 

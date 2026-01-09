@@ -1,4 +1,5 @@
 ---
+name: helix-interact
 description: Test Helix editor config changes, debug LSP issues, or observe editor behavior by running Helix in a tmux session. Use when iterating on helix config.toml, languages.toml, Steel scripts, or troubleshooting language server problems.
 ---
 

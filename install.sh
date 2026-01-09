@@ -57,6 +57,10 @@ ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$PWD/claude/commands" ~/.claude
 ln -sf "$PWD/claude/skills" ~/.claude
 
-mkdir -p ~/.config/opencode
+mkdir -p ~/.config/opencode/skills ~/.codex/skills
 ln -sf "$PWD/claude/CLAUDE.md" ~/.config/opencode/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.codex/AGENTS.md
+for skill in "$PWD/claude/skills"/*/; do
+  ln -sf "$skill" ~/.config/opencode/skills/
+  ln -sf "$skill" ~/.codex/skills/
+done

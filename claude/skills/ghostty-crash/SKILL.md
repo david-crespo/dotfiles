@@ -1,4 +1,5 @@
 ---
+name: ghostty-crash
 description: Debugging a ghostty crash
 ---
 

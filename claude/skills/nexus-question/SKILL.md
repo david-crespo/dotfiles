@@ -1,4 +1,5 @@
 ---
+name: nexus-question
 description: Answer a question about how something works in the Oxide external API in Nexus
 ---
 
