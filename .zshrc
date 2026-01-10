@@ -29,8 +29,38 @@ function jjgit_prompt() {
   local vcs="$(is_jj_or_git)" # jj, git, or ""
   if [[ $vcs = jj ]]; then
     # --ignore-working-copy means don't look at files and update jj state
-    jj log -r @ --ignore-working-copy --no-pager --no-graph --color=always \
-      -T 'zsh_prompt_summary(self, bookmarks)' 2>/dev/null
+    local prompt=$(jj log -r @ --ignore-working-copy --no-pager --no-graph --color=always \
+      -T 'zsh_prompt_summary(self, bookmarks)' 2>/dev/null)
+
+    # Find nearest ancestor bookmark and distance to it.
+    # The revset selects the nearest bookmarked ancestor and all commits from
+    # there to @. With --reversed, the bookmark commit comes first.
+    # Template outputs "B:name" for the bookmark commit, "." for others.
+    # Use local_bookmarks() to avoid duplicates from remote tracking bookmarks.
+    local raw=$(jj log -r 'heads(::@ & bookmarks())::@' \
+      --ignore-working-copy --no-pager --no-graph --reversed \
+      -T 'if(self.local_bookmarks().len() > 0, "B:" ++ self.local_bookmarks().map(|b| b.name()).join(" "), ".") ++ "\n"' 2>/dev/null)
+
+    if [[ -n $raw ]]; then
+      # Take first bookmark only (space-separated), truncate with ellipsis
+      local bookmark=$(echo "$raw" | grep '^B:' | head -1 | cut -c3- | cut -d' ' -f1)
+      if [[ ${#bookmark} -gt 14 ]]; then
+        bookmark="${bookmark:0:14}…"
+      fi
+      # distance = number of commits after bookmark (the "." lines)
+      local distance=$(echo "$raw" | grep -c '^\.$')
+
+      if [[ -n $bookmark ]]; then
+        if [[ $distance -gt 0 ]]; then
+          # gray the +N suffix to match jj's dimmed chars
+          prompt=$'\e[38;5;5m'"${bookmark}"$'\e[38;5;8m'"+${distance}"$'\e[0m'" ${prompt}"
+        else
+          prompt=$'\e[38;5;5m'"${bookmark}"$'\e[0m'" ${prompt}"
+        fi
+      fi
+    fi
+
+    echo "$prompt"
   elif [[ $vcs = git ]]; then
     local gitprompt=$(git --no-pager log -1 --pretty='%D' 2>/dev/null)
     gitprompt="${gitprompt/HEAD -> /}"
