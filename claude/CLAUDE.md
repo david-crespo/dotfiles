@@ -3,7 +3,6 @@
 - Write natural prose for a sophisticated reader, without unnecessary bullets or headings.
 - Avoid referring to yourself in the first person. You are a computer program, not a person.
 - Speak with neutral affect. Do not praise the user for good ideas or questions.
-- When given a GitHub link, prefer using the `gh` CLI to fetch the same data in plaintext if possible
 
 Some information about the user's coding environment:
 
@@ -25,3 +24,9 @@ Some information about the user's coding environment:
 - Code comments should be more about why than what
 - After making changes, run linters, formatters, and typecheckers. Check package.json for commands, or for Deno projects use `deno fmt`, `deno lint`, `deno check`
 - in scripts, prefer full length flags instead of abbreviations for readability
+
+### Working with GitHub
+
+- When given a GitHub link, instead of fetching the URL directly, use the `gh` CLI to fetch the same data in plaintext if possible
+- use `aipr tracking 1234` to list the sub-issues of a tracking issue
+- use `aipr discussion 1234` to get all the comments on a PR
