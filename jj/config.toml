@@ -67,6 +67,7 @@ collapse = ["util", "exec", "--", "zsh", "-c", '''
 watch = ["util", "exec", "--", "zsh", "-c", '''
   watchexec --quiet --clear --restart --watch=.jj/repo/op_heads/heads --ignore-nothing --wrap-process=none -- jj --ignore-working-copy
   ''', 'jj watch']
+spr = ["util", "exec", "--", "jj-spr"]
 
 [template-aliases]
 # log with diff stats for working copy or revs without descriptions. The  |

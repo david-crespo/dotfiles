@@ -21,8 +21,11 @@ Some information about the user's coding environment:
 
 - use `npm info` or similar to find the latest version of a package when adding
 - use jj, not git. jj status, jj diff, jj diff -r @-, etc
+- prefer squash workflow in jj over editing, where if you're trying to update rev A, work in a rev on top of A and periodically squash what you've done into A
 - Code comments should be more about why than what
-- After making changes, run linters, formatters, and typecheckers. Check package.json for commands, or for Deno projects use `deno fmt`, `deno lint`, `deno check`
+- After making changes, ALWAYS run linters, formatters, and typecheckers.
+  - Check package.json for commands
+  - For Deno projects use `deno fmt`, `deno lint`, `deno check`
 - in scripts, prefer full length flags instead of abbreviations for readability
 
 ### Working with GitHub
