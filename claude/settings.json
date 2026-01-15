@@ -3,7 +3,7 @@
   "env": {
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
   },
-  "includeCoAuthoredBy": false,
+  "attribution": { "commit": "", "pr": "" },
   "permissions": {
     "allow": [
       "Bash(cat:*)",
@@ -122,9 +122,5 @@
     "rust-analyzer-lsp@claude-plugins-official": false,
     "ralph-wiggum@claude-plugins-official": true
   },
-  "alwaysThinkingEnabled": true,
-  "gitAttribution": false,
-  "feedbackSurveyState": {
-    "lastShownTime": 1754073691732
-  }
+  "alwaysThinkingEnabled": true
 }
