@@ -54,6 +54,8 @@ ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
 mkdir -p ~/.claude
 ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
+ln -sf "$PWD/claude/settings.json" ~/.claude/settings.json
+ln -sf "$PWD/claude/statusline.ts" ~/.claude/statusline.ts
 ln -sf "$PWD/claude/commands" ~/.claude
 ln -sf "$PWD/claude/skills" ~/.claude
 
