@@ -267,6 +267,12 @@ function tts() {
   fi
 }
 
+function upgrade-agents() {
+  codex --version && npm install -g @openai/codex@latest && codex --version
+  claude update
+  opencode upgrade
+}
+
 source "$HOME/.cargo/env"
 
 export PATH="$HOME/.local/bin:$PATH"
