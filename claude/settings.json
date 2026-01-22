@@ -36,6 +36,7 @@
       "Bash(git show:*)",
       "Bash(jj log:*)",
       "Bash(jj diff:*)",
+      "Bash(jj op log:*)",
       "Bash(jj status:*)",
       "Bash(jj show:*)",
       "Bash(jj file show:*)",

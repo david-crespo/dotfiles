@@ -83,8 +83,10 @@ tviz today                    # primary working view
 tviz inbox                    # process daily
 tviz todos -a <area>          # filter by area
 tviz todos -p <project>       # filter by project
-tviz todos -f tsv             # uuid + created date, token-efficient
+tviz todos -f tsv             # uuid + created date + stop_date, token-efficient
 tviz todos -f pretty          # full notes and checklists
+tviz logbook                  # recently completed items (default 50)
+tviz logbook -a Oxide -n 100  # filter by area, increase limit
 tviz item <uuid> -f pretty    # details on one item
 tviz link <uuid>              # clickable Things link (use this!)
 ```
@@ -92,7 +94,7 @@ tviz link <uuid>              # clickable Things link (use this!)
 Tips:
 
 - Always use `-f tsv` first to get uuids and dates; only fetch `-f pretty` when you need notes
-- Output `tviz link <uuid>` for any item the user should modify—they can click to open Things
+- When referencing a task, output the title and the link separately (markdown links don't render in the terminal): "Task title — things:///show?id=uuid"
 - Find oldest items: `tviz todos -f json | jq -r 'sort_by(.created) | .[0:20] | .[] | "\(.created[0:10]) \(.title)"'`
 - Check GitHub status with `gh issue view` / `gh pr view` or `aipr tracking` / `aipr discussion`
 - For large outputs, spawn a Task subagent to process and summarize
