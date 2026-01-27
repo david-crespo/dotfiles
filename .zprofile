@@ -79,8 +79,10 @@ function jpr() {
   [[ -z "$pr" ]] && return
   echo "Checking out PR #$pr"
   gh pr checkout "$pr"
+  local branch="$(git branch --show-current)"
   jj git import
-  jj log -n 2 # show current rev and parent
+  jj bookmark track "$branch" --remote=origin
+  jj log -n 2
 }
 
 function nu-run {

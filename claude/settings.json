@@ -3,7 +3,10 @@
   "env": {
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
   },
-  "attribution": { "commit": "", "pr": "" },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "allow": [
       "Bash(cat:*)",
@@ -127,6 +130,5 @@
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
     "ralph-wiggum@claude-plugins-official": true
-  },
-  "alwaysThinkingEnabled": true
+  }
 }
