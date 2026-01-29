@@ -99,6 +99,7 @@
       "Bash(tldr:*)",
       "Bash(aipr tracking:*)",
       "Bash(aipr discussion:*)",
+      "Bash(brew info:*)",
       "WebSearch",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
