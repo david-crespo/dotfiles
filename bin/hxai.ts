@@ -4,9 +4,9 @@
 //   -f <file>   Read file content and pass as first argument to `ai`.
 //   All other arguments are passed through to `ai` unchanged.
 
-import $ from "jsr:@david/dax@0.42.0"
-import { readAll } from "jsr:@std/io@0.225.2"
-import { Command } from "jsr:@cliffy/command@1.0.0-rc.7"
+import $ from "@david/dax"
+import { readAll } from "@std/io"
+import { Command } from "@cliffy/command"
 
 const SYSTEM_PROMPT =
   `You are part of a code completion system in a text editor. You will receive

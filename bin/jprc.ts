@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh,ai
 
-import $ from "jsr:@david/dax@0.42.0"
-import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
+import $ from "@david/dax"
+import { Command, ValidationError } from "@cliffy/command"
 
 const prompt =
   "you will receive a diff and commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"

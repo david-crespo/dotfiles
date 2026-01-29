@@ -1,9 +1,9 @@
 #!/usr/bin/env -S deno run
 
-import { readAll } from "jsr:@std/io@0.224"
-import { parseArgs } from "jsr:@std/cli@1.0/parse-args"
-import * as R from "npm:remeda@2.18.0"
-import { Table } from "jsr:@cliffy/table@1.0.0-rc.7"
+import { readAll } from "@std/io"
+import { parseArgs } from "@std/cli/parse-args"
+import * as R from "remeda"
+import { Table } from "@cliffy/table"
 
 R.map // this foolishness gets deno not to tree-shake remeda
 

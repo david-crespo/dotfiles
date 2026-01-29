@@ -1,8 +1,8 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=gh,ai,fzf --allow-net=api.github.com
 
-import $ from "jsr:@david/dax@0.43.0"
-import { readAll } from "jsr:@std/io@0.225.2"
-import { Command, ValidationError } from "jsr:@cliffy/command@1.0.0-rc.7"
+import $ from "@david/dax"
+import { readAll } from "@std/io"
+import { Command, ValidationError } from "@cliffy/command"
 
 const today = new Date().toISOString().slice(0, 10)
 const reviewSystemPrompt =

@@ -42,6 +42,8 @@ ln -sf "$PWD/nushell/config.nu" ~/.config/nushell/config.nu
 ln -sf "$PWD/nushell/zsh-functions.nu" ~/.config/nushell/zsh-functions.nu
 
 mkdir -p ~/.local/bin
+# Deno searches for config from symlink location, not target, so we need this here
+ln -sf "$PWD/deno.jsonc" ~/.local/bin/deno.jsonc
 ln -sf "$PWD/bin/codeblocks.ts" ~/.local/bin/cb
 ln -sf "$PWD/bin/ghrel.nu" ~/.local/bin/ghrel
 ln -sf "$PWD/bin/dq.ts" ~/.local/bin/dq

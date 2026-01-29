@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh,open
 
-import $ from "jsr:@david/dax@0.42.0"
-import { Command } from "jsr:@cliffy/command@1.0.0-rc.7"
+import $ from "@david/dax"
+import { Command } from "@cliffy/command"
 
 interface CheckRun {
   id: number

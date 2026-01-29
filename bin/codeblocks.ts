@@ -6,10 +6,10 @@
  * based on the extension. Used for piping files to my LLM CLI.
  */
 
-import { extname } from "jsr:@std/path@^1.0.8"
-import { readAll } from "jsr:@std/io@0.225.1"
-import { Command } from "jsr:@cliffy/command@1.0.0-rc.7"
-import $ from "jsr:@david/dax@0.42.0"
+import { extname } from "@std/path"
+import { readAll } from "@std/io"
+import { Command } from "@cliffy/command"
+import $ from "@david/dax"
 
 // adoc doesn't display right in glow but it does on github
 const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh", "html", "md"]
