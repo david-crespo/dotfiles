@@ -49,6 +49,7 @@ ln -sf "$PWD/bin/jprc.ts" ~/.local/bin/jprc
 ln -sf "$PWD/bin/aipr.ts" ~/.local/bin/aipr
 ln -sf "$PWD/bin/hxai.ts" ~/.local/bin/hxai
 ln -sf "$PWD/bin/edit-cmd.sh" ~/.local/bin/ecmd
+ln -sf "$PWD/bin/cancel-ci.ts" ~/.local/bin/cancel-ci
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
