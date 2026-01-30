@@ -342,8 +342,9 @@ async function getStdin() {
   return new TextDecoder().decode(await readAll(Deno.stdin)).trim() || undefined
 }
 
-async function aiReview(model: string | undefined, inputs: (string | undefined)[]) {
+async function aiReview(model: string, inputs: (string | undefined)[]) {
   const args = ["--system", reviewSystemPrompt, "--model", model]
+  if (model.includes("codex")) args.push("--think-hard")
   const prompt = inputs.filter((x) => x).join("\n\n")
   await $`ai ${args}`.stdinText(prompt)
 }
