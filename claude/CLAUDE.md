@@ -27,6 +27,7 @@ Some information about the user's coding environment:
   - Check package.json for commands
   - For Deno projects use `deno fmt`, `deno lint`, `deno check`
 - in scripts, prefer full length flags instead of abbreviations for readability
+- if you're in a repo in ~/oxide and want to look at the source for another oxide repo, check if it's already cloned and use the local source. make sure to pull main on the other repo. if it's not present locally, clone it.
 
 ### Working with GitHub
 
