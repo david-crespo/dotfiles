@@ -42,6 +42,8 @@ log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk())"
 # in `trunk()`.
 # https://jj-vcs.github.io/jj/v0.26.0/config/#set-of-immutable-commits
 "immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())"
+"fork(x)" = "fork_point(trunk() | x)"
+"fork()" = "fork_point(trunk() | @)"
 
 [aliases]
 d = ["diff"]
