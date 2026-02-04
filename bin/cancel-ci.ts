@@ -8,7 +8,14 @@ interface CheckRun {
   name: string
   status: string
   details_url: string
+  started_at: string
   app: { slug: string }
+}
+
+interface CommitInfo {
+  sha: string
+  message: string
+  date: string
 }
 
 interface WorkflowRun {
@@ -112,19 +119,36 @@ async function getRunningChecks(
   return response.check_runs.filter((run) => run.status !== "completed")
 }
 
-async function cancelGitHubActions(
-  commitRef: CommitRef,
-): Promise<void> {
+async function getCommitInfo(commitRef: CommitRef): Promise<CommitInfo> {
   const response =
-    await $`gh api repos/${commitRef.owner}/${commitRef.repo}/actions/runs?head_sha=${commitRef.sha}&event=pull_request`
-      .json() as { workflow_runs: WorkflowRun[] }
+    await $`gh api repos/${commitRef.owner}/${commitRef.repo}/commits/${commitRef.sha}`
+      .json() as { sha: string; commit: { message: string; committer: { date: string } } }
+  return {
+    sha: response.sha,
+    message: response.commit.message.split("\n")[0], // first line only
+    date: response.commit.committer.date,
+  }
+}
 
-  await Promise.all(
-    response.workflow_runs.map((run) =>
-      $`gh api repos/${commitRef.owner}/${commitRef.repo}/actions/runs/${run.id}/cancel --method POST --silent`
-        .noThrow()
-    ),
-  )
+function formatRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  if (diffMins < 1) return "just now"
+  if (diffMins < 60) return `${diffMins}m ago`
+  const diffHours = Math.floor(diffMins / 60)
+  if (diffHours < 24) return `${diffHours}h ago`
+  const diffDays = Math.floor(diffHours / 24)
+  return `${diffDays}d ago`
+}
+
+async function cancelGitHubActionsRun(
+  repoRef: RepoRef,
+  runId: number,
+): Promise<void> {
+  await $`gh api repos/${repoRef.owner}/${repoRef.repo}/actions/runs/${runId}/cancel --method POST --silent`
+    .noThrow()
 }
 
 async function main(prArg?: string, repoArg?: string) {
@@ -153,12 +177,13 @@ async function main(prArg?: string, repoArg?: string) {
   const forcePushedCommits = await getForcePushedCommits(prRef)
   const allCommits = [...new Set([...currentCommits, ...forcePushedCommits])]
 
-  // Find commits with running checks
-  const commitsWithRunningCI: { sha: string; checks: CheckRun[] }[] = []
+  // Find commits with running checks and fetch their info
+  const commitsWithRunningCI: { info: CommitInfo; checks: CheckRun[] }[] = []
   for (const sha of allCommits) {
     const checks = await getRunningChecks({ ...repoRef, sha })
     if (checks.length > 0) {
-      commitsWithRunningCI.push({ sha, checks })
+      const info = await getCommitInfo({ ...repoRef, sha })
+      commitsWithRunningCI.push({ info, checks })
     }
   }
 
@@ -167,14 +192,37 @@ async function main(prArg?: string, repoArg?: string) {
     return
   }
 
-  // Select commit if multiple
-  let selectedCommit: { sha: string; checks: CheckRun[] }
+  // Sort by date (most recent first) using check start time
+  commitsWithRunningCI.sort((a, b) => {
+    const aTime = Math.min(...a.checks.map((c) => new Date(c.started_at).getTime()))
+    const bTime = Math.min(...b.checks.map((c) => new Date(c.started_at).getTime()))
+    return bTime - aTime
+  })
+
+  // Select commit
+  let selectedCommit: { info: CommitInfo; checks: CheckRun[] }
   if (commitsWithRunningCI.length === 1) {
     selectedCommit = commitsWithRunningCI[0]
-  } else {
-    const options = commitsWithRunningCI.map((c) =>
-      `${c.sha.slice(0, 7)} (${c.checks.length} running)`
+    const startedAt = Math.min(
+      ...selectedCommit.checks.map((c) => new Date(c.started_at).getTime()),
     )
+    $.log(
+      `${selectedCommit.info.sha.slice(0, 7)} ${
+        selectedCommit.info.message.slice(0, 50)
+      } (${
+        formatRelativeTime(new Date(startedAt).toISOString())
+      }, ${selectedCommit.checks.length} running)`,
+    )
+  } else {
+    const options = commitsWithRunningCI.map((c) => {
+      const startedAt = Math.min(...c.checks.map((ch) => new Date(ch.started_at).getTime()))
+      const msg = c.info.message.length > 50
+        ? c.info.message.slice(0, 47) + "..."
+        : c.info.message
+      return `${c.info.sha.slice(0, 7)} ${msg} (${
+        formatRelativeTime(new Date(startedAt).toISOString())
+      }, ${c.checks.length} running)`
+    })
     const index = await $.select({
       message: "Select commit to cancel CI for:",
       options,
@@ -182,7 +230,18 @@ async function main(prArg?: string, repoArg?: string) {
     selectedCommit = commitsWithRunningCI[index]
   }
 
-  $.logStep(`Cancelling CI for ${selectedCommit.sha.slice(0, 7)}...`)
+  // Confirm cancellation
+  const confirmed = await $.confirm(
+    `Cancel ${selectedCommit.checks.length} CI jobs for ${
+      selectedCommit.info.sha.slice(0, 7)
+    }?`,
+  )
+  if (!confirmed) {
+    $.log("Cancelled.")
+    return
+  }
+
+  $.logStep(`Cancelling CI for ${selectedCommit.info.sha.slice(0, 7)}...`)
 
   // Group checks by type
   const ghActionsChecks = selectedCommit.checks.filter((c) =>
@@ -194,7 +253,14 @@ async function main(prArg?: string, repoArg?: string) {
 
   // Cancel GitHub Actions
   if (ghActionsChecks.length > 0) {
-    await cancelGitHubActions({ ...repoRef, sha: selectedCommit.sha })
+    const runsUrl =
+      `repos/${repoRef.owner}/${repoRef.repo}/actions/runs?head_sha=${selectedCommit.info.sha}&event=pull_request`
+    const response = await $`gh api ${runsUrl}`.json() as { workflow_runs: WorkflowRun[] }
+
+    const runsToCancel = response.workflow_runs.filter((r) => r.status !== "completed")
+    await Promise.all(
+      runsToCancel.map((run) => cancelGitHubActionsRun(repoRef, run.id)),
+    )
   }
 
   // Open external CI in browser
