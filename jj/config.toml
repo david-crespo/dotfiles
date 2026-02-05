@@ -9,6 +9,12 @@ email = "crespo.dm@gmail.com"
 [--scope.user]
 email = "david.crespo@oxidecomputer.com"
 
+[remotes.origin]
+auto-track-created-bookmarks = "*"
+
+[remotes.mine]
+auto-track-created-bookmarks = "*"
+
 # Delta uses less by default but doesn't pass -X to it, which would the last
 # page stick around after quit. I could use
 #
@@ -33,7 +39,7 @@ diff-formatter = ":git"
 
 [revsets]
 # default is 2 ancestors and I found it wasn't enough
-log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk())"
+log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | divergent()"
 
 [revset-aliases]
 'closest_bookmark(to)' = 'heads(::to & bookmarks())'
