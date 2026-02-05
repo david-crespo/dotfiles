@@ -344,12 +344,12 @@ async function getStdin() {
 
 async function aiReview(model: string, inputs: (string | undefined)[]) {
   const args = ["--system", reviewSystemPrompt, "--model", model]
-  if (model.includes("codex")) args.push("--think-hard")
+  if (model.includes("codex") || model.includes("gpt")) args.push("--think-hard")
   const prompt = inputs.filter((x) => x).join("\n\n")
   await $`ai ${args}`.stdinText(prompt)
 }
 
-const DEFAULT_MODEL = "codex"
+const DEFAULT_MODEL = "gpt-5.2"
 
 const reviewCmd = new Command()
   .description("Review a PR")
