@@ -32,6 +32,12 @@ alias jpp="jj new && jj tug && jj git push"
 # reset on top of main after being done with a PR
 alias jrm="jj git fetch && jj new 'trunk()'"
 
+function jjw() {
+  local wspath
+  wspath="$(jjw-setup)" || return 1
+  cd "$wspath"
+}
+
 # fzf jj bookmark picker
 function zjb() {
   jj b list -T 'separate("\t", name, normal_target.author().name(), normal_target.description())' |
