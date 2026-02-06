@@ -7,6 +7,8 @@ function prompt_pwd() {
   pwd=${pwd/#$HOME\/repos\//}
   # replace leading $HOME/oxide/ with empty string
   pwd=${pwd/#$HOME\/oxide\//}
+  # replace leading $HOME/jj-workspaces/ with empty string
+  pwd=${pwd/#$HOME\/jj-workspaces\//}
   # replace leading $HOME/ with ~
   pwd=${pwd/#$HOME/\~}
 
