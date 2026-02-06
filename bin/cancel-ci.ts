@@ -81,12 +81,6 @@ async function findPrFromBookmark(): Promise<PrRef & { title: string; branch: st
 
   const { owner, repo } = await getCurrentRepo()
 
-  const confirmed = await $.confirm(`Cancel CI for PR #${prInfo.number}: ${prInfo.title}?`)
-  if (!confirmed) {
-    $.logError("Cancelled")
-    Deno.exit(1)
-  }
-
   return { owner, repo, pr: prInfo.number, title: prInfo.title, branch: bookmark }
 }
 
@@ -97,21 +91,27 @@ async function getPrCommits(prRef: PrRef): Promise<string[]> {
   return commits.map((c) => c.sha)
 }
 
-async function getActiveCIShas(
+// Find SHAs that were force-pushed away on a branch by looking at repo push events.
+// Works regardless of CI system (GitHub Actions, Buildomat, etc.).
+async function getForcePushedShas(
   repoRef: RepoRef,
   branch: string,
 ): Promise<string[]> {
-  const [inProgress, queued] = await Promise.all([
-    $`gh api repos/${repoRef.owner}/${repoRef.repo}/actions/runs -f branch=${branch} -f status=in_progress --paginate --jq '.workflow_runs[].head_sha'`
-      .text(),
-    $`gh api repos/${repoRef.owner}/${repoRef.repo}/actions/runs -f branch=${branch} -f status=queued --paginate --jq '.workflow_runs[].head_sha'`
-      .text(),
-  ])
-  const shas = `${inProgress}\n${queued}`
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean)
-  return [...new Set(shas)]
+  const text = await $`gh api repos/${repoRef.owner}/${repoRef.repo}/events`
+    .noThrow().text()
+  try {
+    const events = JSON.parse(text) as Array<{
+      type: string
+      payload: { ref: string; before: string }
+    }>
+    const branchRef = `refs/heads/${branch}`
+    return events
+      .filter((e) => e.type === "PushEvent" && e.payload.ref === branchRef)
+      .map((e) => e.payload.before)
+      .filter((sha) => /^[0-9a-f]{40}$/.test(sha))
+  } catch {
+    return []
+  }
 }
 
 async function getRunningChecks(
@@ -178,10 +178,10 @@ async function main(prArg?: string, repoArg?: string) {
   const repoRef: RepoRef = { owner, repo }
   const prRef: PrRef = { ...repoRef, pr }
 
-  // Get all commits: current PR commits + any with active workflow runs (includes force-pushed)
+  // Get all commits: current PR commits + any recently force-pushed away
   const currentCommits = await getPrCommits(prRef)
-  const activeCIShas = await getActiveCIShas(repoRef, branch)
-  const allCommits = [...new Set([...currentCommits, ...activeCIShas])]
+  const forcePushedShas = await getForcePushedShas(repoRef, branch)
+  const allCommits = [...new Set([...currentCommits, ...forcePushedShas])]
 
   // Find commits with running checks and fetch their info
   const commitsWithRunningCI: { info: CommitInfo; checks: CheckRun[] }[] = []
@@ -205,38 +205,22 @@ async function main(prArg?: string, repoArg?: string) {
     return bTime - aTime
   })
 
-  // Select commit
-  let selectedCommit: { info: CommitInfo; checks: CheckRun[] }
-  if (commitsWithRunningCI.length === 1) {
-    selectedCommit = commitsWithRunningCI[0]
-    const startedAt = Math.min(
-      ...selectedCommit.checks.map((c) => new Date(c.started_at).getTime()),
-    )
-    $.log(
-      `${selectedCommit.info.sha.slice(0, 7)} ${
-        selectedCommit.info.message.slice(0, 50)
-      } (${
-        formatRelativeTime(new Date(startedAt).toISOString())
-      }, ${selectedCommit.checks.length} running)`,
-    )
-  } else {
-    const options = commitsWithRunningCI.map((c) => {
-      const startedAt = Math.min(...c.checks.map((ch) => new Date(ch.started_at).getTime()))
-      const msg = c.info.message.length > 50
-        ? c.info.message.slice(0, 47) + "..."
-        : c.info.message
-      return `${c.info.sha.slice(0, 7)} ${msg} (${
-        formatRelativeTime(new Date(startedAt).toISOString())
-      }, ${c.checks.length} running)`
-    })
-    const index = await $.select({
-      message: "Select commit to cancel CI for:",
-      options,
-    })
-    selectedCommit = commitsWithRunningCI[index]
-  }
+  // Select commit to cancel
+  const options = commitsWithRunningCI.map((c) => {
+    const startedAt = Math.min(...c.checks.map((ch) => new Date(ch.started_at).getTime()))
+    const msg = c.info.message.length > 50
+      ? c.info.message.slice(0, 47) + "..."
+      : c.info.message
+    return `${c.info.sha.slice(0, 7)} ${msg} (${
+      formatRelativeTime(new Date(startedAt).toISOString())
+    }, ${c.checks.length} running)`
+  })
+  const index = await $.select({
+    message: "Select commit to cancel CI for:",
+    options,
+  })
+  const selectedCommit = commitsWithRunningCI[index]
 
-  // Confirm cancellation
   const confirmed = await $.confirm(
     `Cancel ${selectedCommit.checks.length} CI jobs for ${
       selectedCommit.info.sha.slice(0, 7)

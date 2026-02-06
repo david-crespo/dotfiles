@@ -54,7 +54,7 @@ log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | diver
 [aliases]
 d = ["diff"]
 dm = ["describe", "-m"]
-dmp = ["describe", "-r", "@-", "-m"]
+dp = ["describe", "-r", "@-"]
 # diff rev against fork point like GitHub PR diff or git ...
 dt = ["util", "exec", "--", "zsh", "-c", '''
   jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
