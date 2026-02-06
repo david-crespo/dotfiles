@@ -22,11 +22,7 @@ interface WorkflowRun {
   id: number
   name: string
   status: string
-}
-
-interface TimelineEvent {
-  event: string
-  before?: string
+  head_sha: string
 }
 
 interface Commit {
@@ -67,7 +63,7 @@ async function getCurrentRepo(): Promise<RepoRef> {
   return { owner, repo }
 }
 
-async function findPrFromBookmark(): Promise<PrRef & { title: string }> {
+async function findPrFromBookmark(): Promise<PrRef & { title: string; branch: string }> {
   const bookmarksOutput =
     await $`jj log -r 'ancestors(@, 10) & bookmarks()' --no-graph -T 'local_bookmarks ++ "\n"'`
       .text()
@@ -91,7 +87,7 @@ async function findPrFromBookmark(): Promise<PrRef & { title: string }> {
     Deno.exit(1)
   }
 
-  return { owner, repo, pr: prInfo.number, title: prInfo.title }
+  return { owner, repo, pr: prInfo.number, title: prInfo.title, branch: bookmark }
 }
 
 async function getPrCommits(prRef: PrRef): Promise<string[]> {
@@ -101,13 +97,21 @@ async function getPrCommits(prRef: PrRef): Promise<string[]> {
   return commits.map((c) => c.sha)
 }
 
-async function getForcePushedCommits(prRef: PrRef): Promise<string[]> {
-  const events: TimelineEvent[] =
-    await $`gh api repos/${prRef.owner}/${prRef.repo}/issues/${prRef.pr}/timeline --paginate`
-      .json()
-  return events
-    .filter((e) => e.event === "head_ref_force_pushed" && e.before)
-    .map((e) => e.before!)
+async function getActiveCIShas(
+  repoRef: RepoRef,
+  branch: string,
+): Promise<string[]> {
+  const [inProgress, queued] = await Promise.all([
+    $`gh api repos/${repoRef.owner}/${repoRef.repo}/actions/runs -f branch=${branch} -f status=in_progress --paginate --jq '.workflow_runs[].head_sha'`
+      .text(),
+    $`gh api repos/${repoRef.owner}/${repoRef.repo}/actions/runs -f branch=${branch} -f status=queued --paginate --jq '.workflow_runs[].head_sha'`
+      .text(),
+  ])
+  const shas = `${inProgress}\n${queued}`
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean)
+  return [...new Set(shas)]
 }
 
 async function getRunningChecks(
@@ -152,7 +156,7 @@ async function cancelGitHubActionsRun(
 }
 
 async function main(prArg?: string, repoArg?: string) {
-  let owner: string, repo: string, pr: number
+  let owner: string, repo: string, pr: number, branch: string
 
   if (prArg) {
     const prNum = parseInt(prArg, 10)
@@ -164,18 +168,20 @@ async function main(prArg?: string, repoArg?: string) {
     } else {
       ;({ owner, repo } = await getCurrentRepo())
     }
+    branch = (await $`gh api repos/${owner}/${repo}/pulls/${pr} --jq .head.ref`
+      .text()).trim()
   } else {
-    ;({ owner, repo, pr } = await findPrFromBookmark())
+    ;({ owner, repo, pr, branch } = await findPrFromBookmark())
   }
 
   $.logStep(`Checking PR #${pr} in ${owner}/${repo}...`)
   const repoRef: RepoRef = { owner, repo }
   const prRef: PrRef = { ...repoRef, pr }
 
-  // Get all commits: current + force-pushed
+  // Get all commits: current PR commits + any with active workflow runs (includes force-pushed)
   const currentCommits = await getPrCommits(prRef)
-  const forcePushedCommits = await getForcePushedCommits(prRef)
-  const allCommits = [...new Set([...currentCommits, ...forcePushedCommits])]
+  const activeCIShas = await getActiveCIShas(repoRef, branch)
+  const allCommits = [...new Set([...currentCommits, ...activeCIShas])]
 
   // Find commits with running checks and fetch their info
   const commitsWithRunningCI: { info: CommitInfo; checks: CheckRun[] }[] = []
