@@ -6,7 +6,7 @@ import { join } from "@std/path"
 const repoRoot = (await $`jj root`.text()).trim()
 const repoName = repoRoot.split("/").at(-1)!
 
-const baseDir = join(Deno.env.get("HOME")!, "oxide", "jj-workspaces")
+const baseDir = join(Deno.env.get("HOME")!, "jj-workspaces")
 await Deno.mkdir(baseDir, { recursive: true })
 
 let i = 1
