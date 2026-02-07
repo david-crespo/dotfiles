@@ -14,17 +14,16 @@ Write a note summarizing the recent conversation to `~/obsidian/Base files/Bot n
 2. Pick a short, lowercase, descriptive filename (e.g., `jj workspace tool.md`). Match the style of existing notes in the directory.
 3. Write the note and save it.
 
-If invoked with an argument, use it as the topic or filename hint.
+If invoked with an argument, treat it as instructions on what to include in the note (topic, scope, emphasis). The filename should always just be a good short representative title regardless of the argument.
 
 ## Note format
 
-Work notes capture ideas, decisions, and research from a conversation. They are not transcripts. The note should read like something useful to return to later.
+The key principle: **the note should be very close to verbatim what was said in the conversation.** If you gave a good explanation in the chat, copy it nearly verbatim into the note. Do not rewrite, reorganize, or "summarize" something that was already well-written. The conversation is the primary source — the note preserves it, lightly edited at most.
 
-Structure is flexible, but follow these conventions from existing notes:
-
-- **Open with the user's own words.** Start with a blockquote (`>`) containing the original question or prompt that kicked off the conversation, lightly edited for clarity if needed. This preserves intent and context.
-- **Follow with a synthesis of what was discussed.** Summarize findings, decisions, trade-offs, and conclusions in the user's voice or neutral prose. Use headings and code blocks where they help, but don't over-structure. Put the summary at the top rather than at the end.
-- **Include concrete details.** Links, command examples, code snippets, names of tools or libraries — the kind of thing that's hard to reconstruct later.
+- **Use the conversation's Q&A structure directly.** The user's questions become blockquotes (`>`), your answers follow. If the user asked a follow-up question that drove the conversation forward, include it as a blockquote transition between sections — this is more authentic and clearer than invented section headings.
+- **When quoting, quote.** Blockquotes (`>`) must use the user's actual words. It's fine to paraphrase or summarize the user, but not inside a blockquote — that's a quote.
+- **Copy your responses nearly verbatim.** Light editing for flow is fine (removing "Let me look at..." transitions), but preserve the structure, tone, and level of detail. If the response used prose paragraphs, keep prose paragraphs. Don't break flowing text into bullet points or add headings that weren't there.
+- **Include concrete details.** Links, file paths with line numbers, code snippets, command examples — the kind of thing that's hard to reconstruct later.
 - **Omit filler.** No preamble, no "here's what we discussed," no meta-commentary about the note itself.
 
 ## Before writing
