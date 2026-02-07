@@ -37,6 +37,7 @@ Some information about the user's coding environment:
 ### Working with GitHub
 
 - When given a GitHub link, instead of fetching the URL directly, use the `gh` CLI to fetch the same data in plaintext if possible
+- For read-only GitHub API calls, use `gh-api-read` instead of `gh api` (it's allowlisted and rejects write operations)
 - Use `aipr tracking 1234` to list the sub-issues of a tracking issue
 - Use `aipr discussion 1234` to get all the comments on a PR
 - When you're in running in the repo under discussion, prefer local commands for looking at history over GitHub API calls that would fetch the same data.
