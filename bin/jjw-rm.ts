@@ -18,6 +18,8 @@ const wsPath = (await $`jj workspace root --name ${name}`.text()).trim()
 const ok = await $.confirm({ message: `Delete ${wsPath}?`, default: false })
 if (!ok) Deno.exit(0)
 
-await Deno.permissions.request({ name: "write", path: wsPath })
-await $`jj workspace forget ${name}`.printCommand()
-await $`rm -rf ${wsPath}`.printCommand()
+const perm = await Deno.permissions.request({ name: "write", path: wsPath })
+if (perm.state === "granted") {
+  await $`jj workspace forget ${name}`.printCommand()
+  await $`rm -rf ${wsPath}`.printCommand()
+}
