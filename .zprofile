@@ -33,9 +33,13 @@ alias jpp="jj new && jj tug && jj git push"
 alias jrm="jj git fetch && jj new 'trunk()'"
 
 function jjw() {
-  local wspath
-  wspath="$(jjw-setup)" || return 1
-  cd "$wspath"
+  if [[ ("$1" == "create" || "$1" == "c") && "$#" -eq 1 ]]; then
+    local wspath
+    wspath="$(jjw-cmd create)" || return 1
+    cd "$wspath"
+  else
+    jjw-cmd "$@"
+  fi
 }
 
 # fzf jj bookmark picker

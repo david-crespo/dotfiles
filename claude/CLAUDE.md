@@ -23,6 +23,7 @@ Some information about the user's coding environment:
 - use jj, not git. jj status, jj diff, jj diff -r @-, etc. to view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`)
 - prefer squash workflow in jj over editing, where if you're trying to update rev A, work in a rev on top of A and periodically squash what you've done into A
 - for parallel approaches, use `jj new <base>` to create siblings from a common base, implement each approach, then compare. bookmarks are unnecessary for this workflow
+- use `jjw` to manage jj workspaces: `jjw create` (or `jjw c`) creates a workspace and cds into it, `jjw ls` lists workspaces, `jjw rm` interactively removes one
 - Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv do jj desc + jj new) after chunks of work to snapshot each step in a reviewable way
 - don't try to run destructive `jj` ops like squash or abandon unprompted. intermediate commits are fine; just note when cleanup might be needed
 - Code comments should be more about why than what
