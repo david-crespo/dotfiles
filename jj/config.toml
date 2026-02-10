@@ -42,7 +42,6 @@ diff-formatter = ":git"
 log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | divergent()"
 
 [revset-aliases]
-'closest_bookmark(to)' = 'heads(::to & bookmarks())'
 # Treat commits not authored by me as immutable. The `trunk().. &` bit is an
 # optimization to scan for non-`mine()` commits only among commits that are not
 # in `trunk()`.
@@ -65,7 +64,16 @@ dts = ["util", "exec", "--", "zsh", "-c", '''
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
-tug = ["bookmark", "move", "--from", "closest_bookmark(@)", "--to", "@-"]
+# move the closest ancestor bookmark to @-. prefers non-trunk bookmarks so
+# that merging trunk doesn't drag the trunk bookmark forward. falls back to
+# including trunk if it's the only ancestor bookmark. the jj log prints "x"
+# per matching rev; grep -q tests whether there's any output (i.e., the
+# revset matched something). if not, we widen the revset to include trunk.
+tug = ["util", "exec", "--", "zsh", "-c", '''
+  from='heads(::@ & bookmarks()) ~ trunk()'
+  jj --no-pager log -r "$from" --no-graph -T '"x"' 2>/dev/null | grep -q . || from='heads(::@ & bookmarks())'
+  jj bookmark move --from "$from" --to '@-'
+  ''', 'jj tug']
 # jj collapse START [END]
 # squash START::END into START
 # second arg optional. if left out does all descendants of START
@@ -76,6 +84,10 @@ watch = ["util", "exec", "--", "zsh", "-c", '''
   watchexec --quiet --clear --restart --watch=.jj/repo/op_heads/heads --ignore-nothing --wrap-process=none -- jj --ignore-working-copy
   ''', 'jj watch']
 spr = ["util", "exec", "--", "jj-spr"]
+# merge trunk into rev. doesn't move any bookmarks
+mm = ["util", "exec", "--", "zsh", "-c", '''
+  jj new "$1" trunk() -m 'merge trunk' && jj new
+  ''', 'jj mm']
 
 [template-aliases]
 # log with diff stats for working copy or revs without descriptions. The  |
