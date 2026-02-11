@@ -138,7 +138,7 @@ function ecopy() {
 alias server='python3 -m http.server 8000'
 
 alias dev='npm run dev'
-alias ts='./node_modules/.bin/tsc'
+alias ts='if [ -x ./node_modules/.bin/tsgo ]; then ./node_modules/.bin/tsgo; else ./node_modules/.bin/tsc; fi'
 alias e2e='npx playwright test'
 alias e2ec='npx playwright test --project=chrome'
 alias e2es='npx playwright test --project=safari'
