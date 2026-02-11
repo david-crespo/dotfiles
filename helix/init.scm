@@ -65,7 +65,7 @@
                 (C-k "jump_view_up")
                 (C-l "jump_view_right")
                 ; hxai is bin/hxai.ts. Add -f %{buffer_name} to include the whole file.
-                (tab "@:pipe hxai -m glm ")
+                (tab "@:pipe hxai -m k2 ")
                 (L (r "@:pipe hxai ") (s "@:pipe hxai -m sonnet ") (g "@:pipe hxai -m gpt-5 "))
                 (M (f ":toggle-option auto-format")
                    (c ":copy-path")
