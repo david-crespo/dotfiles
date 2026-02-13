@@ -95,6 +95,7 @@
       "Bash(gh release list:*)",
       "Bash(gh search:*)",
       "Bash(gh-api-read *)",
+      "Bash(jq:*)",
       "Bash(tmux new-session:*)",
       "Bash(tmux capture-pane:*)",
       "Bash(tviz:*)",
