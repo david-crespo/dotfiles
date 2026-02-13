@@ -27,6 +27,7 @@ Some information about the user's coding environment:
 - Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv do jj desc + jj new) after chunks of work to snapshot each step in a reviewable way
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message
 - don't try to run destructive `jj` ops like squash or abandon unprompted. intermediate commits are fine; just note when cleanup might be needed
+- `--ignore-immutable` may be needed when abandoning divergent commits from other authors, e.g., after rebasing on their branch and force pushing
 - Code comments should be more about why than what
 - After making changes, ALWAYS run linters, formatters, and typecheckers.
   - Check package.json for commands

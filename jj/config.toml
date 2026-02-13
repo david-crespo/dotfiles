@@ -86,7 +86,7 @@ watch = ["util", "exec", "--", "zsh", "-c", '''
 spr = ["util", "exec", "--", "jj-spr"]
 # merge trunk into rev. doesn't move any bookmarks
 mm = ["util", "exec", "--", "zsh", "-c", '''
-  jj new "$1" trunk() -m 'merge trunk' && jj new
+  jj new "$1" 'trunk()' -m 'merge trunk' && jj new
   ''', 'jj mm']
 
 [template-aliases]
