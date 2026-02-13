@@ -34,6 +34,7 @@
       "Bash(git diff:*)",
       "Bash(git status:*)",
       "Bash(git show:*)",
+      "Bash(git ls-tree:*)",
       "Bash(jj help:*)",
       "Bash(jj log:*)",
       "Bash(jj diff:*)",

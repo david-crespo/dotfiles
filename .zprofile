@@ -50,7 +50,7 @@ function zjb() {
 }
 
 function curr_bookmark {
-  jj bookmark list --tracked -r 'trunk()..@' -T 'name++"\n"' | head -1
+  jj log --no-graph -r 'heads(::@ & bookmarks())' -T 'bookmarks.map(|b| b.name()).join("\n")' | head -1
 }
 
 function jpl() {
@@ -61,16 +61,6 @@ function jpl() {
 
 alias jdr='jj diff --from "$(curr_bookmark)@origin"'
 alias jbs='jj tug'
-
-# when you accidentally edit a revision with a pushed bookmark, this puts the
-# changes in a new commit and resets the bookmark to the origin version
-function jsr() {
-  local b=$(curr_bookmark)
-  jj new "$b"@origin
-  jj restore -f "$b"
-  jj abandon "$b"
-  jj bookmark set "$b" -r "$b"@origin
-}
 
 # jj abandon branch
 function jab() {
