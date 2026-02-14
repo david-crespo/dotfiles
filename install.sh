@@ -36,6 +36,9 @@ ln -sf "$PWD/atuin/config.toml" ~/.config/atuin/config.toml
 mkdir -p ~/.config/ghostty
 ln -sf "$PWD/ghostty/config" ~/.config/ghostty/config
 
+mkdir -p ~/.config/zellij
+ln -sf "$PWD/zellij/config.kdl" ~/.config/zellij/config.kdl
+
 mkdir -p ~/.config/nushell
 ln -sf "$PWD/nushell/env.nu" ~/.config/nushell/env.nu
 ln -sf "$PWD/nushell/config.nu" ~/.config/nushell/config.nu
