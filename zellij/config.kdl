@@ -244,6 +244,23 @@ keybinds clear-defaults=true {
     }
 }
 
+themes {
+    ayu {
+        fg "#e6e1cf"
+        bg "#020202"
+        black "#000000"
+        red "#ff5555"
+        green "#b8cc52"
+        yellow "#e7c547"
+        blue "#36a3d9"
+        magenta "#f07178"
+        cyan "#95e6cb"
+        white "#ffffff"
+        orange "#ff8f40"
+    }
+}
+theme "ayu"
+
 // Plugin aliases - can be used to change the implementation of Zellij
 // changing these requires a restart to take effect
 plugins {
