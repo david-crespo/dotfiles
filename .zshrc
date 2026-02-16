@@ -104,6 +104,19 @@ bindkey '^x^e' edit-command-line
 # needed to make cmd+backspace esc:w work in ghostty
 bindkey '\ew' backward-kill-line
 
+# ctrl-z toggles between shell and a suspended process (e.g., helix)
+fancy-ctrl-z () {
+  if [[ $#BUFFER -eq 0 ]]; then
+    BUFFER="fg"
+    zle accept-line
+  else
+    zle push-input
+    zle clear-screen
+  fi
+}
+zle -N fancy-ctrl-z
+bindkey '^Z' fancy-ctrl-z
+
 # disable history expansion so I can type ! in commit messages with impunity
 setopt NO_BANG_HIST
 
