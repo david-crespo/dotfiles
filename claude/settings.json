@@ -133,7 +133,6 @@
       "Bash(jj resolve:*)"
     ]
   },
-  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -157,5 +156,6 @@
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
     "ralph-wiggum@claude-plugins-official": true
-  }
+  },
+  "model": "opus"
 }

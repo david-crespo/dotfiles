@@ -2,7 +2,6 @@
 ## in any directory within a git repository tree (default: false)
 workspaces = true
 filter_mode = "workspace"
-
 ## which filter mode to use when atuin is invoked from a shell up-key binding
 ## the accepted values are identical to those of "filter_mode"
 ## leave unspecified to use same mode set in "filter_mode"
@@ -32,6 +31,10 @@ history_filter = [
 ## Defaults to true. If enabled, upon hitting enter Atuin will immediately execute the command. Press tab to return to the shell and edit.
 # This applies for new installs. Old installs will keep the old behaviour unless configured otherwise.
 enter_accept = true
+
+[search]
+## see filter_mode docs for full set
+filters = ["workspace", "global"]
 
 [stats]
 # Set commands where we should consider the subcommand for statistics. Eg, kubectl get vs just kubectl
