@@ -270,9 +270,10 @@ function tts() {
 }
 
 function upgrade-agents() {
-  codex --version && npm install -g @openai/codex@latest && codex --version
-  claude update
-  opencode upgrade
+  parallel ::: \
+    'codex --version && npm install -g @openai/codex@latest && codex --version' \
+    'claude update' \
+    'opencode upgrade'
 }
 
 source "$HOME/.cargo/env"

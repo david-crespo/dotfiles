@@ -62,6 +62,8 @@
       "Bash(cargo doc:*)",
       "Bash(cargo fmt:*)",
       "Bash(cargo clippy:*)",
+      "Bash(cargo info:*)",
+      "Bash(cargo search:*)",
       "Bash(npm test:*)",
       "Bash(npm run tsc:*)",
       "Bash(npm run typecheck:*)",
