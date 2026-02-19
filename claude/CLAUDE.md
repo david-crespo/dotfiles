@@ -46,3 +46,16 @@ Some information about the user's coding environment:
 - Use `aipr tracking 1234` to list the sub-issues of a tracking issue
 - Use `aipr discussion 1234` to get all the comments on a PR
 - When you're in running in the repo under discussion, prefer local commands for looking at history over GitHub API calls that would fetch the same data.
+
+### Batch data processing
+
+When a task involves fetching and processing data for many items (e.g.,
+analyzing many PRs, processing a list of API resources), do not fan out to
+the full list immediately. First, work through the pipeline on a single item
+end-to-end: figure out which commands and API calls to run, what fields matter,
+how to parse and thread the data together, and confirm the output is useful.
+Refine the approach on one or a few cases — try different jq expressions, check
+whether the data model matches expectations, and verify the extraction logic
+produces what's needed. Only after the procedure is solid on one item should you
+scale up, and even then, prefer starting with a small batch before processing
+everything in parallel. Consider saving the procedure in a skill for future use.
