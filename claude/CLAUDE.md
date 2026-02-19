@@ -38,7 +38,7 @@ Some information about the user's coding environment:
 - in scripts, prefer full length flags instead of abbreviations for readability
 - if you're in a repo in ~/oxide and want to look at the source for another oxide repo, check if it's already cloned and use the local source. make sure to use jj to pull main on the other repo. if it's not present locally, clone it.
 - Always run tests after changing test code. Generally you should run relevant tests after changing any code.
-- Avoid python3 scripts for parsing JSON whenever possible. Use jq instead. jq is allowlisted in your permissions.
+- Do NOT use python3 for JSON processing. Use jq — it is allowlisted in your permissions. Only fall back to python3 for JSON if jq truly cannot be made to work (e.g., the transformation requires state across records that jq can't express).
 
 ### Working with GitHub
 

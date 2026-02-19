@@ -53,6 +53,8 @@
       "Bash(jj config list:*)",
       "Bash(jj config get:*)",
       "Bash(jj config path:*)",
+      "Bash(jj dt:*)",
+      "Bash(jj dts:*)",
       "Bash(cargo build:*)",
       "Bash(cargo check:*)",
       "Bash(cargo test:*)",
