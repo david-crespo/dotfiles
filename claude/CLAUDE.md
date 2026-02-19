@@ -30,6 +30,7 @@ Some information about the user's coding environment:
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message
 - don't try to run destructive `jj` ops like squash or abandon unprompted. intermediate commits are fine; just note when cleanup might be needed
 - `--ignore-immutable` may be needed when abandoning divergent commits from other authors, e.g., after rebasing on their branch and force pushing
+- Minimize diff size. Avoid no-op restructuring of code you're not otherwise changing (extracting variables, reordering, renaming) — it obscures the real change. Cleanup is fine in code you're already modifying.
 - Code comments should be more about why than what
 - After making changes, ALWAYS run linters, formatters, and typecheckers.
   - Check package.json for commands
@@ -37,7 +38,7 @@ Some information about the user's coding environment:
 - in scripts, prefer full length flags instead of abbreviations for readability
 - if you're in a repo in ~/oxide and want to look at the source for another oxide repo, check if it's already cloned and use the local source. make sure to use jj to pull main on the other repo. if it's not present locally, clone it.
 - Always run tests after changing test code. Generally you should run relevant tests after changing any code.
-- Prefer jq over custom python3 scripts when possible for manipulating JSON because jq is allowlisted in your permissions
+- Avoid python3 scripts for parsing JSON whenever possible. Use jq instead. jq is allowlisted in your permissions.
 
 ### Working with GitHub
 
