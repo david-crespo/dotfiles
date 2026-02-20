@@ -12,9 +12,9 @@ If invoked with an argument, treat it as the search term, topic, or date to find
 
 ## Helper script
 
-This skill includes `claude-sessions.sh` for common operations on Claude Code
-sessions. Use it instead of writing ad hoc jq/rg pipelines. Run it without
-arguments for usage.
+This skill includes `claude-sessions.sh` for common operations on both Claude
+Code and Codex sessions. Use it instead of writing ad hoc jq/rg pipelines. Run
+it without arguments for usage. The script auto-detects session format by path.
 
 ```
 claude-sessions.sh dir [path]                              # session dir for a project
@@ -47,26 +47,13 @@ The directory name is the absolute project path with all `/` replaced by `-`
 
     ~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl
 
-## Codex JSONL structure
-
-Codex sessions have a different format. Each line has `type` ("session_meta",
-"event_msg", "response_item", "turn_context") and `payload`.
-
-```bash
-# User messages
-jq -r 'select(.type == "event_msg") | .payload | select(.type == "user_message") | .message' "$session"
-
-# Assistant text
-jq -r 'select(.type == "response_item") | .payload | select(.type == "message" and .role == "assistant") | .content[]? | select(.type == "output_text") | .text' "$session"
-
-# Session metadata (cwd, model)
-jq -r 'select(.type == "turn_context") | .payload | "\(.cwd) | \(.model)"' "$session" | head -1
-```
+With `--all`, commands include both Claude Code and Codex sessions. Codex
+sessions are distinguished by a `codex:` prefix in summary and header output.
 
 ## Process
 
-1. **Use the helper script** for Claude Code sessions. Only fall back to raw
-   jq for Codex sessions or unusual extraction needs.
+1. **Use the helper script** for both Claude Code and Codex sessions. Only
+   fall back to raw jq for unusual extraction needs.
 
 2. **Triage efficiently.** Use `claude-sessions.sh search` to narrow down
    candidates before extracting full content.

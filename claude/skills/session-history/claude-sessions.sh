@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Common operations on Claude Code session history files.
-# Sessions are JSONL in ~/.claude/projects/<mangled-path>/*.jsonl
+# Common operations on Claude Code and Codex session history files.
+# Claude Code sessions: JSONL in ~/.claude/projects/<mangled-path>/*.jsonl
+# Codex sessions: JSONL in ~/.codex/sessions/YYYY/MM/DD/*.jsonl
 
 SESSIONS_ROOT="$HOME/.claude/projects"
+CODEX_ROOT="$HOME/.codex/sessions"
 
 usage() {
   cat <<'EOF'
@@ -15,15 +17,23 @@ Commands:
   list [--all | path] [--days N]    List recent sessions, most recent first
   search <term> [--all | path] [--days N]
                                     Search sessions for a term (uses rg)
-  bash <session> [filter]           Extract Bash tool commands from a session
+  bash <session> [filter]           Extract Bash/shell commands from a session
   extract <session> <type>          Extract content: user, assistant, bash, tools
   search-bash <term> [--all | path] [--days N]
                                     Search sessions and show matching Bash commands
   search-extract <term> <type> [--all | path] [--days N]
                                     Search sessions and extract content by type
   summary [--all | path] [--days N] List sessions with date, project, first user message
+
+With --all, commands include both Claude Code and Codex sessions.
+Session source is shown in summary output (codex: prefix for Codex sessions).
 EOF
   exit 1
+}
+
+# Check if a session file is from Codex (by path)
+is_codex() {
+  [[ "$1" == "$CODEX_ROOT"* ]]
 }
 
 # Convert an absolute path to the Claude session directory name
@@ -51,7 +61,12 @@ filter_by_days() {
 format_session_header() {
   local session="$1"
   local project date
-  project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
+  if is_codex "$session"; then
+    project=$(jq -r 'select(.type == "turn_context") | .payload.cwd' "$session" 2>/dev/null | head -1 | sed "s|$HOME/||")
+    project="codex: ${project:-unknown}"
+  else
+    project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
+  fi
   date=$(stat -f '%Sm' -t '%Y-%m-%d' "$session")
   echo "=== $project ($date) ==="
 }
@@ -83,8 +98,12 @@ cmd_list() {
   set -- "${REPLY_ARGS[@]+"${REPLY_ARGS[@]}"}"
   local dir
   if [[ "${1:-}" == "--all" ]]; then
-    fd --extension jsonl --changed-within 30d . "$SESSIONS_ROOT" --exec stat -f '%m %N' {} \
-      | sort -rn | awk '{print $2}' \
+    {
+      fd --extension jsonl --changed-within 30d . "$SESSIONS_ROOT" --exec stat -f '%m %N' {}
+      if [[ -d "$CODEX_ROOT" ]]; then
+        fd --extension jsonl --changed-within 30d . "$CODEX_ROOT" --exec stat -f '%m %N' {}
+      fi
+    } | sort -rn | awk '{print $2}' \
       | maybe_filter_days
     return
   fi
@@ -104,7 +123,12 @@ cmd_search() {
   parse_days_opt "$@"
   set -- "${REPLY_ARGS[@]+"${REPLY_ARGS[@]}"}"
   if [[ "${1:-}" == "--all" ]]; then
-    rg --files-with-matches "$term" "$SESSIONS_ROOT"/*/*.jsonl 2>/dev/null | maybe_filter_days || true
+    {
+      rg --files-with-matches "$term" "$SESSIONS_ROOT"/*/*.jsonl 2>/dev/null || true
+      if [[ -d "$CODEX_ROOT" ]]; then
+        rg --files-with-matches --glob '*.jsonl' "$term" "$CODEX_ROOT" 2>/dev/null || true
+      fi
+    } | maybe_filter_days
   else
     local dir
     dir=$(session_dir "${1:-$PWD}")
@@ -112,15 +136,31 @@ cmd_search() {
   fi
 }
 
-# Extract Bash commands from a session, optionally filtering
+# Extract Bash/shell commands from a session, optionally filtering
 cmd_bash() {
   local session="${1:?session file required}"
   local filter="${2:-}"
-  if [[ -n "$filter" ]]; then
-    # Filter in jq to preserve full multi-line commands
-    jq -r --arg f "$filter" 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use" and .name == "Bash") | .input.command | select(contains($f))' "$session"
+  if is_codex "$session"; then
+    if [[ -n "$filter" ]]; then
+      jq -r --arg f "$filter" '
+        select(.type == "response_item") | .payload |
+        select(.type == "function_call" and .name == "exec_command") |
+        (.arguments | fromjson? | .cmd) // empty |
+        select(contains($f))
+      ' "$session" 2>/dev/null || true
+    else
+      jq -r '
+        select(.type == "response_item") | .payload |
+        select(.type == "function_call" and .name == "exec_command") |
+        (.arguments | fromjson? | .cmd) // empty
+      ' "$session" 2>/dev/null || true
+    fi
   else
-    jq -r 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use" and .name == "Bash") | .input.command' "$session"
+    if [[ -n "$filter" ]]; then
+      jq -r --arg f "$filter" 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use" and .name == "Bash") | .input.command | select(contains($f))' "$session"
+    else
+      jq -r 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use" and .name == "Bash") | .input.command' "$session"
+    fi
   fi
 }
 
@@ -128,6 +168,15 @@ cmd_bash() {
 cmd_extract() {
   local session="${1:?session file required}"
   local type="${2:?type required: user, assistant, bash, tools}"
+  if is_codex "$session"; then
+    _extract_codex "$session" "$type"
+  else
+    _extract_cc "$session" "$type"
+  fi
+}
+
+_extract_cc() {
+  local session="$1" type="$2"
   case "$type" in
     user)
       jq -r 'select(.type == "user") | .message.content | if type == "string" then . elif type == "array" then map(select(.type == "text") | .text) | join("\n") else empty end' "$session"
@@ -140,6 +189,28 @@ cmd_extract() {
       ;;
     tools)
       jq -r 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use") | "\(.name): \(.input | tostring[:120])"' "$session"
+      ;;
+    *)
+      echo "Unknown type: $type (expected: user, assistant, bash, tools)" >&2
+      exit 1
+      ;;
+  esac
+}
+
+_extract_codex() {
+  local session="$1" type="$2"
+  case "$type" in
+    user)
+      jq -r 'select(.type == "event_msg") | .payload | select(.type == "user_message") | .message' "$session"
+      ;;
+    assistant)
+      jq -r 'select(.type == "response_item") | .payload | select(.type == "message" and .role == "assistant") | .content[]? | select(.type == "output_text") | .text' "$session"
+      ;;
+    bash)
+      cmd_bash "$session"
+      ;;
+    tools)
+      jq -r 'select(.type == "response_item") | .payload | select(.type == "function_call") | "\(.name): \(.arguments[:120])"' "$session"
       ;;
     *)
       echo "Unknown type: $type (expected: user, assistant, bash, tools)" >&2
@@ -196,15 +267,26 @@ cmd_summary() {
     [[ -z "$session" ]] && continue
     [[ "$session" == */subagents/* ]] && continue
     local project date first_msg
-    project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
+    if is_codex "$session"; then
+      project=$(jq -r 'select(.type == "turn_context") | .payload.cwd' "$session" 2>/dev/null | head -1 | sed "s|$HOME/||")
+      project="codex: ${project:-unknown}"
+      first_msg=$(jq -rn '
+        first(inputs | select(.type == "event_msg") | .payload |
+          select(.type == "user_message") | .message |
+          select(startswith("<") | not)
+        ) | .[:120]
+      ' "$session" 2>/dev/null || true)
+    else
+      project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
+      first_msg=$(jq -rn '
+        first(inputs | select(.type == "user") | .message.content |
+          if type == "string" then select(startswith("<") | not)
+          elif type == "array" then [.[] | select(.type == "text") | .text | select(startswith("<") | not)] | first // empty
+          else empty end
+        ) | .[:120]
+      ' "$session" 2>/dev/null || true)
+    fi
     date=$(stat -f '%SB' -t '%Y-%m-%d %H:%M' "$session")
-    first_msg=$(jq -rn '
-      first(inputs | select(.type == "user") | .message.content |
-        if type == "string" then select(startswith("<") | not)
-        elif type == "array" then [.[] | select(.type == "text") | .text | select(startswith("<") | not)] | first // empty
-        else empty end
-      ) | .[:120]
-    ' "$session" 2>/dev/null || true)
     echo "$date | $project | $first_msg"
   done <<< "$sessions"
 }

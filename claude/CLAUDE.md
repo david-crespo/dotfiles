@@ -28,7 +28,7 @@ Some information about the user's coding environment:
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
-- use jj, not git. jj status, jj diff, jj diff -r @-, etc. to view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`). to exclude paths from a jj command, use fileset syntax: `jj diff '~dir1 & ~dir2'` or `jj restore '~package-lock.json'`
+- NEVER use git unless jj has no way to do the thing. Always use jj. jj status, jj diff, jj diff -r @-, jj log, etc. to view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`). to exclude paths from a jj command, use fileset syntax: `jj diff '~dir1 & ~dir2'` or `jj restore '~package-lock.json'`
 - prefer squash workflow in jj over editing, where if you're trying to update rev A, work in a rev on top of A and periodically squash what you've done into A
 - for parallel approaches, use `jj new <base>` to create siblings from a common base, implement each approach, then compare. bookmarks are unnecessary for this workflow
 - use `jjw` to manage jj workspaces: `jjw create` (or `jjw c`) creates a workspace and cds into it, `jjw ls` lists workspaces, `jjw rm` interactively removes one
