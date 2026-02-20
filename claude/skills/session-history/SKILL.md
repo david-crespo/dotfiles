@@ -26,6 +26,7 @@ claude-sessions.sh search-bash <term> [--all | path] [--days N]
                                                             # search + extract matching Bash commands
 claude-sessions.sh search-extract <term> <type> [--all | path] [--days N]
                                                             # search + extract content by type
+claude-sessions.sh summary [--all | path] [--days N]       # date, project, first user message
 ```
 
 The script lives next to this skill file. Run it with its full path:

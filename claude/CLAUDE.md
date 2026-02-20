@@ -12,7 +12,13 @@ Some information about the user's coding environment:
 - Terminal: Ghostty
 - Text editor: Helix
 - Shell: zsh
-- Non-standard bash commands available: rg, ast-grep (sg), tokei, gh, jq
+- Non-standard bash commands available:
+  - `rg` (ripgrep): fast recursive text search, use instead of grep
+  - `sg` (ast-grep): structural code search/transform using AST patterns
+  - `tokei`: lines-of-code statistics by language
+  - `gh`: GitHub CLI for PRs, issues, repos
+  - `jq`: JSON processing and transformation
+  - `yq`: YAML/TOML processing (same query language as jq)
 
 ### TypeScript projects
 
