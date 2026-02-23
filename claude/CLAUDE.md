@@ -66,3 +66,17 @@ whether the data model matches expectations, and verify the extraction logic
 produces what's needed. Only after the procedure is solid on one item should you
 scale up, and even then, prefer starting with a small batch before processing
 everything in parallel. Consider saving the procedure in a skill for future use.
+
+### Analysis and planning
+
+When asked to do analysis and planning for a possible feature, make sure to
+work in a way that is easily resumable by another session. Start a report in a
+markdown file immediately, include the prompt or goal at the top, and fill it
+in as you go instead of at the end. Create separate markdown files for analysis
+and planning, where planning is the shorter and more focused doc developers
+are likely to read, and the analysis is more like a reference backing up the
+plan and making it easy for agents to resume work on the plan. Be thorough and
+consider alternative approaches explicitly, but don't give too much space to
+alternatives that are obviously implausible for whatever reason. When asked to
+review or improve a design doc, engage with the design, not just the prose.
+The point is to produce a solid design and make the case for it.
