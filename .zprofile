@@ -193,6 +193,19 @@ alias aisf='ai --search -m flash'
 alias aif='ai -m flash'
 alias cbd='cb -l diff'
 
+function det() {
+  summary="${1:-Details}"
+  contents="$(pbpaste)"
+
+  echo "<details>
+<summary>$summary</summary>
+
+$contents
+
+</details>" | pbcopy
+  echo "Clipboard contents wrapped in <details>"
+}
+
 # default divisor is 4 and it seems pretty good, but you can pass a different one
 function tok() {
   local div=${1:-4}
