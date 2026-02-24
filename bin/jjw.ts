@@ -1,8 +1,26 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,rm
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,rm,git
 
 import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
 import { join } from "@std/path"
+
+/** Symlink src into the workspace if it exists and is gitignored. */
+async function symlinkIfIgnored(
+  repoRoot: string,
+  wspath: string,
+  relPath: string,
+) {
+  const src = join(repoRoot, relPath)
+  if (!(await Deno.stat(src).catch(() => null))) return
+  const ignored = await $`git check-ignore -q ${relPath}`
+    .cwd(repoRoot).noThrow().quiet()
+  if (ignored.code !== 0) return
+  const dest = join(wspath, relPath)
+  await Deno.mkdir(dest.substring(0, dest.lastIndexOf("/")), {
+    recursive: true,
+  })
+  await Deno.symlink(src, dest)
+}
 
 const createCmd = new Command()
   .description("Create a new jj workspace and print its path")
@@ -25,16 +43,8 @@ const createCmd = new Command()
     const jjOut = await $`jj workspace add ${wspath}`.text()
     if (jjOut.trim()) console.error(jjOut)
 
-    // symlink claude local settings if present (not versioned)
-    const localSettings = join(repoRoot, ".claude", "settings.local.json")
-    if (await Deno.stat(localSettings).catch(() => null)) {
-      const destDir = join(wspath, ".claude")
-      await Deno.mkdir(destDir, { recursive: true })
-      await Deno.symlink(
-        localSettings,
-        join(destDir, "settings.local.json"),
-      )
-    }
+    await symlinkIfIgnored(repoRoot, wspath, join(".claude", "settings.local.json"))
+    await symlinkIfIgnored(repoRoot, wspath, ".helix")
 
     // only output: the path for the shell wrapper to cd into
     console.log(wspath)
@@ -42,7 +52,8 @@ const createCmd = new Command()
 
 const rmCmd = new Command()
   .description("Remove a jj workspace")
-  .action(async () => {
+  .arguments("[name:string]")
+  .action(async (_options: void, nameArg?: string) => {
     const names = (await $`jj workspace list -T 'name ++ "\n"'`.lines())
       .filter((n) => n && n !== "default")
 
@@ -51,8 +62,18 @@ const rmCmd = new Command()
       Deno.exit(0)
     }
 
-    const i = await $.select({ message: "Remove workspace", options: names })
-    const name = names[i]
+    let name: string
+    if (nameArg) {
+      if (!names.includes(nameArg)) {
+        console.error(`Unknown workspace: ${nameArg}`)
+        console.error(`Known workspaces: ${names.join(", ")}`)
+        Deno.exit(1)
+      }
+      name = nameArg
+    } else {
+      const i = await $.select({ message: "Remove workspace", options: names })
+      name = names[i]
+    }
 
     const wsPath = (await $`jj workspace root --name ${name}`.text()).trim()
 
