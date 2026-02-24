@@ -55,12 +55,21 @@ d = ["diff"]
 dm = ["describe", "-m"]
 dp = ["describe", "-r", "@-"]
 # diff rev against fork point like GitHub PR diff or git ...
+# dt/dts exclude lock files and openapi schemas; dta/dtas show all files
 dt = ["util", "exec", "--", "zsh", "-c", '''
-  jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
+  jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}" \
+    '~glob:"**/package-lock.json"' '~glob:"**/Cargo.lock"' '~glob:"**/openapi/**"'
   ''', 'jj dt']
 dts = ["util", "exec", "--", "zsh", "-c", '''
-  jj diff --stat --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
+  jj diff --stat --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}" \
+    '~glob:"**/package-lock.json"' '~glob:"**/Cargo.lock"' '~glob:"**/openapi/**"'
   ''', 'jj dts']
+dta = ["util", "exec", "--", "zsh", "-c", '''
+  jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
+  ''', 'jj dta']
+dtas = ["util", "exec", "--", "zsh", "-c", '''
+  jj diff --stat --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
+  ''', 'jj dtas']
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
