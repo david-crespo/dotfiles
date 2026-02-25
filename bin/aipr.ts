@@ -102,6 +102,13 @@ const reviewsGraphql = `
             }
           }
         }
+        comments(first: 100) {
+          nodes {
+            author { login }
+            body
+            createdAt
+          }
+        }
       }
     }
   }
@@ -159,12 +166,19 @@ type ReviewThread = {
   comments: { nodes: Comment[] }
 }
 
+type IssueComment = {
+  author: Actor
+  body: string
+  createdAt: string
+}
+
 type Reviews = {
   data: {
     repository: {
       pullRequest: {
         reviews: { nodes: Review[] }
         reviewThreads: { nodes: ReviewThread[] }
+        comments: { nodes: IssueComment[] }
       }
     }
   }
@@ -282,7 +296,11 @@ const fetchComments = async (sel: PrSel) => {
         ])
     )
 
-  return [...reviews, ...reviewComments].join("\n\n")
+  const issueComments = raw.data.repository.pullRequest.comments.nodes
+    .filter((c) => c.body)
+    .flatMap((c) => [`## Comment by ${c.author.login} (${c.createdAt})`, c.body])
+
+  return [...reviews, ...issueComments, ...reviewComments].join("\n\n")
 }
 const getPrContext = (sel: PrSel, includeComments: boolean) =>
   Promise.all([
