@@ -84,3 +84,7 @@ consider alternative approaches explicitly, but don't give too much space to
 alternatives that are obviously implausible for whatever reason. When asked to
 review or improve a design doc, engage with the design, not just the prose.
 The point is to produce a solid design and make the case for it.
+
+Analysis markdown files should go in `.claude/notes` relative to repo root. That
+directory is gitignored globally. Give the file a descriptive name and start it
+with a YYYY-MM-DD date.
