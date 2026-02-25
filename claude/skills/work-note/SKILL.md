@@ -18,6 +18,8 @@ If invoked with an argument, treat it as instructions on what to include in the 
 
 ## Note format
 
+The filename is the note title. Do not add a leading Markdown heading like `# title` inside the note body.
+
 The key principle: **the note should be very close to verbatim what was said in the conversation.** If you gave a good explanation in the chat, copy it nearly verbatim into the note. Do not rewrite, reorganize, or "summarize" something that was already well-written. The conversation is the primary source — the note preserves it, lightly edited at most.
 
 - **Use the conversation's Q&A structure directly.** The user's questions become blockquotes (`>`), your answers follow. If the user asked a follow-up question that drove the conversation forward, include it as a blockquote transition between sections — this is more authentic and clearer than invented section headings.
