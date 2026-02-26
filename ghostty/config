@@ -30,6 +30,11 @@ foreground = e6e1cf
 
 split-divider-color = #666
 
+# Disable auto-generation of 256-color palette so the ayu theme's
+# explicit palette values (indices 16-255) are preserved as-is.
+# See: https://github.com/ghostty-org/ghostty/discussions/10852
+palette-generate = false
+
 font-family = Berkeley Mono
 adjust-cell-height = 2
 adjust-cursor-thickness = 1
