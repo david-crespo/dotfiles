@@ -13,20 +13,38 @@ resolve them.
 
 **Step 1: Gather context (do this silently)**
 
-- Read recent daily notes from `~/obsidian/Daily notes/` (last 3-5 days)
+Run all of these in parallel where possible:
+
+- Read recent daily notes from `~/obsidian/Daily notes/`
 - Run `tviz today -f tsv` to get the Today list with UUIDs
 - Run `tviz logbook -n 30` to see recent completions
 - Run `tviz todos -a Oxide -f tsv` (or relevant area) to see open work items
+- Run `~/.claude/skills/coach/gh-activity.sh 7` to see recent GitHub activity
+  (open PRs, merged PRs, reviews, issues, comments)
+- Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
+  to see recent Claude and Codex sessions
+
+To dig deeper into a GitHub discussion, use the API paths from the gh-activity
+output. For example, to fetch the full text of a comment:
+
+    gh-api-read /repos/oxidecomputer/console/issues/comments/123456 | jq .body
+
+For PRs and issues, use `gh pr view` or `gh issue view` with the URL from the
+output. Use `aipr discussion <number>` (from within the relevant repo) to get
+all comments on a PR.
 
 **Step 2: Identify gaps**
 
-Compare notes against tasks. Look for:
+Cross-reference notes, tasks, GitHub activity, and sessions. Look for:
 
 - **Status mismatches**: Notes say something happened, but the task is still open (or vice versa)
 - **Unclear relationships**: Multiple tasks that seem related but aren't linked or explained
 - **Missing context**: Tasks on Today with no indication of why they're urgent
 - **Stale items**: Tasks that haven't moved in days despite being scheduled
-- **Undercaptured work**: Things mentioned in notes that have no corresponding task
+- **Undercaptured work**: GitHub activity or sessions that have no corresponding task
+- **Open PR threads**: PRs with unresolved review comments or discussions
+- **Scattered focus**: Many repos/topics active in a short period with no clear thread
+- **Invisible work**: Lots of sessions or GitHub activity not reflected in tasks or notes
 
 **Step 3: Ask targeted questions**
 

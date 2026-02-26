@@ -108,6 +108,8 @@
       "Bash(tmux new-session:*)",
       "Bash(tmux capture-pane:*)",
       "Bash(tviz:*)",
+      "Bash(~/.claude/skills/coach/gh-activity.sh:*)",
+      "Bash(~/.claude/skills/session-history/claude-sessions.sh:*)",
       "Bash(sw_vers:*)",
       "Bash(which:*)",
       "Bash(type:*)",
