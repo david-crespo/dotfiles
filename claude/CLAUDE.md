@@ -24,6 +24,7 @@ Some information about the user's coding environment:
 
 - Read online docs for libraries to understand how to use them
 - When working on types, work hard to avoid casting or `any`. Do it right.
+- TS 5.5 (June 2024)+ infers type predicates from `.filter()` callbacks, so `.filter(x => !!x)` narrows.
 
 ### jj (Jujutsu)
 
