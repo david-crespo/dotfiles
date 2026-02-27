@@ -19,10 +19,22 @@ Run all of these in parallel where possible:
 - Run `tviz today -f tsv` to get the Today list with UUIDs
 - Run `tviz logbook -n 30` to see recent completions
 - Run `tviz todos -a Oxide -f tsv` (or relevant area) to see open work items
+- Run `tviz todos -f tsv` excluding Oxide to see all other open tasks (for
+  cleanup and to spot stale non-work items)
 - Run `~/.claude/skills/coach/gh-activity.sh 7` to see recent GitHub activity
   (open PRs, merged PRs, reviews, issues, comments)
 - Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
   to see recent Claude and Codex sessions
+- Check milestones in main repos for upcoming deadlines:
+  `gh-api-read /repos/oxidecomputer/console/milestones | jq '.[] | {title, due_on, open_issues, closed_issues}'`
+  (and similarly for omicron or other repos if relevant)
+- For open PRs and milestone issues that are the user's, check jj revs in the
+  relevant repos to find in-progress work: `jj log` with description searches.
+  The user often has partial implementations in uncommitted jj revisions that
+  the task list doesn't reflect.
+
+tviz is read-only. You cannot create, complete, or modify Things tasks. When
+recommending task changes, tell the user what to do in Things.
 
 To dig deeper into a GitHub discussion, use the API paths from the gh-activity
 output. For example, to fetch the full text of a comment:
@@ -48,11 +60,17 @@ Cross-reference notes, tasks, GitHub activity, and sessions. Look for:
 
 **Step 3: Ask targeted questions**
 
-Open with a brief summary of what you see, then ask about specific gaps:
+Open with a brief summary of what you see, then ask about specific gaps.
+
+If the user mentions a deadline or milestone, pin down the specific date early
+— don't let it stay vague across multiple exchanges.
+
+Examples:
 
 - "Your note says the meeting went well, but the task is still on Today—what's the status?"
 - "You have three docs-related tasks. Are these separate or part of one workflow?"
 - "This task has been on Today since Monday. What's blocking it?"
+- "R19 starts 'next week' — what's the actual code-freeze date?"
 
 Only after addressing gaps, open it up: "Anything else on your mind that isn't captured?"
 
@@ -75,13 +93,24 @@ Once gaps are resolved:
 ## Wrapping up
 
 End by identifying what's next—a short list for the next work block. Write a
-brief summary to the daily note.
+summary to the daily note.
+
+If the user asks for a bot note, write the full analysis to
+`~/obsidian/Base files/Bot notes/YYYY-MM-DD coach session <topic>.md` and
+link to it from the daily note callout. Don't write a bot note unless asked.
 
 ## Note-taking
 
-Write notes to `~/obsidian/Daily notes/YYYY-MM-DD.md` (today's date):
+**Daily note** — `~/obsidian/Daily notes/YYYY-MM-DD.md` (today's date):
 
 - Use a callout titled "Coach" (e.g., `> [!note] Coach`)
-- **Verbatim quotes**: Copy the user's words directly, no markup
-- **Synthesis**: Use callouts to distinguish bot-generated summaries from user words
-- Don't duplicate task tracking—notes are for context and decisions, not task status
+- One callout per session. Multiple sessions in one day get separate callouts.
+- Link to the bot note for full analysis (e.g., `[[2026-02-26 coach session r19 planning]]`)
+- Include the plan summary and key verbatim quotes
+- Don't duplicate the full analysis — that's what the bot note is for
+
+**Bot note** (when requested) — `~/obsidian/Base files/Bot notes/`:
+
+- Name: `YYYY-MM-DD coach session <topic>.md`
+- Include: goal, sources consulted, cross-referencing findings, status of
+  in-progress work, plan, productivity patterns observed
