@@ -101,16 +101,30 @@ link to it from the daily note callout. Don't write a bot note unless asked.
 
 ## Note-taking
 
+Address the user as "you", not by name — these are notes for the user, not
+about the user.
+
 **Daily note** — `~/obsidian/Daily notes/YYYY-MM-DD.md` (today's date):
 
-- Use a callout titled "Coach" (e.g., `> [!note] Coach`)
+- Use a callout titled "Coach" with optional topic (e.g., `> [!note] Coach — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.
-- Link to the bot note for full analysis (e.g., `[[2026-02-26 coach session r19 planning]]`)
-- Include the plan summary and key verbatim quotes
-- Don't duplicate the full analysis — that's what the bot note is for
+- Link to bot notes when they exist
+- Use the full format, not a short summary. The daily note callout should be
+  useful on its own without opening the bot note. Include:
+  - **What got done today/this session**: concrete list with PR numbers and links
+  - **Status of key workstreams**: milestone items, open PRs, in-progress jj
+    revs, with specific states (merged, draft, open, plan only, etc.)
+  - **Priorities for next work block**: numbered, with context on why each
+    matters (deadlines, owed reviews, etc.)
+  - **Todo list state**: if cleanup is needed, say what
+  - **Patterns observed**: if relevant (e.g., nerdsniping, hiring deprioritized)
+- See `2026-02-27.md` "Coach — end of week" callout for a good example
 
 **Bot note** (when requested) — `~/obsidian/Base files/Bot notes/`:
 
 - Name: `YYYY-MM-DD coach session <topic>.md`
 - Include: goal, sources consulted, cross-referencing findings, status of
   in-progress work, plan, productivity patterns observed
+- Bot notes are for deeper analysis that would make the daily note callout too
+  long: weekly retros, PR review breakdowns, detailed cross-referencing.
+  The daily note callout should still be substantive on its own.
