@@ -137,8 +137,13 @@
       "Bash(jj squash:*)",
       "Bash(jj rebase:*)",
       "Bash(jj resolve:*)"
+    ],
+    "additionalDirectories": [
+      "../omicron",
+      "../console"
     ]
   },
+  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -162,6 +167,5 @@
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
     "ralph-wiggum@claude-plugins-official": true
-  },
-  "model": "opus"
+  }
 }
