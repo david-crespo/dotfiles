@@ -39,6 +39,10 @@ Some information about the user's coding environment:
 - `--ignore-immutable` may be needed when abandoning divergent commits from other authors, e.g., after rebasing on their branch and force pushing
 - `jj dt` and `jj dts` are custom aliases that diff a rev against its fork point from trunk (like a GitHub PR diff). `jj dt` shows the full diff, `jj dts` shows `--stat`. Both default to `@` but accept an optional rev argument.
 
+### Rust projects
+
+- Always use nextest for running tests (e.g., `cargo nextest run` instead of `cargo test`).
+
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding

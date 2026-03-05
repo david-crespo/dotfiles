@@ -128,7 +128,9 @@
       "WebFetch(domain:vite.dev)",
       "WebFetch(domain:shiki.style)",
       "WebFetch(domain:docs.jj-vcs.dev)",
-      "WebFetch(domain:oxc.rs)"
+      "WebFetch(domain:oxc.rs)",
+      "WebFetch(domain:support.claude.com)",
+      "WebFetch(domain:docs.anthropic.com)"
     ],
     "ask": [
       "Bash(rm:*)",
