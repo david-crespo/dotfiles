@@ -204,15 +204,9 @@ type TrackingIssue = {
 
 const getPrArgs = (sel: PrSel) => ["-R", toRepoStr(sel), sel.pr]
 
-const REPO_EXCLUDES: Record<string, RegExp[]> = {
-  "oxidecomputer/omicron": [
-    // exclude giant schema files in omicron because the new versioning setup
-    // makes and entire new schema file instead of modifying the existing one
-    // TODO: be smart and get the actual schema diff
-    // https://github.com/oxidecomputer/console/blob/main/tools/deno/api-diff.ts
-    /^openapi\/[^\/]+\/.+\.json$/,
-  ],
-}
+// key is something like oxidecomputer/omicron, value is a list of regexes
+// matching file paths relative to repo root
+const REPO_EXCLUDES: Record<string, RegExp[]> = {}
 
 /** Filter out gigantic useless lockfiles from diff */
 function filterDiff(rawDiff: string, sel?: RepoSel): string {
