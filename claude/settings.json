@@ -55,6 +55,7 @@
       "Bash(jj config path:*)",
       "Bash(jj dt:*)",
       "Bash(jj dts:*)",
+      "Bash(jj st:*)",
       "Bash(cargo build:*)",
       "Bash(cargo check:*)",
       "Bash(cargo test:*)",
@@ -167,5 +168,6 @@
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
     "ralph-wiggum@claude-plugins-official": true
-  }
+  },
+  "includeGitInstructions": false
 }

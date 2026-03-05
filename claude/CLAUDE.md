@@ -35,6 +35,7 @@ Some information about the user's coding environment:
 - Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv do jj desc + jj new) after chunks of work to snapshot each step in a reviewable way
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message. These flags are mutually exclusive.
 - don't try to run destructive `jj` ops like squash or abandon unprompted. intermediate commits are fine; just note when cleanup might be needed
+- The user may squash your work into the previous commit while you're working. This is normal — check `@-` (e.g., `jj diff -r @-`) if you need to confirm your changes landed.
 - `--ignore-immutable` may be needed when abandoning divergent commits from other authors, e.g., after rebasing on their branch and force pushing
 - `jj dt` and `jj dts` are custom aliases that diff a rev against its fork point from trunk (like a GitHub PR diff). `jj dt` shows the full diff, `jj dts` shows `--stat`. Both default to `@` but accept an optional rev argument.
 
