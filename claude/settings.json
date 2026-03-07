@@ -83,6 +83,7 @@
       "Bash(tviz:*)",
       "Bash(~/.claude/skills/coach/gh-activity.sh:*)",
       "Bash(~/.claude/skills/session-history/claude-sessions.sh:*)",
+      "Bash(obsidian-notes:*)",
       "Bash(sw_vers:*)",
       "Bash(which:*)",
       "Bash(type:*)",

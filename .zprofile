@@ -290,3 +290,6 @@ export PATH="/Users/david/oxide/omicron/out/cockroachdb/bin:$PATH"
 [[ -o interactive ]] || return
 eval "$(/opt/homebrew/bin/brew shellenv)"
 eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"
+
+# Added by Obsidian
+export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"

@@ -15,7 +15,7 @@ resolve them.
 
 Run all of these in parallel where possible:
 
-- Read recent daily notes from `~/obsidian/Daily notes/`
+- Read recent daily notes with `obsidian-notes daily:recent`
 - Run `tviz today -f tsv` to get the Today list with UUIDs
 - Run `tviz logbook -n 30` to see recent completions
 - Run `tviz todos -a Oxide -f tsv` (or relevant area) to see open work items
@@ -95,8 +95,8 @@ Once gaps are resolved:
 End by identifying what's next—a short list for the next work block. Write a
 summary to the daily note.
 
-If the user asks for a bot note, write the full analysis to
-`~/obsidian/Base files/Bot notes/YYYY-MM-DD coach session <topic>.md` and
+If the user asks for a bot note, write the full analysis with
+`obsidian-notes bot:create "YYYY-MM-DD coach session <topic>"` and
 link to it from the daily note callout. Don't write a bot note unless asked.
 
 ## Note-taking
@@ -104,7 +104,7 @@ link to it from the daily note callout. Don't write a bot note unless asked.
 Address the user as "you", not by name — these are notes for the user, not
 about the user.
 
-**Daily note** — `~/obsidian/Daily notes/YYYY-MM-DD.md` (today's date):
+**Daily note** — append to today's note with `obsidian-notes daily:append`:
 
 - Use a callout titled "Coach" with optional topic (e.g., `> [!note] Coach — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.
@@ -118,9 +118,9 @@ about the user.
     matters (deadlines, owed reviews, etc.)
   - **Todo list state**: if cleanup is needed, say what
   - **Patterns observed**: if relevant (e.g., nerdsniping, hiring deprioritized)
-- See `2026-02-27.md` "Coach — end of week" callout for a good example
+- See `obsidian-notes daily:read 2026-02-27` "Coach — end of week" callout for a good example
 
-**Bot note** (when requested) — `~/obsidian/Base files/Bot notes/`:
+**Bot note** (when requested) — create with `obsidian-notes bot:create "<name>"`:
 
 - Name: `YYYY-MM-DD coach session <topic>.md`
 - Include: goal, sources consulted, cross-referencing findings, status of
