@@ -34,8 +34,9 @@
   "agent": {
     "default_profile": "write",
     "default_model": {
+      "enable_thinking": true,
       "provider": "anthropic",
-      "model": "claude-sonnet-4-latest"
+      "model": "claude-opus-4-6-thinking-latest"
     },
     "dock": "right"
   },

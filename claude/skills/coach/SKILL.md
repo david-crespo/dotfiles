@@ -36,6 +36,9 @@ Run all of these in parallel where possible:
 tviz is read-only. You cannot create, complete, or modify Things tasks. When
 recommending task changes, tell the user what to do in Things.
 
+When referring to specific tasks, link them with `[title](things:///show?id=<uuid>)`
+so the user can click to open them in Things. Don't show raw UUIDs unless asked.
+
 To dig deeper into a GitHub discussion, use the API paths from the gh-activity
 output. For example, to fetch the full text of a comment:
 

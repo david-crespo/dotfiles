@@ -7,6 +7,7 @@
     "commit": "",
     "pr": ""
   },
+  "includeGitInstructions": false,
   "permissions": {
     "allow": [
       "Bash(cat:*)",
@@ -132,6 +133,26 @@
           }
         ]
       }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jjw-cmd create"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.local/bin/claude-worktree-remove"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -144,5 +165,5 @@
     "rust-analyzer-lsp@claude-plugins-official": false,
     "ralph-wiggum@claude-plugins-official": true
   },
-  "includeGitInstructions": false
+  "effortLevel": "high"
 }
