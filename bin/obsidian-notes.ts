@@ -76,6 +76,18 @@ const botCreate = new Command()
     await obs("create", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
   })
 
+const botAppend = new Command()
+  .description("Append content to a bot note")
+  .arguments("<name:string>")
+  .option("--content <content:string>", "Content to append (reads stdin if omitted)")
+  .action(async ({ content }, name: string) => {
+    if (!content) {
+      const buf = await new Response(Deno.stdin.readable).text()
+      content = buf.trim()
+    }
+    await obs("append", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
+  })
+
 await new Command()
   .name("obsidian-notes")
   .description("Scoped access to Obsidian daily notes and bot notes")
@@ -89,4 +101,5 @@ await new Command()
   .command("bot:read", botRead)
   .command("bot:list", botList)
   .command("bot:create", botCreate)
+  .command("bot:append", botAppend)
   .parse(Deno.args)

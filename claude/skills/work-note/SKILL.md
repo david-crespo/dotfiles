@@ -30,4 +30,4 @@ The key principle: **the note should be very close to verbatim what was said in 
 
 ## Before writing
 
-Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one.
+Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one. To append, use `obsidian-notes bot:append "<name>" --content "<content>"` or pipe content via stdin.
