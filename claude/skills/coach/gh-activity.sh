@@ -53,15 +53,34 @@ gh search prs --author="$USERNAME" --merged --sort=updated --limit=20 \
 echo
 
 # --- PRs I reviewed ---
+# Use events API to get PRs where I actually submitted a review in the window,
+# then enrich with title/state from the search API. This avoids false positives
+# from PRs I reviewed long ago that were merely updated recently.
+REVIEW_EVENTS=$(gh-api-read "/users/$USERNAME/events?per_page=100" \
+  | jq -r --arg since "$DATE_SINCE" '
+    [.[] |
+     select(.created_at >= $since) |
+     select(.type == "PullRequestReviewEvent") |
+     "\(.repo.name)#\(.payload.pull_request.number)"
+    ] | unique | .[]
+  ')
+
 echo "## Reviews"
-gh search prs --reviewed-by="$USERNAME" --sort=updated --limit=20 \
-  --json repository,title,number,state,updatedAt,url \
-  | jq -r --arg since "$DATE_SINCE" --arg me "$USERNAME" '
-    [.[] | select(.updatedAt >= $since)] |
-    if length == 0 then "  (none)\n"
-    else .[] | "  \(.repository.nameWithOwner)#\(.number) [\(.state)]: \(.title)\n    \(.url)"
-    end
-  '
+if [[ -z "$REVIEW_EVENTS" ]]; then
+  echo "  (none)"
+else
+  # Search gives us titles and state; filter to only PRs with actual recent review events
+  gh search prs --reviewed-by="$USERNAME" --sort=updated --limit=50 \
+    --json repository,title,number,state,url \
+    | jq -r --argjson reviewed "$(echo "$REVIEW_EVENTS" | jq -R -s 'split("\n") | map(select(. != ""))')" '
+      [.[] |
+       select(("\(.repository.nameWithOwner)#\(.number)") as $key | $reviewed | any(. == $key))
+      ] |
+      if length == 0 then "  (none)\n"
+      else .[] | "  \(.repository.nameWithOwner)#\(.number) [\(.state)]: \(.title)\n    \(.url)"
+      end
+    '
+fi
 echo
 
 # --- Issues I opened ---
