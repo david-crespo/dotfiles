@@ -23,7 +23,8 @@ Commands:
                                     Search sessions and show matching Bash commands
   search-extract <term> <type> [--all | path] [--days N]
                                     Search sessions and extract content by type
-  summary [--all | path] [--days N] List sessions with date, project, first user message
+  summary [--all | path] [--days N] List sessions with date, project, message count, first user message
+  recap <session>                   Compact digest: all user messages (truncated) showing work progression
 
 With --all, commands include both Claude Code and Codex sessions.
 Session source is shown in summary output (codex: prefix for Codex sessions).
@@ -258,7 +259,17 @@ cmd_search_extract() {
   done <<< "$sessions"
 }
 
-# List sessions with date, project, and first user message
+# Count user messages in a session
+count_user_msgs() {
+  local session="$1"
+  if is_codex "$session"; then
+    jq -s '[.[] | select(.type == "event_msg") | .payload | select(.type == "user_message")] | length' "$session" 2>/dev/null
+  else
+    jq -s '[.[] | select(.type == "user")] | length' "$session" 2>/dev/null
+  fi
+}
+
+# List sessions with date, project, message count, and first user message
 cmd_summary() {
   local sessions
   sessions=$(cmd_list "$@")
@@ -266,7 +277,7 @@ cmd_summary() {
   while IFS= read -r session; do
     [[ -z "$session" ]] && continue
     [[ "$session" == */subagents/* ]] && continue
-    local project date first_msg
+    local project date first_msg msg_count
     if is_codex "$session"; then
       project=$(jq -r 'select(.type == "turn_context") | .payload.cwd' "$session" 2>/dev/null | head -1 | sed "s|$HOME/||")
       project="codex: ${project:-unknown}"
@@ -286,9 +297,32 @@ cmd_summary() {
         ) | .[:120]
       ' "$session" 2>/dev/null || true)
     fi
+    msg_count=$(count_user_msgs "$session")
     date=$(stat -f '%SB' -t '%Y-%m-%d %H:%M' "$session")
-    echo "$date | $project | $first_msg"
+    echo "$date | $project | ${msg_count}msgs | $first_msg"
   done <<< "$sessions"
+}
+
+# Compact digest of a session: all user messages truncated, showing work progression
+cmd_recap() {
+  local session="${1:?session file required}"
+  format_session_header "$session"
+  if is_codex "$session"; then
+    jq -r '
+      select(.type == "event_msg") | .payload |
+      select(.type == "user_message") | .message |
+      select(startswith("<") | not) |
+      .[0:150]
+    ' "$session" 2>/dev/null | nl -ba
+  else
+    jq -r '
+      select(.type == "user") | .message.content |
+      if type == "string" then select(startswith("<") | not)
+      elif type == "array" then [.[] | select(.type == "text") | .text | select(startswith("<") | not)] | first // empty
+      else empty end |
+      .[0:150]
+    ' "$session" 2>/dev/null | nl -ba
+  fi
 }
 
 [[ $# -eq 0 ]] && usage
@@ -305,5 +339,6 @@ case "$command" in
   search-bash)    cmd_search_bash "$@" ;;
   search-extract) cmd_search_extract "$@" ;;
   summary)        cmd_summary "$@" ;;
+  recap)          cmd_recap "$@" ;;
   *)              usage ;;
 esac

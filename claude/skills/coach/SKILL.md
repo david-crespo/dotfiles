@@ -24,7 +24,11 @@ Run all of these in parallel where possible:
 - Run `~/.claude/skills/coach/gh-activity.sh 7` to see recent GitHub activity
   (open PRs, merged PRs, reviews, issues, comments)
 - Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
-  to see recent Claude and Codex sessions
+  to see recent Claude and Codex sessions. The summary includes message counts.
+  For substantial sessions (roughly 20+ messages), run `recap <session-file>`
+  to see the progression of user messages — this reveals what was actually built,
+  not just the opening prompt. Use `claude-sessions.sh list --all --days N` to
+  get raw session file paths for recap.
 - Check milestones in main repos for upcoming deadlines:
   `gh-api-read /repos/oxidecomputer/console/milestones | jq '.[] | {title, due_on, open_issues, closed_issues}'`
   (and similarly for omicron or other repos if relevant)
