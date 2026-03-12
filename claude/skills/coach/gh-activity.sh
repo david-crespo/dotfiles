@@ -6,7 +6,7 @@ set -euo pipefail
 # (for comments and reviews) into a compact overview.
 
 DAYS="${1:-7}"
-USERNAME=$(gh-api-read /user | jq -r .login 2>/dev/null)
+USERNAME=$(gh-api-read /user --jq .login 2>/dev/null)
 
 usage() {
   cat <<'EOF'
@@ -57,13 +57,10 @@ echo
 # then enrich with title/state from the search API. This avoids false positives
 # from PRs I reviewed long ago that were merely updated recently.
 REVIEW_EVENTS=$(gh-api-read "/users/$USERNAME/events?per_page=100" \
-  | jq -r --arg since "$DATE_SINCE" '
-    [.[] |
-     select(.created_at >= $since) |
-     select(.type == "PullRequestReviewEvent") |
-     "\(.repo.name)#\(.payload.pull_request.number)"
-    ] | unique | .[]
-  ')
+  --jq "[.[] |
+     select(.created_at >= \"$DATE_SINCE\") |
+     select(.type == \"PullRequestReviewEvent\") |
+     \"\\(.repo.name)#\\(.payload.pull_request.number)\"] | unique | .[]")
 
 echo "## Reviews"
 if [[ -z "$REVIEW_EVENTS" ]]; then
@@ -98,23 +95,21 @@ echo
 # --- Recent comments from events API ---
 echo "## Recent comments"
 gh-api-read "/users/$USERNAME/events?per_page=100" \
-  | jq -r --arg since "$DATE_SINCE" '
-    [.[] |
-     select(.created_at >= $since) |
-     select(.type | IN("IssueCommentEvent", "PullRequestReviewCommentEvent")) |
+  --jq "[.[] |
+     select(.created_at >= \"$DATE_SINCE\") |
+     select(.type | IN(\"IssueCommentEvent\", \"PullRequestReviewCommentEvent\")) |
      {
        repo: .repo.name,
-       type: (if .type == "IssueCommentEvent" then "comment"
-              else "review comment" end),
-       body: (.payload.comment.body | split("\n")[0] | .[:100]),
+       type: (if .type == \"IssueCommentEvent\" then \"comment\"
+              else \"review comment\" end),
+       body: (.payload.comment.body | split(\"\\n\")[0] | .[:100]),
        number: (.payload.comment.issue_url // .payload.comment.pull_request_url
-                | split("/") | last),
-       api_path: (.payload.comment.url | ltrimstr("https://api.github.com")),
+                | split(\"/\") | last),
+       api_path: (.payload.comment.url | ltrimstr(\"https://api.github.com\")),
        html_url: .payload.comment.html_url,
        created_at: .created_at
      }
     ] |
-    if length == 0 then "  (none)\n"
-    else .[] | "  \(.repo)#\(.number) (\(.type)): \(.body)\n    api: \(.api_path)  \(.html_url)"
-    end
-  '
+    if length == 0 then \"  (none)\\n\"
+    else .[] | \"  \\(.repo)#\\(.number) (\\(.type)): \\(.body)\\n    api: \\(.api_path)  \\(.html_url)\"
+    end"

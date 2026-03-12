@@ -11,9 +11,10 @@ resolve them.
 
 ## On invocation
 
-**Step 1: Gather context (do this silently)**
+**Step 1: Gather broad context (do this silently)**
 
-Run all of these in parallel where possible:
+Run all of these in parallel. This should be enough to identify gaps and form
+questions — resist the urge to drill into every open PR or milestone item.
 
 - Read recent daily notes with `obsidian-notes daily:recent`
 - Run `tviz today -f tsv` to get the Today list with UUIDs
@@ -29,13 +30,23 @@ Run all of these in parallel where possible:
   to see the progression of user messages — this reveals what was actually built,
   not just the opening prompt. Use `claude-sessions.sh list --all --days N` to
   get raw session file paths for recap.
-- Check milestones in main repos for upcoming deadlines:
-  `gh-api-read /repos/oxidecomputer/console/milestones | jq '.[] | {title, due_on, open_issues, closed_issues}'`
+- Check milestones in main repos for upcoming deadlines. Include the API `number`
+  field (the milestone ID needed for issue queries) so you don't have to re-fetch:
+  `gh-api-read /repos/oxidecomputer/console/milestones --jq '.[] | {id: .number, title, due_on, open_issues, closed_issues}'`
   (and similarly for omicron or other repos if relevant)
-- For open PRs and milestone issues that are the user's, check jj revs in the
-  relevant repos to find in-progress work: `jj log` with description searches.
-  The user often has partial implementations in uncommitted jj revisions that
-  the task list doesn't reflect.
+- Check `jj log` in relevant repos to find in-progress work. The user often has
+  partial implementations in uncommitted jj revisions that the task list doesn't
+  reflect.
+
+For milestone issues, use the `id` from the milestones fetch above. Use `--jq`
+to keep the output compact — titles, assignees, and state are enough:
+`gh-api-read '/repos/oxidecomputer/omicron/issues?milestone=<id>&state=open&per_page=50' --jq '.[] | {number, title, assignee: .assignee.login}'`
+
+**Step 1b: Targeted follow-up (only as needed)**
+
+After reviewing the broad context, only make additional API calls when there is
+a specific gap to fill. Do not speculatively fetch individual PR details
+(reviewers, mergeable state) unless a specific PR is in question.
 
 tviz is read-only. You cannot create, complete, or modify Things tasks. When
 recommending task changes, tell the user what to do in Things.
@@ -43,10 +54,14 @@ recommending task changes, tell the user what to do in Things.
 When referring to specific tasks, link them with `[title](things:///show?id=<uuid>)`
 so the user can click to open them in Things. Don't show raw UUIDs unless asked.
 
+When calling `gh-api-read` directly, always use `--jq` instead of piping to
+`jq`. The piped `jq` triggers a separate permission prompt, but `--jq` is
+covered by the `gh-api-read:*` allowlist entry.
+
 To dig deeper into a GitHub discussion, use the API paths from the gh-activity
 output. For example, to fetch the full text of a comment:
 
-    gh-api-read /repos/oxidecomputer/console/issues/comments/123456 | jq .body
+    gh-api-read /repos/oxidecomputer/console/issues/comments/123456 --jq .body
 
 For PRs and issues, use `gh pr view` or `gh issue view` with the URL from the
 output. Use `aipr discussion <number>` (from within the relevant repo) to get
