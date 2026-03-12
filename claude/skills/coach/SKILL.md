@@ -16,6 +16,11 @@ resolve them.
 Run all of these in parallel. This should be enough to identify gaps and form
 questions — resist the urge to drill into every open PR or milestone item.
 
+Tools like `obsidian-notes`, `tviz`, and `gh-api-read` are on PATH — call them
+by bare name, never with a full path. Scripts in skill directories
+(`gh-activity.sh`, `claude-sessions.sh`) are not on PATH and need their full
+path.
+
 - Read recent daily notes with `obsidian-notes daily:recent`
 - Run `tviz today -f tsv` to get the Today list with UUIDs
 - Run `tviz logbook -n 30` to see recent completions
@@ -26,7 +31,8 @@ questions — resist the urge to drill into every open PR or milestone item.
   (open PRs, merged PRs, reviews, issues, comments)
 - Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
   to see recent Claude and Codex sessions. The summary includes message counts.
-  For substantial sessions (roughly 20+ messages), run `recap <session-file>`
+  For substantial sessions (roughly 20+ messages), run
+  `~/.claude/skills/session-history/claude-sessions.sh recap <session-file>`
   to see the progression of user messages — this reveals what was actually built,
   not just the opening prompt. Use `claude-sessions.sh list --all --days N` to
   get raw session file paths for recap.
@@ -128,7 +134,7 @@ about the user.
 
 **Daily note** — append to today's note with `obsidian-notes daily:append`:
 
-- Use a callout titled "Coach" with optional topic (e.g., `> [!note] Coach — end of week`)
+- Use a callout titled "Coach" with the time and optional topic (e.g., `> [!note] Coach 4:30 pm — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.
 - Link to bot notes when they exist
 - Use the full format, not a short summary. The daily note callout should be
