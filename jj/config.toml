@@ -58,11 +58,11 @@ dp = ["describe", "-r", "@-"]
 # dt/dts exclude lock files and openapi schemas; dta/dtas show all files
 dt = ["util", "exec", "--", "zsh", "-c", '''
   jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}" \
-    '~glob:"**/package-lock.json"' '~glob:"**/Cargo.lock"' '~glob:"**/openapi/**"'
+    '~glob:"**/package-lock.json" & ~glob:"**/Cargo.lock" & ~glob:"**/openapi/**"'
   ''', 'jj dt']
 dts = ["util", "exec", "--", "zsh", "-c", '''
   jj diff --stat --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}" \
-    '~glob:"**/package-lock.json"' '~glob:"**/Cargo.lock"' '~glob:"**/openapi/**"'
+    '~glob:"**/package-lock.json" & ~glob:"**/Cargo.lock" & ~glob:"**/openapi/**"'
   ''', 'jj dts']
 dta = ["util", "exec", "--", "zsh", "-c", '''
   jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
