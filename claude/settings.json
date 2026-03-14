@@ -120,7 +120,7 @@
       "../console"
     ]
   },
-  "model": "opus",
+  "model": "opus[1m]",
   "hooks": {
     "Notification": [
       {
@@ -128,7 +128,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Ping.aiff",
+            "command": "afplay /System/Library/Sounds/Morse.aiff",
             "async": true
           }
         ]
@@ -163,7 +163,15 @@
     "ast-grep@ast-grep-marketplace": true,
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
-    "ralph-wiggum@claude-plugins-official": true
+    "eng@oxide": true
+  },
+  "extraKnownMarketplaces": {
+    "oxide": {
+      "source": {
+        "source": "github",
+        "repo": "oxidecomputer/claude-plugins"
+      }
+    }
   },
   "effortLevel": "high"
 }
