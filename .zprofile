@@ -10,10 +10,26 @@ oxclone() {
 }
 
 ghclone() {
-  local org="$1"
-  local repo_name="$2"
-  local target_dir="${3:-$2}" # accept a third arg but fall back to second
-  jj git clone "https://github.com/$org/$repo_name.git" "$target_dir" "${@:4}"
+  local org repo_name target_dir
+
+  if [[ "$1" == https://github.com/* ]]; then
+    local path="${1#https://github.com/}"
+    path="${path%.git}"
+    path="${path%/}"
+    org="${path%%/*}"
+    repo_name="${path#*/}"
+  elif [[ "$1" == */* ]]; then
+    org="${1%%/*}"
+    repo_name="${1#*/}"
+  fi
+
+  if [[ -z "$org" || -z "$repo_name" ]]; then
+    echo "usage: ghclone <org/repo | github-url> [target_dir]" >&2
+    return 1
+  fi
+
+  target_dir="${2:-$repo_name}"
+  jj git clone "https://github.com/$org/$repo_name.git" "$target_dir" "${@:3}"
   cd "$target_dir"
 }
 
