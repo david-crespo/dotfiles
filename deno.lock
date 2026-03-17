@@ -10,6 +10,7 @@
     "jsr:@david/path@0.2": "0.2.0",
     "jsr:@david/which@~0.4.1": "0.4.1",
     "jsr:@std/bytes@^1.0.6": "1.0.6",
+    "jsr:@std/cli@1": "1.0.24",
     "jsr:@std/fmt@1": "1.0.9",
     "jsr:@std/fmt@~1.0.2": "1.0.9",
     "jsr:@std/fs@1": "1.0.22",
@@ -72,6 +73,12 @@
     },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
+    },
+    "@std/cli@1.0.24": {
+      "integrity": "b655a5beb26aa94f98add6bc8889f5fb9bc3ee2cc3fc954e151201f4c4200a5e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
     },
     "@std/fmt@1.0.9": {
       "integrity": "2487343e8899fb2be5d0e3d35013e54477ada198854e52dd05ed0422eddcabe0"

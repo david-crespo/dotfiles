@@ -47,6 +47,7 @@ alias jpm="jj git push --remote mine"
 alias jpp="jj new && jj tug && jj git push"
 # reset on top of main after being done with a PR
 alias jrm="jj git fetch && jj new 'trunk()'"
+alias jb="jj-jump" # see bin/jj-jump.ts
 
 function jjw() {
   if [[ ("$1" == "create" || "$1" == "c") && "$#" -eq 1 ]]; then

@@ -41,6 +41,7 @@
       "Bash(jj evolog:*)",
       "Bash(jj diff:*)",
       "Bash(jj op log:*)",
+      "Bash(jj op show:*)",
       "Bash(jj status:*)",
       "Bash(jj show:*)",
       "Bash(jj file show:*)",
@@ -60,6 +61,9 @@
       "Bash(cargo tree:*)",
       "Bash(cargo info:*)",
       "Bash(cargo search:*)",
+      "Bash(cargo metadata:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo build:*)",
       "Bash(npm ls:*)",
       "Bash(npm info:*)",
       "Bash(npm outdated:*)",
@@ -117,7 +121,9 @@
     ],
     "additionalDirectories": [
       "../omicron",
-      "../console"
+      "~/oxide/omicron",
+      "../console",
+      "~/oxide/console"
     ]
   },
   "model": "opus[1m]",

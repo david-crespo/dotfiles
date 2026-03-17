@@ -59,6 +59,7 @@ ln -sf "$PWD/bin/jjw.ts" ~/.local/bin/jjw-cmd
 ln -sf "$PWD/bin/claude-worktree-remove.sh" ~/.local/bin/claude-worktree-remove
 ln -sf "$PWD/bin/gh-api-read.ts" ~/.local/bin/gh-api-read
 ln -sf "$PWD/bin/obsidian-notes.ts" ~/.local/bin/obsidian-notes
+ln -sf "$PWD/bin/jj-jump.ts" ~/.local/bin/jj-jump
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
