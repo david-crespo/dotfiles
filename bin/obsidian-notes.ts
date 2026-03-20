@@ -15,6 +15,10 @@ async function obs(...args: string[]): Promise<string> {
   return (await $`${OBSIDIAN} ${args}`.stderr("null").text()).trim()
 }
 
+async function vaultPath(): Promise<string> {
+  return obs("vault", "info=path")
+}
+
 const dailyRead = new Command()
   .description("Read a daily note (default: today)")
   .arguments("[date:string]")
@@ -39,10 +43,24 @@ const dailyRecent = new Command()
   })
 
 const dailyAppend = new Command()
-  .description("Append content to today's daily note")
+  .description("Append content to a daily note (default: today)")
   .arguments("<content:string>")
-  .action(async (_opts, content: string) => {
-    await obs("daily:append", `content=${content}`)
+  .option("--date <date:string>", "Date of the note (YYYY-MM-DD, default: today)")
+  .action(async ({ date }, content: string) => {
+    if (date) {
+      await obs("append", `path=${DAILY_NOTES}/${date}.md`, `content=${content}`)
+    } else {
+      await obs("daily:append", `content=${content}`)
+    }
+  })
+
+const dailyPath = new Command()
+  .description("Print the absolute filesystem path to a daily note (default: today)")
+  .arguments("[date:string]")
+  .action(async (_opts, date?: string) => {
+    const vault = await vaultPath()
+    const rel = date ? `${DAILY_NOTES}/${date}.md` : await obs("daily:path")
+    console.log(`${vault}/${rel}`)
   })
 
 const dailyList = new Command()
@@ -56,6 +74,14 @@ const botRead = new Command()
   .arguments("<name:string>")
   .action(async (_opts, name: string) => {
     console.log(await obs("read", `path=${BOT_NOTES}/${name}.md`))
+  })
+
+const botPath = new Command()
+  .description("Print the absolute filesystem path to a bot note")
+  .arguments("<name:string>")
+  .action(async (_opts, name: string) => {
+    const vault = await vaultPath()
+    console.log(`${vault}/${BOT_NOTES}/${name}.md`)
   })
 
 const botList = new Command()
@@ -97,8 +123,10 @@ await new Command()
   .command("daily:read", dailyRead)
   .command("daily:recent", dailyRecent)
   .command("daily:append", dailyAppend)
+  .command("daily:path", dailyPath)
   .command("daily:list", dailyList)
   .command("bot:read", botRead)
+  .command("bot:path", botPath)
   .command("bot:list", botList)
   .command("bot:create", botCreate)
   .command("bot:append", botAppend)

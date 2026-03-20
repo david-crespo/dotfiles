@@ -133,12 +133,16 @@ If the user asks for a bot note, write the full analysis with
 `obsidian-notes bot:create "YYYY-MM-DD coach session <topic>"` and
 link to it from the daily note callout. Don't write a bot note unless asked.
 
+To edit an existing note, use `obsidian-notes daily:path` or `bot:path <name>`
+to get the absolute filesystem path, then read/edit the file directly.
+
 ## Note-taking
 
 Address the user as "you", not by name — these are notes for the user, not
 about the user.
 
-**Daily note** — append to today's note with `obsidian-notes daily:append`:
+**Daily note** — append to today's note with `obsidian-notes daily:append`
+(use `--date YYYY-MM-DD` to append to a different day's note):
 
 - Use a callout titled "Coach" with the time and optional topic (e.g., `> [!note] Coach 4:30 pm — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.
