@@ -32,6 +32,8 @@ history_filter = [
 # This applies for new installs. Old installs will keep the old behaviour unless configured otherwise.
 enter_accept = true
 
+search_mode = "daemon-fuzzy"
+
 [search]
 ## see filter_mode docs for full set
 filters = ["workspace", "global"]
@@ -39,3 +41,7 @@ filters = ["workspace", "global"]
 [stats]
 # Set commands where we should consider the subcommand for statistics. Eg, kubectl get vs just kubectl
 common_subcommands = ["cargo", "git", "npm", "jj"]
+
+[daemon]
+enabled = true
+autostart = true
