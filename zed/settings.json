@@ -26,9 +26,10 @@
     "dock": "right",
   },
   "terminal": {
+    "font_weight": 400.0,
     "font_size": 13,
     "dock": "left",
-    "line_height": { "custom": 1.3 },
+    "line_height": { "custom": 1.25 },
   },
 
   "agent": {
@@ -42,13 +43,6 @@
   },
 
   // "theme": "Ayu Dark",
-  "theme": "Ayu Dark",
-  "experimental.theme_overrides": {
-    "syntax": {
-      "comment": {
-        "color": "#8c8b88ff", // darker, same as comment.doc
-        "font_style": "normal", // I hate italics
-      },
-    },
-  },
+  // "theme": "Base16 Ayu Dark",
+  "theme": "Ayu Evolve",
 }

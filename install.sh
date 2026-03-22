@@ -21,8 +21,10 @@ ln -sf "$PWD/helix/themes/ayu_evolve2.toml" ~/.config/helix/themes/ayu_evolve2.t
 ln -sf "$PWD/helix/helix.scm" ~/.config/helix/helix.scm
 ln -sf "$PWD/helix/init.scm" ~/.config/helix/init.scm
 
+mkdir -p ~/.config/zed/themes
 ln -sf "$PWD/zed/keymap.json" ~/.config/zed/keymap.json
 ln -sf "$PWD/zed/settings.json" ~/.config/zed/settings.json
+ln -sf "$PWD/zed/themes/ayu-evolve.json" ~/.config/zed/themes/ayu-evolve.json
 
 mkdir -p ~/.config/jj
 ln -sf "$PWD/jj/config.toml" ~/.config/jj/config.toml
