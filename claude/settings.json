@@ -58,6 +58,7 @@
       "Bash(jj dt:*)",
       "Bash(jj dts:*)",
       "Bash(jj st:*)",
+      "Bash(jj workspace update-stale)",
       "Bash(cargo tree:*)",
       "Bash(cargo info:*)",
       "Bash(cargo search:*)",
