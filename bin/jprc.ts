@@ -3,6 +3,17 @@
 import $ from "@david/dax"
 import { Command, ValidationError } from "@cliffy/command"
 
+/** Extract GitHub owner/repo from jj's origin remote URL. */
+async function getRepoSlug(): Promise<string> {
+  const remotes = await $`jj git remote list`.lines()
+  const originLine = remotes.find((r) => r.startsWith("origin"))
+  if (!originLine) throw new Error("No origin remote found")
+  const url = originLine.split(/\s+/)[1]
+  const match = url.match(/github\.com[:/](.+?)(?:\.git)?$/)
+  if (!match) throw new Error(`Cannot parse GitHub repo from: ${url}`)
+  return match[1]
+}
+
 const prompt =
   "you will receive a diff and commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
 
@@ -49,6 +60,9 @@ await new Command()
     const bookmark = await $.prompt("\nCreate branch?", opts)
 
     await $`jj git push --named ${bookmark}=${r}`.printCommand()
-    await $`gh pr create --head ${bookmark} --base ${base} --web`.printCommand()
+    // gh needs --repo because there's no .git dir in jj worktrees
+    const repo = await getRepoSlug()
+    await $`gh pr create --head ${bookmark} --base ${base} --repo ${repo} --web`
+      .printCommand()
   })
   .parse(Deno.args)
