@@ -14,6 +14,8 @@ GitHub, and sessions. Key utilities live in this repo: `bin/obsidian-notes.ts`
 (daily notes and bot notes), `claude/skills/coach/gh-activity.sh`, and
 `claude/skills/session-history/claude-sessions.sh`. Use these tools directly —
 don't go searching the filesystem for Obsidian vaults or other external state.
+When the user asks you to update a skill, look first in ./claude/skills in this
+repo.
 
 Prefer the simplest approach that gets the job done well, but don't avoid
 dependencies just for the sake of minimalism — a well-known tool like GNU

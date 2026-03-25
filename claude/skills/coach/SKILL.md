@@ -84,9 +84,13 @@ Cross-reference notes, tasks, GitHub activity, and sessions. Look for:
 - **Scattered focus**: Many repos/topics active in a short period with no clear thread
 - **Invisible work**: Lots of sessions or GitHub activity not reflected in tasks or notes
 
-**Step 3: Ask targeted questions**
+**Step 3: Present findings and ask targeted questions**
 
-Open with a brief summary of what you see, then ask about specific gaps.
+Present work chronologically, citing session message counts (e.g., "214msg
+session") to convey scale of effort. Include PR numbers, jj revision IDs,
+and links. This makes it easy to see how work evolved and where time went.
+
+After the summary, ask about specific gaps.
 
 If the user mentions a deadline or milestone, pin down the specific date early
 — don't let it stay vague across multiple exchanges.
@@ -144,6 +148,7 @@ about the user.
 
 - Use a callout titled "Coach" with the time and optional topic (e.g., `> [!note] Coach 4:30 pm — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.
+- Prepend a blank line before the callout so Obsidian renders it as a separate block from any preceding content.
 - Link to bot notes when they exist
 - Use the full format, not a short summary. The daily note callout should be
   useful on its own without opening the bot note. Include:
