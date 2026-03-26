@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+# deduplicate PATH entries (useful when .zprofile is re-sourced, e.g., zellij)
+typeset -U PATH path
+
 # Used by helix blame shortcut to get the most recent commit that will not 404
 # on GitHub. Solves the problem of trying to open a blame on a commit that's not
 # pushed yet.
