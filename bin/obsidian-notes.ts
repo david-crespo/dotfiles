@@ -12,11 +12,24 @@ const DAILY_NOTES = "Daily notes"
 const OBSIDIAN = "/Applications/Obsidian.app/Contents/MacOS/obsidian"
 
 async function obs(...args: string[]): Promise<string> {
-  return (await $`${OBSIDIAN} ${args}`.stderr("null").text()).trim()
+  const result = (await $`${OBSIDIAN} ${args}`.stderr("null").text()).trim()
+  if (result.startsWith("Error:")) throw new Error(result)
+  return result
 }
 
 async function vaultPath(): Promise<string> {
   return obs("vault", "info=path")
+}
+
+/** Append to a file, creating it if it doesn't exist. */
+async function appendOrCreate(path: string, content: string): Promise<void> {
+  await obs("read", `path=${path}`)
+    .then(() => obs("append", `path=${path}`, `content=${content}`))
+    .catch(() => obs("create", `path=${path}`, `content=${content}`))
+}
+
+async function readStdin(): Promise<string> {
+  return (await new Response(Deno.stdin.readable).text()).trim()
 }
 
 const dailyRead = new Command()
@@ -46,12 +59,11 @@ const dailyAppend = new Command()
   .description("Append content to a daily note (default: today). Reads from stdin.")
   .option("--date <date:string>", "Date of the note (YYYY-MM-DD, default: today)")
   .action(async ({ date }) => {
-    const content = (await new Response(Deno.stdin.readable).text()).trim()
-    if (date) {
-      await obs("append", `path=${DAILY_NOTES}/${date}.md`, `content=${content}`)
-    } else {
-      await obs("daily:append", `content=${content}`)
-    }
+    const content = await readStdin()
+    const path = date
+      ? `${DAILY_NOTES}/${date}.md`
+      : await obs("daily:path")
+    await appendOrCreate(path, content)
   })
 
 const dailyPath = new Command()
@@ -94,16 +106,16 @@ const botCreate = new Command()
   .description("Create a bot note. Reads content from stdin.")
   .arguments("<name:string>")
   .action(async (_opts, name: string) => {
-    const content = (await new Response(Deno.stdin.readable).text()).trim()
+    const content = await readStdin()
     await obs("create", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
   })
 
 const botAppend = new Command()
-  .description("Append content to a bot note. Reads content from stdin.")
+  .description("Append content to a bot note (creates if needed). Reads from stdin.")
   .arguments("<name:string>")
   .action(async (_opts, name: string) => {
-    const content = (await new Response(Deno.stdin.readable).text()).trim()
-    await obs("append", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
+    const content = await readStdin()
+    await appendOrCreate(`${BOT_NOTES}/${name}.md`, content)
   })
 
 await new Command()
