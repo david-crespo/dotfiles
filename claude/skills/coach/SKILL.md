@@ -143,8 +143,10 @@ to get the absolute filesystem path, then read/edit the file directly.
 Address the user as "you", not by name — these are notes for the user, not
 about the user.
 
-**Daily note** — append to today's note with `obsidian-notes daily:append`
-(use `--date YYYY-MM-DD` to append to a different day's note):
+**Daily note** — append to today's note by piping content via stdin:
+`obsidian-notes daily:append <<'EOF' ... EOF`
+(use `--date YYYY-MM-DD` to append to a different day's note).
+Do NOT pass content as a positional argument — it breaks on multi-line text.
 
 - Use a callout titled "Coach" with the time and optional topic (e.g., `> [!note] Coach 4:30 pm — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.

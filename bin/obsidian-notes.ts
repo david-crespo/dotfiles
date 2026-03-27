@@ -43,10 +43,10 @@ const dailyRecent = new Command()
   })
 
 const dailyAppend = new Command()
-  .description("Append content to a daily note (default: today)")
-  .arguments("<content:string>")
+  .description("Append content to a daily note (default: today). Reads from stdin.")
   .option("--date <date:string>", "Date of the note (YYYY-MM-DD, default: today)")
-  .action(async ({ date }, content: string) => {
+  .action(async ({ date }) => {
+    const content = (await new Response(Deno.stdin.readable).text()).trim()
     if (date) {
       await obs("append", `path=${DAILY_NOTES}/${date}.md`, `content=${content}`)
     } else {
@@ -91,26 +91,18 @@ const botList = new Command()
   })
 
 const botCreate = new Command()
-  .description("Create a bot note")
+  .description("Create a bot note. Reads content from stdin.")
   .arguments("<name:string>")
-  .option("--content <content:string>", "Note content (reads stdin if omitted)")
-  .action(async ({ content }, name: string) => {
-    if (!content) {
-      const buf = await new Response(Deno.stdin.readable).text()
-      content = buf.trim()
-    }
+  .action(async (_opts, name: string) => {
+    const content = (await new Response(Deno.stdin.readable).text()).trim()
     await obs("create", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
   })
 
 const botAppend = new Command()
-  .description("Append content to a bot note")
+  .description("Append content to a bot note. Reads content from stdin.")
   .arguments("<name:string>")
-  .option("--content <content:string>", "Content to append (reads stdin if omitted)")
-  .action(async ({ content }, name: string) => {
-    if (!content) {
-      const buf = await new Response(Deno.stdin.readable).text()
-      content = buf.trim()
-    }
+  .action(async (_opts, name: string) => {
+    const content = (await new Response(Deno.stdin.readable).text()).trim()
     await obs("append", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
   })
 
