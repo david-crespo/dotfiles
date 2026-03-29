@@ -1,10 +1,10 @@
 ---
-name: work-note
-description: Write a work note based on the recent conversation
+name: bot-note
+description: Write a note in Obsidian based on the recent conversation
 user_invocable: true
 ---
 
-# Work Note
+# Bot Note
 
 Write a note summarizing the recent conversation using `obsidian-notes`.
 
@@ -12,7 +12,7 @@ Write a note summarizing the recent conversation using `obsidian-notes`.
 
 1. Review the last several messages in the conversation to identify the substantive topic.
 2. Pick a short, lowercase, descriptive name (e.g., `jj workspace tool`). Match the style of existing notes (`obsidian-notes bot:list`).
-3. Write the note with `obsidian-notes bot:create "<name>" --content "<content>"` or pipe content via stdin.
+3. Write the note by piping content to `obsidian-notes bot:create "<name>"`.
 
 If invoked with an argument, treat it as instructions on what to include in the note (topic, scope, emphasis). The filename should always just be a good short representative title regardless of the argument.
 
@@ -30,4 +30,4 @@ The key principle: **the note should be very close to verbatim what was said in 
 
 ## Before writing
 
-Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one. To append, use `obsidian-notes bot:append "<name>" --content "<content>"` or pipe content via stdin. To edit an existing note directly, use `obsidian-notes bot:path "<name>"` to get the absolute filesystem path, then read/edit the file.
+Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one. To append, pipe content to `obsidian-notes bot:append "<name>"`. To edit an existing note directly, use `obsidian-notes bot:path "<name>"` to get the absolute filesystem path, then read/edit the file.
