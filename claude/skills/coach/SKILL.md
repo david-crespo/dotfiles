@@ -52,8 +52,7 @@ After reviewing the broad context, only make additional API calls when there is
 a specific gap to fill. Do not speculatively fetch individual PR details
 (reviewers, mergeable state) unless a specific PR is in question.
 
-tviz is read-only. You cannot create, complete, or modify Things tasks. When
-recommending task changes, tell the user what to do in Things.
+tviz supports creating and updating tasks — use `/tviz` for write syntax.
 
 When referring to specific tasks, link them with `[title](things:///show?id=<uuid>)`
 so the user can click to open them in Things. Don't show raw UUIDs unless asked.
