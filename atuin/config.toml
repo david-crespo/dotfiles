@@ -24,6 +24,7 @@ command_chaining = true
 history_filter = [
   "oxide-token-",
   "_API_KEY=",
+  "auth-token=",
   #   "^secret-cmd",
   #   "^innocuous-cmd .*--secret=.+"
 ]
