@@ -98,3 +98,33 @@ Tips:
 - Find oldest items: `tviz todos -f json | jq -r 'sort_by(.created) | .[0:20] | .[] | "\(.created[0:10]) \(.title)"'`
 - Check GitHub status with `gh issue view` / `gh pr view` or `aipr tracking` / `aipr discussion`
 - For large outputs, spawn a Task subagent to process and summarize
+
+## Write commands
+
+Create commands are allowlisted. Update commands are in `ask` permission, so
+the user will be prompted before each one runs.
+
+```bash
+# Create a todo
+tviz add todo "Buy groceries" --area Life
+tviz add todo "Fix login bug" --project "Auth redesign" --when today
+tviz add todo "Review PR" --project "Auth redesign" --heading "Code review" --deadline 2026-04-01
+echo "Detailed notes here" | tviz add todo "Research options" --area Oxide
+
+# Create a project
+tviz add project "Kitchen renovation" --area Home
+tviz add project "Q2 planning" --area Oxide --deadline 2026-04-15
+
+# Update an existing item (todo or project, same command)
+tviz update <uuid> --title "New title"
+tviz update <uuid> --completed
+tviz update <uuid> --canceled
+tviz update <uuid> --when today --deadline 2026-04-01
+tviz update <uuid> --append-notes "Additional context"
+tviz update <uuid> --add-tags "urgent,blocked"
+```
+
+Notes for create commands can be piped via stdin. The `--project` flag on
+`add todo` selects by project name; if the project doesn't exist, Things
+silently puts the item in the inbox. Update works on both todos and projects
+— it just needs the UUID.
