@@ -30,14 +30,25 @@ DATE_SINCE=$(date -v-"${DAYS}"d '+%Y-%m-%d')
 
 # --- Open PRs I authored ---
 echo "## Open PRs"
-gh search prs --author="$USERNAME" --state=open --sort=updated --limit=20 \
-  --json repository,title,number,updatedAt,url \
-  | jq -r --arg since "$DATE_SINCE" '
-    [.[] | select(.updatedAt >= $since)] |
-    if length == 0 then "  (none)\n"
-    else .[] | "  \(.repository.nameWithOwner)#\(.number): \(.title)\n    \(.url)"
-    end
-  '
+OPEN_PRS=$(gh search prs --author="$USERNAME" --state=open --sort=updated --limit=20 \
+  --json repository,title,number,updatedAt,url,isDraft \
+  | jq -c --arg since "$DATE_SINCE" '[.[] | select(.updatedAt >= $since)]')
+
+if [[ $(echo "$OPEN_PRS" | jq 'length') -eq 0 ]]; then
+  echo "  (none)"
+else
+  echo "$OPEN_PRS" | jq -r '.[] | "\(.repository.nameWithOwner)\t\(.number)\t\(.title)\t\(.url)\t\(.isDraft)"' |
+  while IFS=$'\t' read -r repo number title url is_draft; do
+    reviewers=$(gh-api-read "/repos/$repo/pulls/$number" \
+      --jq '[.requested_reviewers[].login] | join(", ")' 2>/dev/null)
+    draft_tag=""
+    [[ "$is_draft" == "true" ]] && draft_tag=" [draft]"
+    detail=""
+    [[ -n "$reviewers" ]] && detail="  (reviewers: ${reviewers})"
+    echo "  ${repo}#${number}${draft_tag}: ${title}"
+    echo "    ${url}${detail}"
+  done
+fi
 echo
 
 # --- Recently merged PRs ---
