@@ -49,6 +49,7 @@ alias jpp="jj new && jj tug && jj git push"
 alias jrm="jj git fetch && jj new 'trunk()'"
 alias jb="jj-jump" # see bin/jj-jump.ts
 alias jsq="jj squash"
+alias sk="bun ~/oxide/skepsis/cli.ts"
 
 function jjw() {
   if [[ ("$1" == "create" || "$1" == "c") && "$#" -eq 1 ]]; then
