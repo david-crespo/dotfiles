@@ -33,14 +33,17 @@ path.
   `~/.claude/skills/session-history/claude-sessions.sh recap <session-file>`
   to see the progression of user messages — this reveals what was actually built,
   not just the opening prompt. Use `claude-sessions.sh list --all --days N` to
-  get raw session file paths for recap.
+  get raw session file paths for recap. Run `list` and `recap` as separate
+  commands — do not combine them with `$()` subshells or pipes, as that
+  bypasses Bash allowlist prefix matching.
 - Check milestones in main repos for upcoming deadlines. Include the API `number`
   field (the milestone ID needed for issue queries) so you don't have to re-fetch:
   `gh-api-read /repos/oxidecomputer/console/milestones --jq '.[] | {id: .number, title, due_on, open_issues, closed_issues}'`
   (and similarly for omicron or other repos if relevant)
 - Check `jj log` in relevant repos to find in-progress work. The user often has
   partial implementations in uncommitted jj revisions that the task list doesn't
-  reflect.
+  reflect. Use `jj log -R <path>` to check other repos without `cd` — this
+  keeps the command prefix matching the `jj log:*` allowlist entry.
 
 For milestone issues, use the `id` from the milestones fetch above. Use `--jq`
 to keep the output compact — titles, assignees, and state are enough:
