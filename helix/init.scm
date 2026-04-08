@@ -79,18 +79,14 @@
         (insert (C-ret "completion")))
 
 ; Language-specific keybindings using ' as the minor mode
-(define (lang-keymap ext binds)
-  (eval `(keymap (extension ,ext) (normal ("'" ,@binds)))))
+(keymap (extension "rs") (normal ("'" (d ":wrap-dbg"))))
 
-(lang-keymap "rs" '((d ":wrap-dbg")))
-
-(define ecma-binds '((l ":wrap-console-log") (d ":wrap-console-dir")))
-(lang-keymap "ts" ecma-binds)
-(lang-keymap "tsx" ecma-binds)
-(lang-keymap "js" ecma-binds)
+(keymap (extension "ts") (normal ("'" (l ":wrap-console-log") (d ":wrap-console-dir"))))
+(keymap (extension "tsx") (normal ("'" (l ":wrap-console-log") (d ":wrap-console-dir"))))
+(keymap (extension "js") (normal ("'" (l ":wrap-console-log") (d ":wrap-console-dir"))))
 
 ; format_sql defined in .zshenv
-(lang-keymap "sql" '((s ":pipe format_sql")))
+(keymap (extension "sql") (normal ("'" (s ":pipe format_sql"))))
 
 ; remove from space menu since I don't use them
 (define (space-noop key)
@@ -109,23 +105,5 @@
 ; brew install --cask racket
 ; raco pkg install --auto fmt
 
-(define eslint-config (get-lsp-config "vscode-eslint-language-server"))
-
-;; Functionally updates a hash map
-(define (nested-hash-insert map keys value)
-  (if (null? keys)
-      value
-      (hash-insert map
-                   (car keys)
-                   (nested-hash-insert (if (hash-contains? map (car keys))
-                                           (hash-get map (car keys))
-                                           (hash))
-                                       (cdr keys)
-                                       value))))
-
-(define new-config (nested-hash-insert eslint-config (list 'config 'run) "onSave"))
-
-; (displayln eslint-config)
-; (displayln new-config)
-
-(set-lsp-config! "vscode-eslint-language-server" new-config)
+; set-lsp-config! merges the given hash into the existing config, only updating fields present
+(set-lsp-config! "vscode-eslint-language-server" (hash "config" (hash "run" "onSave")))
