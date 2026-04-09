@@ -74,10 +74,38 @@ function curr_bookmark {
   jj log --no-graph -r 'heads(::@ & bookmarks())' -T 'bookmarks.map(|b| b.name()).join("\n")' | head -1
 }
 
+# jpl: fetch and pull upstream changes under your work
+#
+# jpl              — like git pull of current branch
+# jpl <source>     — fetch, rebase source subtree onto current bookmark
+#                    (falls back to trunk if bookmark was merged/deleted)
+# jpl <source> <bookmark> — same, with explicit bookmark
 function jpl() {
-  local b=$(curr_bookmark)
-  jj git fetch --branch "$b"
-  jj new "$b"
+  local source="$1"
+  local bookmark="${2:-$(curr_bookmark)}"
+
+  jj git fetch
+
+  # no source: just pulling the branch, check out on top of it
+  if [[ -z "$source" ]]; then
+    # already on top of this bookmark, nothing to do
+    if jj log --no-graph -r "$bookmark & ::@" -T '""' 2>/dev/null; then
+      return
+    fi
+    jj new "$bookmark"
+    return
+  fi
+
+  # if the remote branch still exists, rebase onto it;
+  # if it was merged/deleted, rebase onto trunk instead
+  local dest
+  if jj log --no-graph -r "$bookmark@origin" -T '""' 2>/dev/null; then
+    dest="$bookmark"
+  else
+    dest='trunk()'
+  fi
+
+  jj rebase -s "$source" -d "$dest"
 }
 
 alias jdr='jj diff --from "$(curr_bookmark)@origin"'
