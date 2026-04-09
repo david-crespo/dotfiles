@@ -67,7 +67,7 @@ dts = ["util", "exec", "--", "zsh", "-c", '''
 dta = ["util", "exec", "--", "zsh", "-c", '''
   jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
   ''', 'jj dta']
-dtas = ["util", "exec", "--", "zsh", "-c", '''
+dtsa = ["util", "exec", "--", "zsh", "-c", '''
   jj diff --stat --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
   ''', 'jj dtas']
 rp = ["log", "--no-graph", "-T", "commit_id"]

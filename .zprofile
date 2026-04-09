@@ -299,6 +299,8 @@ function upgrade-agents() {
 
 source "$HOME/.cargo/env"
 
+export CLAUDE_CODE_NO_FLICKER=1
+
 export PATH="$HOME/.local/bin:$PATH"
 
 # omicron things obviously

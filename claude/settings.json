@@ -119,7 +119,8 @@
       "Bash(jj restore:*)",
       "Bash(jj squash:*)",
       "Bash(jj rebase:*)",
-      "Bash(jj resolve:*)"
+      "Bash(jj resolve:*)",
+      "Bash(turnstile triage add:*)"
     ],
     "additionalDirectories": [
       "../omicron",

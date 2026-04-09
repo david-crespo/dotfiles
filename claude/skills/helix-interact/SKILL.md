@@ -54,6 +54,8 @@ When converting keybinding commands to Steel functions:
 - Global: `~/.config/helix/` (config.toml, languages.toml, etc.)
 - Project-local: `.helix/` directory (if it exists)
 
+**Startup errors:** Some errors (e.g., Steel init failures) only show on the scratch buffer. Always test with `hx` (no file argument) first — opening a file prints "Loaded N file(s)." which overwrites the error in the status line.
+
 **Logs:** Usually at `~/.cache/helix/helix.log` (use `tail -n 100`). If stale, open in Helix with `:log-open` and jump to bottom (`G`).
 
 ## Example
