@@ -51,6 +51,10 @@ Some information about the user's coding environment:
 
 - Always use nextest for running tests (e.g., `cargo nextest run` instead of `cargo test`).
 
+### Skills
+
+- Place project-specific skills in-repo at `.claude/skills/<skill-name>/SKILL.md`.
+
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
