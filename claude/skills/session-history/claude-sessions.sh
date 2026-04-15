@@ -23,7 +23,7 @@ Commands:
                                     Search sessions and show matching Bash commands
   search-extract <term> <type> [--all | path] [--days N]
                                     Search sessions and extract content by type
-  summary [--all | path] [--days N] List sessions with date, project, message count, first user message
+  summary [--all | path] [--days N] List sessions with date, project, activity (U/T = user msgs/tools), first user message
   recap <session>                   Compact digest: all user messages (truncated) showing work progression
 
 With --all, commands include both Claude Code and Codex sessions.
@@ -259,13 +259,27 @@ cmd_search_extract() {
   done <<< "$sessions"
 }
 
-# Count user messages in a session
-count_user_msgs() {
+# Count user turns and tool executions in a session.
+# Output: "(U N, T M)" where N = user messages (excludes tool_result messages),
+# M = tool calls by assistant.
+count_session_activity() {
   local session="$1"
   if is_codex "$session"; then
-    jq -s '[.[] | select(.type == "event_msg") | .payload | select(.type == "user_message")] | length' "$session" 2>/dev/null
+    local turns
+    turns=$(jq -s '[.[] | select(.type == "event_msg") | .payload | select(.type == "user_message")] | length' "$session" 2>/dev/null)
+    local tools
+    tools=$(jq -s '[.[] | select(.type == "response_item") | .payload | select(.type == "function_call")] | length' "$session" 2>/dev/null)
+    echo "(U ${turns}, T ${tools})"
   else
-    jq -s '[.[] | select(.type == "user")] | length' "$session" 2>/dev/null
+    jq -rs '
+      ([.[] | select(.type == "user") | .message.content |
+        if type == "string" then true
+        elif type == "array" then any(.[]; .type == "text")
+        else false end | select(.)
+      ] | length) as $turns |
+      ([.[] | select(.type == "assistant") | .message.content[]? | select(.type == "tool_use")] | length) as $tools |
+      "(U \($turns), T \($tools))"
+    ' "$session" 2>/dev/null
   fi
 }
 
@@ -297,9 +311,9 @@ cmd_summary() {
         ) | .[:120]
       ' "$session" 2>/dev/null || true)
     fi
-    msg_count=$(count_user_msgs "$session")
+    activity=$(count_session_activity "$session")
     date=$(stat -f '%SB' -t '%Y-%m-%d %H:%M' "$session")
-    echo "$date | $project | ${msg_count}msgs | $first_msg"
+    echo "$date | $project | $activity | $first_msg"
   done <<< "$sessions"
 }
 

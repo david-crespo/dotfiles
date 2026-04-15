@@ -28,7 +28,7 @@ path.
 - Run `~/.claude/skills/coach/gh-activity.sh 7` to see recent GitHub activity
   (open PRs, merged PRs, reviews, issues, comments)
 - Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
-  to see recent Claude and Codex sessions. The summary includes message counts.
+  to see recent Claude and Codex sessions. The summary shows activity as `(U N, T M)` (N user messages / M tool executions).
   For substantial sessions (roughly 20+ messages), run
   `~/.claude/skills/session-history/claude-sessions.sh recap <session-file>`
   to see the progression of user messages — this reveals what was actually built,
@@ -88,8 +88,8 @@ Cross-reference notes, tasks, GitHub activity, and sessions. Look for:
 
 **Step 3: Present findings and ask targeted questions**
 
-Present work chronologically, citing session message counts (e.g., "214msg
-session") to convey scale of effort. Include PR numbers, jj revision IDs,
+Present work chronologically, citing session activity (e.g., "(U 4, T 63)")
+to convey scale of effort. Format: (U N, T M) = user messages / tool executions. Include PR numbers, jj revision IDs,
 and links. This makes it easy to see how work evolved and where time went.
 
 After the summary, ask about specific gaps.
