@@ -94,11 +94,12 @@ function pick_pr() {
 function jpr() {
   local pr="$(pick_pr)"
   [[ -z "$pr" ]] && return
-  echo "Checking out PR #$pr"
-  gh pr checkout "$pr"
-  local branch="$(git branch --show-current)"
-  jj git import
-  jj bookmark track "$branch" --remote=origin
+  local branch="$(gh pr view "$pr" --json headRefName --jq .headRefName)"
+  [[ -z "$branch" ]] && return
+  echo "Checking out PR #$pr ($branch)"
+  jj git fetch
+  jj bookmark track "$branch@origin" 2>/dev/null
+  jj new "$branch"
   jj log -n 2
 }
 
