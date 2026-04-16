@@ -64,8 +64,9 @@ Some information about the user's coding environment:
   - Check package.json for commands
   - For Deno projects use `deno fmt`, `deno lint`, `deno check`
 - in scripts, prefer full length flags instead of abbreviations for readability
-- if you're in a repo in ~/oxide and want to look at the source for another oxide repo, check if it's already cloned and use the local source. make sure to use jj to pull main on the other repo. if it's not present locally, clone it.
+- Don't browse other oxide repos under ~/oxide speculatively. Only read from another oxide repo when the task explicitly requires it (the user named the repo, or a cross-repo reference can't be resolved otherwise). In that case, prefer the local clone over GitHub; if it's not cloned, ask before cloning.
 - Always run tests after changing test code. Generally you should run relevant tests after changing any code.
+- When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
 - Do NOT use python3 for JSON processing. Use jq — it is allowlisted in your permissions. Only fall back to python3 for JSON if jq truly cannot be made to work (e.g., the transformation requires state across records that jq can't express).
 
 ### Working with GitHub
