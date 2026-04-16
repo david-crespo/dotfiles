@@ -26,7 +26,7 @@ claude-sessions.sh search-bash <term> [--all | path] [--days N]
                                                             # search + extract matching Bash commands
 claude-sessions.sh search-extract <term> <type> [--all | path] [--days N]
                                                             # search + extract content by type
-claude-sessions.sh summary [--all | path] [--days N]       # date, project, first user message
+claude-sessions.sh summary [--all | path] [--days N]       # per-session user-msg & tool-call counts, first user message
 ```
 
 The script lives next to this skill file. Run it with its full path:
@@ -61,6 +61,11 @@ sessions are distinguished by a `codex:` prefix in summary and header output.
 3. **Summarize selectively.** Extract only user messages first to understand
    the arc. Only extract assistant messages for the specific sessions the user
    cares about.
+
+   For counting questions ("how many user messages today?", "how active
+   was I in this repo?"), `summary` already emits `(U N, T M)` per session —
+   sum those columns rather than writing ad hoc jq. The `U` count excludes
+   tool-result messages; naive `type == "user"` filters conflate the two.
 
 4. **For multi-session narratives**, establish chronological order using file
    timestamps or `session_meta` entries, then read sessions in order to build

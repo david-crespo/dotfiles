@@ -200,5 +200,6 @@
       }
     }
   },
-  "effortLevel": "medium"
+  "effortLevel": "high",
+  "skipAutoPermissionPrompt": true
 }
