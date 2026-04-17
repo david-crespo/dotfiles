@@ -27,6 +27,8 @@ claude-sessions.sh search-bash <term> [--all | path] [--days N]
 claude-sessions.sh search-extract <term> <type> [--all | path] [--days N]
                                                             # search + extract content by type
 claude-sessions.sh summary [--all | path] [--days N]       # per-session user-msg & tool-call counts, first user message
+claude-sessions.sh tools-audit <session> [--mode M] [--summary|--json|--truncate N]
+                                                            # per-tool-call audit with permissionMode & outcome (Claude Code only)
 ```
 
 The script lives next to this skill file. Run it with its full path:
@@ -73,3 +75,47 @@ sessions are distinguished by a `codex:` prefix in summary and header output.
 
 5. For large session files (>256KB), always use the helper script or `jq` via
    Bash rather than the Read tool.
+
+## Auditing tool calls by permission mode
+
+When asked to audit auto-mode (or acceptEdits / bypassPermissions) tool calls —
+typically "what got approved under auto mode recently?" or "which commands did
+auto mode reject?" — use `tools-audit`.
+
+Transcripts record `permissionMode` on user-message entries and on
+`permission-mode` events, so the script can tag every tool call with the mode
+in effect at that moment. Outcomes come from the matching `tool_result`:
+`denied-user` is an interactive rejection, `denied-rule` is a sandbox/allowlist
+block, `error` is a tool-level failure, `ok` is anything that ran cleanly.
+Caveat: within a mode the transcript does not distinguish "allowed by rule" from
+"user clicked approve" — only that the call wasn't denied.
+
+Typical recipe for "audit yesterday's auto-mode calls in repo X":
+
+```bash
+DIR=$(claude-sessions.sh dir ~/oxide/X)
+> /tmp/audit.jsonl
+for f in "$DIR"/*.jsonl; do
+  d=$(stat -f '%Sm' -t '%Y-%m-%d' "$f")
+  [[ "$d" != "YYYY-MM-DD" ]] && continue
+  claude-sessions.sh tools-audit "$f" --mode auto --json >> /tmp/audit.jsonl
+done
+
+# Rejections and errors first:
+jq -c 'select(.outcome != "ok")' /tmp/audit.jsonl
+
+# Then audit the Bash stream for dubiousness:
+jq -r 'select(.outcome == "ok" and .tool == "Bash") | .input.command' /tmp/audit.jsonl \
+  | rg 'rm -rf|git push|--force|--no-verify|gh pr (create|edit|merge|close)|gh issue (create|edit|close)|npm publish|curl .*-X (POST|PUT|DELETE|PATCH)|sudo|chmod|chown|jj (abandon|squash|rebase)|killall|pkill'
+
+# And Writes/Edits outside the project:
+jq -r 'select(.outcome == "ok" and (.tool == "Write" or .tool == "Edit")) | [.tool, .input.file_path] | @tsv' /tmp/audit.jsonl \
+  | rg -v 'oxide/X'
+```
+
+Always use `--json` when piping to another tool — the default TSV double-escapes
+backslashes in the input column (it's meant for human reading), so downstream
+`jq` on the input field will fail. Read the current CLAUDE.md and memory for
+user-specific preferences (e.g. rules against plain `git`, squashing unprompted,
+browsing neighboring repos speculatively) and call those out as soft violations
+in addition to the hard-destructive patterns above.

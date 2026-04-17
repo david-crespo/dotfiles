@@ -25,6 +25,15 @@ Commands:
                                     Search sessions and extract content by type
   summary [--all | path] [--days N] List sessions with date, project, activity (U/T = user msgs/tools), first user message
   recap <session>                   Compact digest: all user messages (truncated) showing work progression
+  tools-audit <session> [--mode M] [--summary|--json|--truncate N]
+                                    Audit tool_use events. Default output is TSV columns:
+                                    timestamp, permissionMode, outcome, tool, input (compact JSON).
+                                    Outcome is ok | denied-user | denied-rule | error | no-result.
+                                    --mode filters to a single permissionMode.
+                                    --summary prints counts grouped by mode x outcome x tool.
+                                    --json emits JSONL (tool.input is a real JSON value — use
+                                      this when downstream code needs to reparse the input).
+                                    --truncate N trims the TSV input column for readability.
 
 With --all, commands include both Claude Code and Codex sessions.
 Session source is shown in summary output (codex: prefix for Codex sessions).
@@ -317,6 +326,84 @@ cmd_summary() {
   done <<< "$sessions"
 }
 
+# Audit tool calls in a session: map each tool_use to the permissionMode in
+# effect and the outcome (ok / denied-user / denied-rule / error). Useful for
+# reviewing what was auto-approved under acceptEdits / auto / bypassPermissions
+# vs. what required interactive approval. Claude Code sessions only.
+cmd_tools_audit() {
+  local session="${1:?session file required}"
+  shift || true
+  local mode_filter=""
+  local do_summary=0
+  local do_json=0
+  local truncate_n=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --mode) mode_filter="$2"; shift 2 ;;
+      --summary) do_summary=1; shift ;;
+      --json) do_json=1; shift ;;
+      --truncate) truncate_n="$2"; shift 2 ;;
+      *) echo "unknown flag: $1" >&2; exit 1 ;;
+    esac
+  done
+  if is_codex "$session"; then
+    echo "tools-audit is Claude Code only (permissionMode doesn't exist in Codex sessions)" >&2
+    exit 1
+  fi
+
+  # Slurp the session, build an outcome map from tool_result entries keyed by
+  # tool_use_id, then walk in order tracking the running permissionMode and
+  # emit one record per tool_use. Mode starts at "default" and updates on any
+  # entry carrying permissionMode (user messages and permission-mode events).
+  # Emit JSONL first (tool.input is a real JSON value — safe to reparse) and
+  # let callers pick a display format via --summary / --truncate, or consume
+  # the JSONL directly with --json.
+  local records
+  records=$(jq -cs '
+    def outcome_map:
+      [ .[] | select(.type == "user") as $u
+        | $u.message.content[]? | select(.type == "tool_result")
+        | { key: .tool_use_id,
+            value: (if $u.toolUseResult == "User rejected tool use" then "denied-user"
+                    elif (.content | tostring | test("Permission for this action has been denied")) then "denied-rule"
+                    elif .is_error == true then "error"
+                    else "ok" end) } ] | from_entries;
+
+    . as $all
+    | ($all | outcome_map) as $o
+    | reduce $all[] as $e ({mode:"default", rows:[]};
+        if $e.permissionMode then .mode = $e.permissionMode
+        elif $e.type == "assistant" then
+          reduce ($e.message.content[]? | select(.type == "tool_use")) as $tu (.;
+            .rows += [{ts: $e.timestamp, mode: .mode,
+                       outcome: ($o[$tu.id] // "no-result"),
+                       tool: $tu.name, input: $tu.input}])
+        else . end)
+    | .rows[]
+  ' "$session")
+
+  if [[ -n "$mode_filter" ]]; then
+    records=$(echo "$records" | jq -c --arg m "$mode_filter" 'select(.mode == $m)')
+  fi
+
+  if [[ "$do_summary" -eq 1 ]]; then
+    echo "$records" | jq -r '[.mode, .outcome, .tool] | @tsv' \
+      | sort | uniq -c | sort -rn
+  elif [[ "$do_json" -eq 1 ]]; then
+    echo "$records"
+  else
+    # TSV for terminal readability: tool input is compact JSON, optionally
+    # truncated. The input column IS escaped by @tsv (backslashes doubled,
+    # real tabs/newlines escaped) so it is safe to display but not trivially
+    # reparseable as JSON — use --json when you need to reparse.
+    echo "$records" \
+      | jq -r --argjson n "$truncate_n" '
+          (.input | tostring) as $raw
+          | (if $n > 0 and ($raw | length) > $n then ($raw[0:$n] + "…") else $raw end) as $inp
+          | [.ts, .mode, .outcome, .tool, $inp] | @tsv'
+  fi
+}
+
 # Compact digest of a session: all user messages truncated, showing work progression
 cmd_recap() {
   local session="${1:?session file required}"
@@ -354,5 +441,6 @@ case "$command" in
   search-extract) cmd_search_extract "$@" ;;
   summary)        cmd_summary "$@" ;;
   recap)          cmd_recap "$@" ;;
+  tools-audit)    cmd_tools_audit "$@" ;;
   *)              usage ;;
 esac
