@@ -96,6 +96,24 @@
   //     ]
   //   },
 
+  "browser": {
+    "interceptTerminalOpenCommandInCmuxBrowser": false,
+    "openTerminalLinksInCmuxBrowser": false
+  },
+
+  // cmux has no way to unbind a shortcut via the settings file (empty/null is
+  // rejected and falls back to the default). See
+  // https://github.com/manaflow-ai/cmux/issues/2257. Remap cmd+r's two default
+  // actions to unreachable combos so cmd+r effectively does nothing.
+  "shortcuts": {
+    "bindings": {
+      "browserReload": "cmd+ctrl+opt+shift+r",
+      "renameTab": "cmd+ctrl+opt+shift+t",
+      "nextSurface": "cmd+opt+→",
+      "prevSurface": "cmd+opt+←"
+    }
+  },
+
   //   "browser" : {
   //     "defaultSearchEngine" : "google",
   //     "hostsToOpenInEmbeddedBrowser" : [

@@ -43,6 +43,18 @@ ln -sf "$PWD/zellij/config.kdl" ~/.config/zellij/config.kdl
 
 mkdir -p ~/.config/cmux
 ln -sf "$PWD/cmux/settings.json" ~/.config/cmux/settings.json
+# cmux 0.63.2's readConfigFile rejects symbolic links, so ~/.config/ghostty/config
+# (symlinked) never loads. Copy the ghostty config into cmux's bundle Application
+# Support dir as a regular file. Rerun install.sh after editing ghostty/config
+# to keep it in sync.
+#
+# Fixed on cmux main in 8eb74560. Once that lands in a release, cmux will read
+# the symlinked ~/.config/ghostty/config directly — then delete this block AND
+# the copy at ~/Library/Application Support/com.cmuxterm.app/config, otherwise
+# the stale copy will keep overriding the real config.
+mkdir -p ~/Library/Application\ Support/com.cmuxterm.app
+rm -f ~/Library/Application\ Support/com.cmuxterm.app/config
+cp "$PWD/ghostty/config" ~/Library/Application\ Support/com.cmuxterm.app/config
 
 mkdir -p ~/.config/nushell
 ln -sf "$PWD/nushell/env.nu" ~/.config/nushell/env.nu

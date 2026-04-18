@@ -1,1 +1,5 @@
-
+# Also set in init.scm via (helix.theme ...). Duplicated here because Helix
+# re-derives the theme from config.toml alone (not init.scm) when the terminal
+# emits a DECSET 2031 theme-report CSI, which cmux sends on pane splits. With
+# no theme here, splits would revert Helix to the default theme.
+theme = "ayu_evolve2"
