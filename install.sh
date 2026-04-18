@@ -41,6 +41,9 @@ ln -sf "$PWD/ghostty/config" ~/.config/ghostty/config
 mkdir -p ~/.config/zellij
 ln -sf "$PWD/zellij/config.kdl" ~/.config/zellij/config.kdl
 
+mkdir -p ~/.config/cmux
+ln -sf "$PWD/cmux/settings.json" ~/.config/cmux/settings.json
+
 mkdir -p ~/.config/nushell
 ln -sf "$PWD/nushell/env.nu" ~/.config/nushell/env.nu
 ln -sf "$PWD/nushell/config.nu" ~/.config/nushell/config.nu

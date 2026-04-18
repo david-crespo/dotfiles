@@ -149,18 +149,6 @@
   },
   "model": "opus[1m]",
   "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "afplay /System/Library/Sounds/Morse.aiff",
-            "async": true
-          }
-        ]
-      }
-    ],
     "WorktreeCreate": [
       {
         "hooks": [
