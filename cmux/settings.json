@@ -109,8 +109,8 @@
     "bindings": {
       "browserReload": "cmd+ctrl+opt+shift+r",
       "renameTab": "cmd+ctrl+opt+shift+t",
-      "nextSurface": "cmd+opt+→",
-      "prevSurface": "cmd+opt+←"
+      "nextSurface": "cmd+ctrl+l",
+      "prevSurface": "cmd+ctrl+h"
     }
   },
 

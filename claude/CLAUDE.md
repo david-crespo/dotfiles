@@ -11,6 +11,9 @@
   help clarify, make up representative ones.
 - Avoid LLM-isms in prose: "that's X, not Y" and "that's not X, it's Y" as
   sentence-ending clarifications.
+- When estimating how long a task will take, estimate how long it would take
+  with the help of SOTA coding agents, not how long it would take a human to do
+  by hand.
 
 Some information about the user's coding environment:
 

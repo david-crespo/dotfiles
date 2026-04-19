@@ -178,7 +178,8 @@
     "ast-grep@ast-grep-marketplace": true,
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
-    "eng@oxide": true
+    "eng@oxide": true,
+    "swift-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "oxide": {

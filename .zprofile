@@ -51,7 +51,7 @@ alias jb="jj-jump" # see bin/jj-jump.ts
 alias jsq="jj squash"
 # alias sk="bun ~/oxide/skepsis/cli.ts"
 alias sk="npx --prefix ~/oxide/skepsis tsx ~/oxide/skepsis/cli.ts"
-
+alias cmux-desc='cmux workspace-action --action set-description --description'
 
 function jjw() {
   if [[ ("$1" == "create" || "$1" == "c") && "$#" -eq 1 ]]; then
