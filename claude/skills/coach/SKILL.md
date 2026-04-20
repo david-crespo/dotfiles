@@ -44,6 +44,17 @@ path.
   partial implementations in uncommitted jj revisions that the task list doesn't
   reflect. Use `jj log -R <path>` to check other repos without `cd` — this
   keeps the command prefix matching the `jj log:*` allowlist entry.
+- Check the user's calendar for the relevant window via the
+  `mcp__claude_ai_Google_Calendar__list_events` tool. For an end-of-day
+  session, pull today; for end-of-week or week-planning, pull the full work
+  week. Look for meeting density, conflicts, board/leadership syncs, and
+  meetings that indicate committed work (e.g., a demo slot implies something
+  must be ready). The calendar grounds planning in the actual shape of the
+  days — clear afternoons are real heads-down windows; congested days aren't.
+  Treat `responseStatus: "tentative"` (the self attendee) as "maybe / probably
+  not attending" — exclude these from the meeting-load picture unless the user
+  says otherwise. Treat `declined` as skipped. Optional attendees on events
+  the user only tentatively accepted are also not real commitments.
 
 For milestone issues, use the `id` from the milestones fetch above. Use `--jq`
 to keep the output compact — titles, assignees, and state are enough:
@@ -112,7 +123,12 @@ Once gaps are resolved:
 
 1. Summarize the actual priorities
 2. Identify what's blocked vs. ready to work on
-3. Suggest a concrete focus for the session/day
+3. Suggest a concrete focus for the session/day, shaped around the calendar —
+   name which days have real heads-down time vs. are meeting-heavy, flag
+   conflicts, and point out deadlines (board meetings, demos, code freezes)
+   that anchor the week. Avoid rigid day-by-day plans when the user's work is
+   inherently scattered; a looser "top rock + slots around meetings" framing
+   usually fits better.
 
 ## Principles
 
