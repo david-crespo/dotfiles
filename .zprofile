@@ -211,6 +211,31 @@ alias aisf='ai --search -m flash'
 alias aif='ai -m flash'
 alias cbd='cb -l diff'
 
+# run the same prompt against several models (comma-separated after -m)
+function aic() {
+  local models="" prompt=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      -m) models=$2; shift 2 ;;
+      *)  prompt="$prompt${prompt:+ }$1"; shift ;;
+    esac
+  done
+
+  local stdin=""
+  [ ! -t 0 ] && stdin=$(cat)
+
+  local IFS=,
+  for m in $models; do
+    echo "=== $m ==="
+    if [ -n "$stdin" ]; then
+      printf '%s' "$stdin" | ai -e -m "$m" "$prompt"
+    else
+      ai -e -m "$m" "$prompt"
+    fi
+    echo
+  done
+}
+
 # default divisor is 4 and it seems pretty good, but you can pass a different one
 function tok() {
   local div=${1:-4}
