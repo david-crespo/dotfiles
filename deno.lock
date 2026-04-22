@@ -16,9 +16,12 @@
     "jsr:@std/fs@1": "1.0.22",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/io@0.225": "0.225.3",
+    "jsr:@std/io@~0.225.2": "0.225.3",
     "jsr:@std/path@1": "1.1.4",
+    "jsr:@std/path@^1.0.8": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
-    "jsr:@std/text@~1.0.7": "1.0.17"
+    "jsr:@std/text@~1.0.7": "1.0.17",
+    "npm:remeda@^2.18.0": "2.33.7"
   },
   "jsr": {
     "@cliffy/command@1.0.0-rc.7": {
@@ -57,7 +60,7 @@
         "jsr:@david/which",
         "jsr:@std/fmt@1",
         "jsr:@std/fs",
-        "jsr:@std/io",
+        "jsr:@std/io@0.225",
         "jsr:@std/path@1"
       ]
     },
@@ -107,6 +110,11 @@
     },
     "@std/text@1.0.17": {
       "integrity": "4b2c4ef67ae5b6c1dfd447c81c83a43718f52e3c7e748d8b33f694aba9895f95"
+    }
+  },
+  "npm": {
+    "remeda@2.33.7": {
+      "integrity": "sha512-cXlyjevWx5AcslOUEETG4o8XYi9UkoCXcJmj7XhPFVbla+ITuOBxv6ijBrmbeg+ZhzmDThkNdO+iXKUfrJep1w=="
     }
   },
   "workspace": {

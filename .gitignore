@@ -2,4 +2,5 @@
 .aider*
 **/.claude/settings.local.json
 **/.claude/notes/
+**/.claude/scheduled_tasks.lock
 

@@ -83,9 +83,23 @@ function ps1_jjgit_prompt() {
 
 precmd_functions+=(ps1_jjgit_prompt)
 
-# we're also going to set the title to the abbreviated thing when we open a new shell
+# Use Ghostty's tab-title override so split panes don't stomp the tab label.
 function set_title() {
-  echo -ne "\033]0;$1\007"
+  local title="$1"
+
+  export GHOSTTY_TAB_BASE_LABEL="$title"
+
+  if [[ -n $GHOSTTY_RESOURCES_DIR ]] && (( $+commands[ghostty-tab-title] )); then
+    # First call: run synchronously so GHOSTTY_TERMINAL_ID lands in the shell
+    # env before Claude is launched. Subsequent calls (chpwd) can background.
+    if [[ -z $GHOSTTY_TERMINAL_ID ]]; then
+      eval "$(ghostty-tab-title shell "$title" 2>/dev/null)"
+    else
+      ghostty-tab-title shell "$title" >/dev/null 2>&1 &!
+    fi
+  else
+    echo -ne "\033]0;$title\007"
+  fi
 }
 
 # zsh hook to update title on directory change

@@ -75,6 +75,7 @@ ln -sf "$PWD/bin/cancel-ci.ts" ~/.local/bin/cancel-ci
 ln -sf "$PWD/bin/jjw.ts" ~/.local/bin/jjw-cmd
 ln -sf "$PWD/bin/claude-worktree-remove.sh" ~/.local/bin/claude-worktree-remove
 ln -sf "$PWD/bin/gh-api-read.ts" ~/.local/bin/gh-api-read
+ln -sf "$PWD/bin/ghostty-tab-title.ts" ~/.local/bin/ghostty-tab-title
 ln -sf "$PWD/bin/obsidian-notes.ts" ~/.local/bin/obsidian-notes
 ln -sf "$PWD/bin/jj-jump.ts" ~/.local/bin/jj-jump
 ln -sf "$PWD/bin/jpl.ts" ~/.local/bin/jpl
