@@ -44,7 +44,7 @@
    ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'")))
 
 (keymap (global)
-        (normal (" " (q ":bc"))
+        (normal (" " (q ":bc") (o (n ":o .claude/notes")))
                 (A-w ":bc")
                 ("=" ":reflow")
                 (Cmd-k "select_line_above")
@@ -107,3 +107,11 @@
 
 ; set-lsp-config! merges the given hash into the existing config, only updating fields present
 (set-lsp-config! "vscode-eslint-language-server" (hash "config" (hash "run" "onSave")))
+
+; Load project-local extensions from .helix/local.scm if present. Runs after
+; the global config, so it can call add-global-keybinding etc. to extend (not
+; replace) the global setup. Deliberately not named .helix/init.scm because
+; helix's built-in local-config mechanism replaces the global config when both
+; .helix/init.scm and .helix/helix.scm exist in a project.
+(when (path-exists? ".helix/local.scm")
+  (load ".helix/local.scm"))

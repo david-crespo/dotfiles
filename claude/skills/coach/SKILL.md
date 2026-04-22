@@ -168,7 +168,7 @@ Do NOT pass content as a positional argument — it breaks on multi-line text.
 
 - Use a callout titled "Coach" with the time and optional topic (e.g., `> [!note] Coach 4:30 pm — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.
-- Prepend a blank line before the callout so Obsidian renders it as a separate block from any preceding content.
+- Always prepend a blank line before the callout, even when the callout is the first thing in the note.
 - Link to bot notes when they exist
 - Use the full format, not a short summary. The daily note callout should be
   useful on its own without opening the bot note. Include:
