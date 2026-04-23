@@ -94,12 +94,21 @@ function pick_pr() {
 function jpr() {
   local pr="$(pick_pr)"
   [[ -z "$pr" ]] && return
-  local branch="$(gh pr view "$pr" --json headRefName --jq .headRefName)"
-  [[ -z "$branch" ]] && return
+  local meta="$(gh pr view "$pr" --json headRefName,isCrossRepository)"
+  [[ -z "$meta" ]] && return
+  local branch="$(jq -r .headRefName <<<"$meta")"
+  local cross="$(jq -r .isCrossRepository <<<"$meta")"
   echo "Checking out PR #$pr ($branch)"
-  jj git fetch
-  jj bookmark track "$branch@origin" 2>/dev/null
-  jj new "$branch"
+  if [[ "$cross" == "true" ]]; then
+    # Fork PR: branch isn't on origin, but GitHub exposes refs/pull/N/head.
+    # Fetch it into a local bookmark named pr-N.
+    git fetch origin "+refs/pull/$pr/head:refs/heads/pr-$pr" || return
+    jj new "pr-$pr"
+  else
+    jj git fetch
+    jj bookmark track "$branch@origin" 2>/dev/null
+    jj new "$branch"
+  fi
   jj log -n 2
 }
 

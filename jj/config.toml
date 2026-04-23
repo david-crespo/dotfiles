@@ -30,7 +30,7 @@ auto-track-created-bookmarks = "*"
 pager = [
   "zsh",
   "-c",
-  '[ "${COLUMNS}" -ge 160 ] && delta --side-by-side || delta',
+  '[ "${COLUMNS}" -ge 165 ] && delta --side-by-side || delta',
 ]
 default-command = ["log", "--template", "home"]
 diff-editor = ":builtin"
