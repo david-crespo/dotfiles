@@ -3,3 +3,24 @@ template = "home"
 
 [ui.colors]
 "selected" = { bg = "#292929" }
+
+[preview]
+revision_command = ["util", "exec", "--", "bash", "-c",
+  "jj show --color always --git -r $change_id | delta"]
+oplog_command = ["util", "exec", "--", "bash", "-c",
+  "jj op show $operation_id --git --color always | delta"]
+file_command = ["util", "exec", "--", "bash", "-c",
+  "jj diff --color always --git -r $change_id $file | delta"]
+
+[[actions]]
+name = "delta-diff"
+lua = '''jj_interactive("util", "exec", "--",
+  "bash", "-c",
+  "jj show --summary --git --color=always -r " .. context.change_id() ..
+  " | delta --pager 'less -R'")'''
+
+[[bindings]]
+action = "delta-diff"
+key = "d"
+scope = "revisions"
+desc = "diff (delta)"
