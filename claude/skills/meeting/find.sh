@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # Find four-star entries for a given date, optionally filtered by title substring.
-# Handles auth preflight (four-star list silently returns empty on 401) and
-# widens the date window by one day on each side to catch meetings near
-# midnight UTC.
+# Widens the date window by one day on each side to catch meetings near
+# midnight UTC. Auth failures surface as four-star's own stderr message and a
+# non-zero exit (pipefail propagates it).
 
 usage() {
   cat <<'EOF'
@@ -32,12 +32,6 @@ while [[ $# -gt 0 ]]; do
     *) title="$1"; shift ;;
   esac
 done
-
-# Preflight: four-star list returns empty + exit 0 on 401, so probe explicitly.
-if ! four-star self >/dev/null 2>&1; then
-  echo "four-star auth failed. Run 'four-star auth login google' in your terminal." >&2
-  exit 2
-fi
 
 newer=$(date -j -v-"${widen}"d -f '%Y-%m-%d' "$date" '+%Y-%m-%d')
 older=$(date -j -v+"${widen}"d -f '%Y-%m-%d' "$date" '+%Y-%m-%d')

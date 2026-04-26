@@ -32,11 +32,12 @@ what this skill documents and do not open PRs against
 
 2. **Find the four-star entry.** Run `find.sh <YYYY-MM-DD> [title-substring]`
    (next to this SKILL.md), passing a distinctive substring of the *resolved*
-   title from step 1. It does the auth preflight, lists recordings in a ±1-day
-   window around the date (widen with `--widen N` if needed), filters by title
-   substring, and prints a JSON array with `name`, `created_at`,
-   `recording_id`, `transcript_external_id`, and the drive link. Auth failures
-   exit 2 with instructions; transcript_external_id is null when not indexed.
+   title from step 1. It lists recordings in a ±1-day window around the date
+   (widen with `--widen N` if needed), filters by title substring, and prints
+   a JSON array with `name`, `created_at`, `recording_id`,
+   `transcript_external_id`, and the drive link. Auth failures surface as
+   four-star's own "Not authenticated" stderr message with a non-zero exit;
+   `transcript_external_id` is null when not indexed.
 
 3. **Fetch transcript text.** four-star itself exposes no endpoint for full
    transcript retrieval — only cropped `transcript_matches` snippets via
@@ -105,8 +106,6 @@ chat_matches?: ...
   filter.** Top hits for common titles are always from the earliest indexed
   year. Use `list` (or `find.sh`) with date bounds for "latest X" queries;
   use `search` only when you need transcript/chat content matches.
-- **`list` returns an empty result and exit 0 on 401.** `find.sh` does the
-  preflight so a silent auth failure doesn't look like "no meetings found."
 - **No four-star endpoint returns full transcript text.** Only per-query
   snippets via `search`'s `transcript_matches`. `Meeting.links` exposes the
   recording video, not the transcript document. Work around this by pulling
