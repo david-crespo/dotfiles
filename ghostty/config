@@ -68,6 +68,7 @@ keybind = performable:ctrl+l=goto_split:right
 
 # auto covers me pretty much all the time
 keybind = cmd+d=new_split:auto
+keybind = opt+shift+d=new_split:up
 
 keybind = cmd+backspace=esc:w
 
