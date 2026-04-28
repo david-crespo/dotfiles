@@ -42,7 +42,10 @@ alias jdps="jj diff -r @- --stat"
 alias jr="jj log -n 10"
 alias jds="jj diff --stat"
 alias jf="jj git fetch"
-alias jp="jj git push"
+# git export added for push from workspaces. workspaces aren't colocated, so the
+# git sync is not automatic. git export should be a noop nearly all the time.
+# See https://github.com/jj-vcs/jj/issues/8055
+alias jp="jj git export && jj git push"
 alias jpm="jj git push --remote mine"
 alias jpp="jj new && jj tug && jj git push"
 # reset on top of main after being done with a PR
