@@ -197,6 +197,34 @@ end tell
   return { terminalId, terminalCount }
 }
 
+// Find the tab containing `terminalId` and return how many panes are in it.
+// Used by the chpwd path to decide whether the cwd change should drive the tab
+// title — we only want to retitle on cd when this terminal is the only pane.
+async function paneCountForTerminal(terminalId: string): Promise<number | undefined> {
+  const script = `
+on run argv
+  set targetTerminalId to item 1 of argv
+  tell application "Ghostty"
+    repeat with targetWindow in windows
+      repeat with targetTab in tabs of targetWindow
+        repeat with targetTerminal in terminals of targetTab
+          if (id of targetTerminal as text) is targetTerminalId then
+            return (count of terminals of targetTab as text)
+          end if
+        end repeat
+      end repeat
+    end repeat
+  end tell
+  return ""
+end run
+`
+  const raw = (await $`osascript -e ${script} ${[terminalId]}`.text().catch(() => ""))
+    .trim()
+  if (!raw) return undefined
+  const n = Number.parseInt(raw, 10)
+  return Number.isNaN(n) ? undefined : n
+}
+
 // Set the title of the tab currently containing `terminalId`. The tab may
 // differ from the one captured at SessionStart if the pane has been moved.
 async function setTabTitleByTerminal(terminalId: string, title: string) {
@@ -233,9 +261,10 @@ async function sessionForTerminal(terminalId: string): Promise<string | undefine
     return undefined
   }
 
-  const sessionExists = await Deno.stat(join(SESSION_DIR, sessionId)).then(() => true).catch(
-    () => false,
-  )
+  const sessionExists = await Deno.stat(join(SESSION_DIR, sessionId)).then(() => true)
+    .catch(
+      () => false,
+    )
   if (!sessionExists) {
     await Deno.remove(indexFile).catch(() => {})
     return undefined
@@ -426,22 +455,34 @@ async function handlePreview(transcriptPath: string) {
 }
 
 async function handleShell(label: string) {
-  const info = await currentFrontTerminalInfo()
-  if (!info) return
+  // Two callers: zsh startup (no GHOSTTY_TERMINAL_ID yet — find frontmost
+  // terminal and emit the export) and chpwd (env var already set — look up
+  // pane count for that specific terminal). The chpwd path must NOT use
+  // "frontmost terminal", since a backgrounded osascript can race with focus
+  // changes and would also retitle the wrong tab if the user has switched.
+  const envTerminalId = Deno.env.get("GHOSTTY_TERMINAL_ID")
+  let terminalId: string | undefined
+  let terminalCount: number | undefined
 
-  // Emit the terminal id so the shell can export it for Claude to inherit.
-  // Terminal ids are stable across pane moves, so hooks don't need to re-guess
-  // which Ghostty surface they belong to.
-  console.log(`export GHOSTTY_TERMINAL_ID=${info.terminalId}`)
+  if (envTerminalId) {
+    terminalId = envTerminalId
+    terminalCount = await paneCountForTerminal(envTerminalId)
+  } else {
+    const info = await currentFrontTerminalInfo()
+    if (!info) return
+    terminalId = info.terminalId
+    terminalCount = info.terminalCount
+    console.log(`export GHOSTTY_TERMINAL_ID=${info.terminalId}`)
+  }
 
   const cleanLabel = sanitizeTitle(label)
-  if (!cleanLabel) return
+  if (!cleanLabel || !terminalId) return
 
   await ensureStateDirs()
-  if (await sessionForTerminal(info.terminalId)) return
-  if (info.terminalCount !== 1) return
+  if (await sessionForTerminal(terminalId)) return
+  if (terminalCount !== 1) return
 
-  await setTabTitleByTerminal(info.terminalId, cleanLabel)
+  await setTabTitleByTerminal(terminalId, cleanLabel)
 }
 
 async function handleHook() {
@@ -520,7 +561,9 @@ await new Command()
   .command(
     "preview",
     new Command()
-      .description("Print the JSON payload the summarizer would feed the LLM for a transcript")
+      .description(
+        "Print the JSON payload the summarizer would feed the LLM for a transcript",
+      )
       .arguments("<transcript-path:string>")
       .action((_opts: void, transcriptPath: string) => handlePreview(transcriptPath)),
   )
