@@ -1,6 +1,6 @@
 ---
 name: helix-update
-description: Bring the user's local Helix fork up to date: fetch, rebase merge commit, resolve conflicts, rebuild.
+description: "Bring the user's local Helix fork up to date: fetch, rebase merge commit, resolve conflicts, rebuild."
 ---
 
 The user runs a custom Helix build that merges two upstream forks on top of helix-editor/master:
