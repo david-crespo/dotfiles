@@ -22,8 +22,6 @@ by bare name. Scripts in skill directories (`gh-activity.sh`,
 - Run `tviz today -f tsv` to get the Today list with UUIDs
 - Run `tviz logbook -n 30` to see recent completions
 - Run `tviz todos -a Oxide -f tsv` (or relevant area) to see open work items
-- Run `tviz todos -f tsv` excluding Oxide to see all other open tasks (for
-  cleanup and to spot stale non-work items)
 - Run `~/.claude/skills/coach/gh-activity.sh 7` to see recent GitHub activity
   (open PRs, merged PRs, reviews, issues, comments)
 - Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
@@ -43,22 +41,10 @@ by bare name. Scripts in skill directories (`gh-activity.sh`,
   partial implementations in uncommitted jj revisions that the task list doesn't
   reflect. Use `jj log -R <path>` to check other repos without `cd` — this
   keeps the command prefix matching the `jj log:*` allowlist entry.
-- Check the user's calendar for the relevant window via the
-  `mcp__claude_ai_Google_Calendar__list_events` tool. For an end-of-day
-  session, pull today; for end-of-week or week-planning, pull the full work
-  week. Look for meeting density, conflicts, board/leadership syncs, and
-  meetings that indicate committed work (e.g., a demo slot implies something
-  must be ready). The calendar grounds planning in the actual shape of the
-  days — clear afternoons are real heads-down windows; congested days aren't.
-  Treat `responseStatus: "tentative"` (the self attendee) as "maybe / probably
-  not attending" — exclude these from the meeting-load picture unless the user
-  says otherwise. Treat `declined` as skipped. Optional attendees on events
-  the user only tentatively accepted are also not real commitments.
-  Timezone handling: the response's top-level `timeZone` field is the zone
-  that all event `dateTime` values are rendered in, and the offset on each
-  `dateTime` confirms it. The per-event `timeZone` is just where the event
-  was originally created (often LA, Detroit, etc.) and is informational —
-  do NOT re-convert from it, that double-shifts the time. Read the offset.
+- Check the calendar via `mcp__claude_ai_Google_Calendar__list_events`.
+  - Window: today for end-of-day, full work week for week-planning.
+  - Attendance: self `tentative` = probably skipping (exclude from load); `declined` = skipped. Optional attendees on events you only tentatively accepted aren't real commitments.
+  - Timezone: dateTimes are rendered in the response's top-level `timeZone`, and the offset confirms it. The per-event `timeZone` is just where it was created — do NOT re-convert from it; that double-shifts. Read the offset.
 
 For milestone issues, use the `id` from the milestones fetch above. Use `--jq`
 to keep the output compact — titles, assignees, and state are enough:
@@ -88,77 +74,40 @@ For PRs and issues, use `gh pr view` or `gh issue view` with the URL from the
 output. Use `aipr discussion <number>` (from within the relevant repo) to get
 all comments on a PR.
 
-**Step 2: Identify gaps**
+**Step 2: Cross-reference and present findings**
 
-Cross-reference notes, tasks, GitHub activity, and sessions. Look for:
+Cross-reference notes, tasks, GitHub activity, calendar, and sessions; call
+out mismatches, stale tasks, missing rationale, unresolved PR threads, and
+uncaptured work. Ask about specific gaps before recommending focus.
 
-- **Status mismatches**: Notes say something happened, but the task is still open (or vice versa)
-- **Unclear relationships**: Multiple tasks that seem related but aren't linked or explained
-- **Missing context**: Tasks on Today with no indication of why they're urgent
-- **Stale items**: Tasks that haven't moved in days despite being scheduled
-- **Undercaptured work**: GitHub activity or sessions that have no corresponding task
-- **Open PR threads**: PRs with unresolved review comments or discussions
-- **Scattered focus**: Many repos/topics active in a short period with no clear thread
-- **Invisible work**: Lots of sessions or GitHub activity not reflected in tasks or notes
+Present work chronologically, citing session activity (e.g., "(U 4, T 63)") to
+convey scale of effort. Format: (U N, T M) = user messages / tool executions.
+Include PR numbers, jj revision IDs, and links. When ordering events, prefer
+session and jj rev times over logbook `stop_date`, which reflects when the
+task was marked done and can trail the work.
 
-**Step 3: Present findings and ask targeted questions**
+If it's not clear what the user should be doing next, that's a todo-list
+problem — push back on tasks missing dates, deadlines, or rationale rather
+than guessing priority. If the user mentions a deadline or milestone, pin down
+the specific date early.
 
-Present work chronologically, citing session activity (e.g., "(U 4, T 63)")
-to convey scale of effort. Format: (U N, T M) = user messages / tool executions. Include PR numbers, jj revision IDs,
-and links. This makes it easy to see how work evolved and where time went.
+**Step 3: Focus**
 
-After the summary, ask about specific gaps.
+Summarize actual priorities, flag what's blocked vs. ready, and suggest a
+concrete focus shaped around the calendar — which days have heads-down time
+vs. are meeting-heavy, conflicts, and deadlines (board meetings, demos, code
+freezes). Avoid rigid day-by-day plans; "top rock + slots around meetings"
+usually fits better.
 
-If the user mentions a deadline or milestone, pin down the specific date early
-— don't let it stay vague across multiple exchanges.
-
-Examples:
-
-- "Your note says the meeting went well, but the task is still on Today—what's the status?"
-- "You have three docs-related tasks. Are these separate or part of one workflow?"
-- "This task has been on Today since Monday. What's blocking it?"
-- "R19 starts 'next week' — what's the actual code-freeze date?"
-
-Only after addressing gaps, open it up: "Anything else on your mind that isn't captured?"
-
-**Step 4: Clarify and focus**
-
-Once gaps are resolved:
-
-1. Summarize the actual priorities
-2. Identify what's blocked vs. ready to work on
-3. Suggest a concrete focus for the session/day, shaped around the calendar —
-   name which days have real heads-down time vs. are meeting-heavy, flag
-   conflicts, and point out deadlines (board meetings, demos, code freezes)
-   that anchor the week. Avoid rigid day-by-day plans when the user's work is
-   inherently scattered; a looser "top rock + slots around meetings" framing
-   usually fits better.
-
-## Principles
-
-- **Audit before asking.** The data often reveals the questions.
-- **Be specific.** "What's the status of X?" beats "What's on your mind?"
-- **Follow resistance.** What they keep not doing matters more than what they say matters.
-- **Less is more.** Help them focus on fewer things done well.
-- **Surface assumptions.** "What would happen if you didn't do that?" "Is that actually your job?"
-
-## Tone
-
-Flat, matter-of-fact, concise. Do not praise the user or editorialize. State
-what happened and what's next. Analysis of patterns and comparisons across days
-is useful and encouraged.
+Tone: flat, matter-of-fact, concise. State what happened and what's next.
+Pattern analysis across days is welcome.
 
 ## Wrapping up
 
-End by identifying what's next—a short list for the next work block. Write a
-summary to the daily note.
-
-If the user asks for a bot note, write the full analysis with
-`obsidian-notes bot:create "YYYY-MM-DD coach session <topic>"` and
-link to it from the daily note callout. Don't write a bot note unless asked.
-
-To edit an existing note, use `obsidian-notes daily:path` or `bot:path <name>`
-to get the absolute filesystem path, then read/edit the file directly.
+End by identifying what's next—a short list for the next work block. Write
+a summary to the daily note. To edit an existing note, use `obsidian-notes
+daily:path` or `bot:path <name>` to get the absolute filesystem path, then
+read/edit the file directly.
 
 ## Note-taking
 
@@ -172,7 +121,6 @@ Do NOT pass content as a positional argument — it breaks on multi-line text.
 
 - Use a callout titled "Coach" with the time and optional topic (e.g., `> [!note] Coach 4:30 pm — end of week`)
 - One callout per session. Multiple sessions in one day get separate callouts.
-- Always prepend a blank line before the callout, even when the callout is the first thing in the note.
 - Link to bot notes when they exist
 - Use the full format, not a short summary. The daily note callout should be
   useful on its own without opening the bot note. Include:

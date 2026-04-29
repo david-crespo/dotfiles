@@ -21,11 +21,14 @@ async function vaultPath(): Promise<string> {
   return obs("vault", "info=path")
 }
 
-/** Append to a file, creating it if it doesn't exist. */
+/** Append to a file, creating it if it doesn't exist. Always prepends a
+ * blank-line separator: between existing content and the appended block, or
+ * at the start of a new file (Obsidian won't render a callout that starts
+ * on line 1 unless the cursor is outside it). */
 async function appendOrCreate(path: string, content: string): Promise<void> {
   await obs("read", `path=${path}`)
-    .then(() => obs("append", `path=${path}`, `content=${content}`))
-    .catch(() => obs("create", `path=${path}`, `content=${content}`))
+    .then(() => obs("append", `path=${path}`, `content=\n\n${content}`))
+    .catch(() => obs("create", `path=${path}`, `content=\n\n${content}`))
 }
 
 async function readStdin(): Promise<string> {
