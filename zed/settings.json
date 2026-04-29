@@ -1,12 +1,24 @@
 // https://zed.dev/docs/configuring-zed
 {
+  "agent_buffer_font_size": 14.0,
+  "ui_font_size": 16.0,
+  "buffer_font_weight": 400.0,
+  "outline_panel": {
+    "dock": "right",
+  },
+  "collaboration_panel": {
+    "dock": "right",
+  },
+  "git_panel": {
+    "dock": "right",
+  },
   "edit_predictions": {
     "provider": "zed",
   },
   "helix_mode": true,
-  "buffer_font_size": 13,
+  "buffer_font_size": 13.0,
   "buffer_font_family": "Berkeley Mono",
-  "buffer_line_height": { "custom": 1.3 },
+  "buffer_line_height": { "custom": 1.35 },
   "cursor_blink": false,
   "double_click_in_multibuffer": "open",
   "use_autoclose": false,
@@ -28,18 +40,19 @@
   "terminal": {
     "font_weight": 400.0,
     "font_size": 13,
-    "dock": "left",
+    "dock": "bottom",
     "line_height": { "custom": 1.25 },
   },
 
   "agent": {
     "default_profile": "write",
     "default_model": {
+      "effort": "high",
       "enable_thinking": true,
       "provider": "anthropic",
-      "model": "claude-opus-4-6-thinking-latest",
+      "model": "claude-opus-4-7-latest",
     },
-    "dock": "right",
+    "dock": "left",
   },
 
   // "theme": "Ayu Dark",
