@@ -72,6 +72,7 @@ Some information about the user's coding environment:
 
 ### Working with GitHub
 
+- When mentioning a PR or issue in a response to the user, render it as a clickable link (e.g., `[#4669](https://github.com/oxidecomputer/omicron/pull/4669)` or `[oxidecomputer/console#2573](https://github.com/oxidecomputer/console/issues/2573)`) rather than a bare number. This applies to chat responses, not to text written into files like commit messages, PR descriptions, or task notes — those follow the conventions of their destination.
 - When given a GitHub link, instead of fetching the URL directly, use the `gh` CLI to fetch the same data in plaintext if possible
 - Do not use `gh api`! For read-only GitHub API calls (the only kind you should be making), use `gh-api-read` instead of `gh api` (it's allowlisted and rejects write operations). Use the --jq flag on gh-api-read to avoid per prompts due to the composition of gh-api-read and jq.
 - Use `aipr tracking 1234` to list the sub-issues of a tracking issue

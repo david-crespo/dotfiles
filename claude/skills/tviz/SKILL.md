@@ -37,7 +37,7 @@ tviz link <uuid>              # clickable Things link (use this!)
 Tips:
 
 - Always use `-f tsv` first to get uuids and dates; only fetch `-f pretty` when you need notes
-- When referencing a task, output the title and the link separately (markdown links don't render in the terminal): "Task title — things:///show?id=uuid"
+- When referencing a task, output the title and the link separately (markdown links don't render in the terminal): "Task title — things:///show?id=uuid". Use the full original title so the user can search Things for it.
 - Find oldest items: `tviz todos -f json | jq -r 'sort_by(.created) | .[0:20] | .[] | "\(.created[0:10]) \(.title)"'`
 - Check GitHub status with `gh issue view` / `gh pr view` or `aipr tracking` / `aipr discussion`
 - For large outputs, spawn a Task subagent to process and summarize
@@ -71,3 +71,11 @@ Notes for create commands can be piped via stdin. The `--project` flag on
 `add todo` selects by project name; if the project doesn't exist, Things
 silently puts the item in the inbox. Update works on both todos and projects
 — it just needs the UUID.
+
+`--append-notes` and `--prepend-notes` automatically add a blank line of
+separation, so just write the new content without leading/trailing newlines.
+
+Use plain URLs in Things item notes, not markdown links — Things 3 doesn't
+render markdown, so `[text](url)` shows as raw bracket syntax. A bare URL
+like `https://github.com/oxidecomputer/omicron/pull/4669` becomes a
+clickable link automatically.
