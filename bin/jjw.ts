@@ -36,8 +36,11 @@ async function symlinkIfIgnored(
 const createCmd = new Command()
   .description("Create a new jj workspace and print its path")
   .action(async () => {
-    const repoRoot = (await $`jj root`.text()).trim()
-    const repoName = repoRoot.split("/").at(-1)!
+    // use the default workspace, not the current one — running `jjw c` from
+    // inside an existing workspace should still name and link relative to the
+    // main checkout
+    const defaultRoot = (await $`jj workspace root --name default`.text()).trim()
+    const repoName = defaultRoot.split("/").at(-1)!
 
     const baseDir = join(Deno.env.get("HOME")!, "jj-workspaces")
     await Deno.mkdir(baseDir, { recursive: true })
@@ -54,9 +57,9 @@ const createCmd = new Command()
     const jjOut = await $`jj workspace add ${wspath}`.text()
     if (jjOut.trim()) console.error(jjOut)
 
-    await symlinkIfIgnored(repoRoot, wspath, join(".claude", "settings.local.json"))
-    await symlinkIfIgnored(repoRoot, wspath, join(".claude", "notes"))
-    await symlinkIfIgnored(repoRoot, wspath, ".helix")
+    await symlinkIfIgnored(defaultRoot, wspath, join(".claude", "settings.local.json"))
+    await symlinkIfIgnored(defaultRoot, wspath, join(".claude", "notes"))
+    await symlinkIfIgnored(defaultRoot, wspath, ".helix")
 
     // only output: the path for the shell wrapper to cd into
     console.log(wspath)
@@ -70,14 +73,20 @@ const rmCmd = new Command()
     const name = names[i]
     const wsPath = (await $`jj workspace root --name ${name}`.text()).trim()
 
+    const cwd = Deno.cwd()
+    if (cwd === wsPath || cwd.startsWith(wsPath + "/")) {
+      console.error(`Refusing to delete ${wsPath}: cwd is inside it. cd out first.`)
+      Deno.exit(1)
+    }
+
     const ok = await $.confirm({ message: `Delete ${wsPath}?`, default: false })
     if (!ok) Deno.exit(0)
 
-    const perm = await Deno.permissions.request({ name: "write", path: wsPath })
-    if (perm.state === "granted") {
-      await $`jj workspace forget ${name}`.printCommand()
-      await $`rm -rf ${wsPath}`.printCommand()
-    }
+    // snapshot the target's working copy so any un-snapshotted edits land as
+    // commits in the repo before we forget the workspace and delete its files
+    await $`jj util snapshot`.cwd(wsPath).printCommand()
+    await $`jj workspace forget ${name}`.printCommand()
+    await $`rm -rf ${wsPath}`.printCommand()
   })
 
 const cdCmd = new Command()
