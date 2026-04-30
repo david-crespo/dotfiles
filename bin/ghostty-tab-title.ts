@@ -95,6 +95,7 @@ interface HookInput {
 interface SessionState {
   terminalId: string
   label: string
+  cwd?: string
   state?: string
   summary?: string
 }
@@ -106,13 +107,26 @@ interface FrontTerminalInfo {
 
 const STALE_MS = 7 * 24 * 60 * 60 * 1000
 
+// List regular files in `dir` with their stats. Stats run concurrently;
+// missing dir or stat failures are skipped so callers don't need try/catch.
+async function listFiles(
+  dir: string,
+): Promise<{ name: string; path: string; stat: Deno.FileInfo }[]> {
+  const entries = await Array.fromAsync(Deno.readDir(dir))
+    .catch(() => [] as Deno.DirEntry[])
+  return (await Promise.all(
+    entries.filter((e) => e.isFile).map(async (e) => {
+      const path = join(dir, e.name)
+      const stat = await Deno.stat(path).catch(() => undefined)
+      return stat ? { name: e.name, path, stat } : undefined
+    }),
+  )).filter((x) => x !== undefined)
+}
+
 async function sweepStale(dir: string) {
   const cutoff = Date.now() - STALE_MS
-  for await (const entry of Deno.readDir(dir)) {
-    if (!entry.isFile) continue
-    const path = join(dir, entry.name)
-    const stat = await Deno.stat(path).catch(() => undefined)
-    if (stat?.mtime && stat.mtime.getTime() < cutoff) {
+  for (const { path, stat } of await listFiles(dir)) {
+    if (stat.mtime && stat.mtime.getTime() < cutoff) {
       await Deno.remove(path).catch(() => {})
     }
   }
@@ -445,6 +459,23 @@ async function handleSummarize() {
   await updateSession(input.sessionId, { summary })
 }
 
+// Look up the most recent active session whose cwd matches `path`, and print
+// its summary (if any). Used by external tools (e.g. jjw) that want to
+// surface "what's going on at this path right now".
+async function handleDescription(path: string) {
+  const matches = (await Promise.all(
+    (await listFiles(SESSION_DIR)).map(async ({ name, stat }) => {
+      const session = await loadSessionState(name)
+      return stat.mtime && session?.cwd === path && session.summary
+        ? { summary: session.summary, mtime: stat.mtime.getTime() }
+        : undefined
+    }),
+  )).filter((m) => m !== undefined)
+
+  const best = matches.toSorted((a, b) => b.mtime - a.mtime)[0]
+  if (best) console.log(best.summary)
+}
+
 async function handlePreview(transcriptPath: string) {
   const payload = await buildSummaryPayload(transcriptPath)
   if (!payload) {
@@ -506,7 +537,7 @@ async function handleHook() {
         (await currentFrontTerminalInfo())?.terminalId
       if (!terminalId) return
 
-      await writeSessionState(sessionId, { terminalId, label })
+      await writeSessionState(sessionId, { terminalId, label, cwd: input.cwd })
       await Deno.writeTextFile(
         join(TERMINAL_SESSION_DIR, terminalId),
         `${sessionId}\n`,
@@ -557,6 +588,15 @@ await new Command()
     new Command()
       .description("Async UserPromptSubmit hook: regenerate the tab label from the prompt")
       .action(() => handleSummarize()),
+  )
+  .command(
+    "description",
+    new Command()
+      .description(
+        "Print the active session summary for a path, if one exists. Used by external tools to surface what's going on at a given workspace.",
+      )
+      .arguments("<path:string>")
+      .action((_opts: void, path: string) => handleDescription(path)),
   )
   .command(
     "preview",

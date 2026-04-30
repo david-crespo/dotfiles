@@ -1,18 +1,81 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,rm,git
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,rm,git,ghostty-tab-title
 
 import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
-import { join } from "@std/path"
+import { dirname, join } from "@std/path"
 
-/** List non-default workspace names. Exits with a message if there are none. */
-async function listWorkspaces(): Promise<string[]> {
-  const names = await $`jj workspace list -T 'name ++ "\n"'`.lines()
-  const filtered = names.filter((n) => n && n !== "default")
-  if (filtered.length === 0) {
-    console.error("No non-default workspaces found.")
-    Deno.exit(0)
+interface Workspace {
+  name: string
+  wsPath: string
+}
+
+/**
+ * Resolve the default workspace's path. `jj workspace root --name default`
+ * errors with "Workspace has no recorded path", so we chase the .jj/repo
+ * pointer from the current workspace: it's either a directory (we're in
+ * default already) or a text file pointing at default's .jj/repo.
+ */
+async function defaultRoot(): Promise<string> {
+  const cwdRoot = (await $`jj root`.text()).trim()
+  const repoLink = join(cwdRoot, ".jj", "repo")
+  const stat = await Deno.stat(repoLink)
+  if (stat.isDirectory) return cwdRoot
+  const rel = (await Deno.readTextFile(repoLink)).trim()
+  const resolved = await Deno.realPath(join(cwdRoot, ".jj", rel))
+  // resolved is /<default>/.jj/repo; strip /repo and /.jj
+  return dirname(dirname(resolved))
+}
+
+/**
+ * List workspaces (name + path) in one subprocess call. `self.root()` errors
+ * for the default workspace, so the template skips it and we substitute the
+ * default's path resolved via .jj/repo.
+ */
+async function listWorkspaces(): Promise<Workspace[]> {
+  const tmpl = 'name ++ "\t" ++ if(name == "default", "", self.root()) ++ "\n"'
+  const [lines, defaultPath] = await Promise.all([
+    $`jj workspace list -T ${tmpl}`.lines(),
+    defaultRoot(),
+  ])
+  return lines.filter((l) => l).map((line) => {
+    const [name, path] = line.split("\t")
+    return { name, wsPath: name === "default" ? defaultPath : path }
+  })
+}
+
+interface WorkspaceInfo {
+  name: string
+  wsPath: string
+  description: string
+  current: boolean
+}
+
+async function workspaceInfos(workspaces: Workspace[]): Promise<WorkspaceInfo[]> {
+  const cwd = Deno.cwd()
+  const hasTool = !!(await $.which("ghostty-tab-title"))
+  if (!hasTool) {
+    console.error("ghostty-tab-title not found in PATH; skipping descriptions")
   }
-  return filtered
+  return await Promise.all(workspaces.map(async ({ name, wsPath }) => ({
+    name,
+    wsPath,
+    description: hasTool
+      ? (await $`ghostty-tab-title description ${wsPath}`.text()).trim()
+      : "",
+    current: cwd === wsPath || cwd.startsWith(wsPath + "/"),
+  })))
+}
+
+function formatOptions(infos: WorkspaceInfo[]): string[] {
+  const maxName = Math.max(...infos.map((i) => i.name.length))
+  return infos.map((info) => {
+    // ⭐ is two cells wide in most terminal fonts, so non-current entries pad
+    // with three spaces to stay column-aligned with "⭐ ".
+    const prefix = info.current ? "⭐ " : "   "
+    const paddedName = info.name.padEnd(maxName)
+    const desc = info.description ? ` — ${info.description}` : ""
+    return `${prefix}${paddedName}${desc}`
+  })
 }
 
 /** Symlink src into the workspace if it exists and is gitignored. */
@@ -39,8 +102,8 @@ const createCmd = new Command()
     // use the default workspace, not the current one — running `jjw c` from
     // inside an existing workspace should still name and link relative to the
     // main checkout
-    const defaultRoot = (await $`jj workspace root --name default`.text()).trim()
-    const repoName = defaultRoot.split("/").at(-1)!
+    const defaultPath = await defaultRoot()
+    const repoName = defaultPath.split("/").at(-1)!
 
     const baseDir = join(Deno.env.get("HOME")!, "jj-workspaces")
     await Deno.mkdir(baseDir, { recursive: true })
@@ -57,9 +120,9 @@ const createCmd = new Command()
     const jjOut = await $`jj workspace add ${wspath}`.text()
     if (jjOut.trim()) console.error(jjOut)
 
-    await symlinkIfIgnored(defaultRoot, wspath, join(".claude", "settings.local.json"))
-    await symlinkIfIgnored(defaultRoot, wspath, join(".claude", "notes"))
-    await symlinkIfIgnored(defaultRoot, wspath, ".helix")
+    await symlinkIfIgnored(defaultPath, wspath, join(".claude", "settings.local.json"))
+    await symlinkIfIgnored(defaultPath, wspath, join(".claude", "notes"))
+    await symlinkIfIgnored(defaultPath, wspath, ".helix")
 
     // only output: the path for the shell wrapper to cd into
     console.log(wspath)
@@ -68,10 +131,16 @@ const createCmd = new Command()
 const rmCmd = new Command()
   .description("Remove a jj workspace")
   .action(async () => {
-    const names = await listWorkspaces()
-    const i = await $.select({ message: "Remove workspace", options: names })
-    const name = names[i]
-    const wsPath = (await $`jj workspace root --name ${name}`.text()).trim()
+    const workspaces = (await listWorkspaces()).filter((w) => w.name !== "default")
+    if (workspaces.length === 0) {
+      console.error("No non-default workspaces found.")
+      Deno.exit(0)
+    }
+    const i = await $.select({
+      message: "Remove workspace",
+      options: workspaces.map((w) => w.name),
+    })
+    const { name, wsPath } = workspaces[i]
 
     const cwd = Deno.cwd()
     if (cwd === wsPath || cwd.startsWith(wsPath + "/")) {
@@ -92,20 +161,20 @@ const rmCmd = new Command()
 const cdCmd = new Command()
   .description("Pick a jj workspace and print its path")
   .action(async () => {
-    const names = await listWorkspaces()
-    const i = await $.select({ message: "cd to workspace", options: names })
-    const wsPath = (await $`jj workspace root --name ${names[i]}`.text()).trim()
-    console.log(wsPath)
+    const infos = await workspaceInfos(await listWorkspaces())
+    const i = await $.select({
+      message: "cd to workspace",
+      options: formatOptions(infos),
+    })
+    console.log(infos[i].wsPath)
   })
 
 const lsCmd = new Command()
   .description("List jj workspaces")
   .action(async () => {
-    const names = await listWorkspaces()
-
-    for (const name of names) {
-      const wsPath = (await $`jj workspace root --name ${name}`.text()).trim()
-      console.log(`${name}\t${wsPath}`)
+    const infos = await workspaceInfos(await listWorkspaces())
+    for (const line of formatOptions(infos)) {
+      console.log(line)
     }
   })
 
