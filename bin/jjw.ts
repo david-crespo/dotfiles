@@ -4,6 +4,17 @@ import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
 import { join } from "@std/path"
 
+/** List non-default workspace names. Exits with a message if there are none. */
+async function listWorkspaces(): Promise<string[]> {
+  const names = await $`jj workspace list -T 'name ++ "\n"'`.lines()
+  const filtered = names.filter((n) => n && n !== "default")
+  if (filtered.length === 0) {
+    console.error("No non-default workspaces found.")
+    Deno.exit(0)
+  }
+  return filtered
+}
+
 /** Symlink src into the workspace if it exists and is gitignored. */
 async function symlinkIfIgnored(
   repoRoot: string,
@@ -44,6 +55,7 @@ const createCmd = new Command()
     if (jjOut.trim()) console.error(jjOut)
 
     await symlinkIfIgnored(repoRoot, wspath, join(".claude", "settings.local.json"))
+    await symlinkIfIgnored(repoRoot, wspath, join(".claude", "notes"))
     await symlinkIfIgnored(repoRoot, wspath, ".helix")
 
     // only output: the path for the shell wrapper to cd into
@@ -52,57 +64,35 @@ const createCmd = new Command()
 
 const rmCmd = new Command()
   .description("Remove a jj workspace")
-  .arguments("[name:string]")
-  .action(async (_options: void, nameArg?: string) => {
-    const names = (await $`jj workspace list -T 'name ++ "\n"'`.lines())
-      .filter((n) => n && n !== "default")
-
-    if (names.length === 0) {
-      console.error("No non-default workspaces found.")
-      Deno.exit(0)
-    }
-
-    let name: string
-    if (nameArg) {
-      if (!names.includes(nameArg)) {
-        console.error(`Unknown workspace: ${nameArg}`)
-        console.error(`Known workspaces: ${names.join(", ")}`)
-        Deno.exit(1)
-      }
-      name = nameArg
-    } else {
-      const i = await $.select({ message: "Remove workspace", options: names })
-      name = names[i]
-    }
-
+  .action(async () => {
+    const names = await listWorkspaces()
+    const i = await $.select({ message: "Remove workspace", options: names })
+    const name = names[i]
     const wsPath = (await $`jj workspace root --name ${name}`.text()).trim()
 
-    const ok = await $.confirm({
-      message: `Delete ${wsPath}?`,
-      default: false,
-    })
+    const ok = await $.confirm({ message: `Delete ${wsPath}?`, default: false })
     if (!ok) Deno.exit(0)
 
-    const perm = await Deno.permissions.request({
-      name: "write",
-      path: wsPath,
-    })
+    const perm = await Deno.permissions.request({ name: "write", path: wsPath })
     if (perm.state === "granted") {
       await $`jj workspace forget ${name}`.printCommand()
       await $`rm -rf ${wsPath}`.printCommand()
     }
   })
 
+const cdCmd = new Command()
+  .description("Pick a jj workspace and print its path")
+  .action(async () => {
+    const names = await listWorkspaces()
+    const i = await $.select({ message: "cd to workspace", options: names })
+    const wsPath = (await $`jj workspace root --name ${names[i]}`.text()).trim()
+    console.log(wsPath)
+  })
+
 const lsCmd = new Command()
   .description("List jj workspaces")
   .action(async () => {
-    const names = (await $`jj workspace list -T 'name ++ "\n"'`.lines())
-      .filter((n) => n && n !== "default")
-
-    if (names.length === 0) {
-      console.error("No non-default workspaces found.")
-      return
-    }
+    const names = await listWorkspaces()
 
     for (const name of names) {
       const wsPath = (await $`jj workspace root --name ${name}`.text()).trim()
@@ -119,4 +109,5 @@ await new Command()
   .command("create", createCmd).alias("c")
   .command("rm", rmCmd)
   .command("ls", lsCmd)
+  .command("cd", cdCmd)
   .parse()

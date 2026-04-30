@@ -61,6 +61,10 @@ function jjw() {
     local wspath
     wspath="$(jjw-cmd create)" || return 1
     cd "$wspath"
+  elif [[ "$1" == "cd" && "$#" -eq 1 ]]; then
+    local wspath
+    wspath="$(jjw-cmd cd)" || return 1
+    [[ -n "$wspath" ]] && cd "$wspath"
   else
     jjw-cmd "$@"
   fi
