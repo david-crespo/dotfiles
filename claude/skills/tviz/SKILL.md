@@ -37,7 +37,7 @@ tviz link <uuid>              # clickable Things link (use this!)
 Tips:
 
 - Always use `-f tsv` first to get uuids and dates; only fetch `-f pretty` when you need notes
-- When referencing a task, output the title and the link separately (markdown links don't render in the terminal): "Task title — things:///show?id=uuid". Use the full original title so the user can search Things for it.
+- When referring to specific tasks, link them with `[title](things:///show?id=<uuid>)`. Use the full original title so the user can search Things for it.
 - Find oldest items: `tviz todos -f json | jq -r 'sort_by(.created) | .[0:20] | .[] | "\(.created[0:10]) \(.title)"'`
 - Check GitHub status with `gh issue view` / `gh pr view` or `aipr tracking` / `aipr discussion`
 - For large outputs, spawn a Task subagent to process and summarize

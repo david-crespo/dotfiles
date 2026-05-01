@@ -19,7 +19,7 @@ Output sections:
   Merged PRs     - PRs you authored, recently merged
   Reviews        - PRs by others that you reviewed
   Issues         - Issues you opened recently
-  Comments       - Recent issue/PR comments (from events API)
+  Comments you posted - Recent issue/PR comments authored by you (from events API)
 EOF
   exit 0
 }
@@ -103,8 +103,43 @@ gh search issues --author="$USERNAME" --sort=created --limit=20 \
   '
 echo
 
-# --- Recent comments from events API ---
-echo "## Recent comments"
+# --- Recent comments on your open PRs (from others) ---
+# Shows all comments authored by others on the user's open PRs within the
+# window. Bots and the user are filtered out. Note: this does NOT filter by
+# read-state — surfacing seen comments is intentional, because the user's
+# triage habit is to make a todo for each PR after reading. The coach skill
+# is expected to cross-reference these against the active todo list and only
+# surface PRs that lack a corresponding todo.
+echo "## Comments on your PRs (from others, within window)"
+SINCE_ISO="${DATE_SINCE}T00:00:00Z"
+PR_COMMENTS_OUTPUT=""
+if [[ $(echo "$OPEN_PRS" | jq 'length') -gt 0 ]]; then
+  while IFS=$'\t' read -r repo number; do
+    [[ -z "$repo" ]] && continue
+    combined=$(
+      {
+        gh-api-read "/repos/$repo/issues/$number/comments?since=$SINCE_ISO" \
+          --jq ".[] | select(.user.login != \"$USERNAME\" and (.user.login | endswith(\"[bot]\") | not)) | \"  $repo#$number (\\(.user.login), \\(.created_at[:10])): \\(.body | split(\"\\n\")[0] | .[:120])\""
+        gh-api-read "/repos/$repo/pulls/$number/comments?since=$SINCE_ISO" \
+          --jq ".[] | select(.user.login != \"$USERNAME\" and (.user.login | endswith(\"[bot]\") | not)) | \"  $repo#$number review (\\(.user.login), \\(.created_at[:10])): \\(.body | split(\"\\n\")[0] | .[:120])\""
+      }
+    )
+    if [[ -n "$combined" ]]; then
+      PR_COMMENTS_OUTPUT+="$combined"$'\n'
+    fi
+  done < <(echo "$OPEN_PRS" | jq -r '.[] | "\(.repository.nameWithOwner)\t\(.number)"')
+fi
+if [[ -z "$PR_COMMENTS_OUTPUT" ]]; then
+  echo "  (none)"
+else
+  printf '%s' "$PR_COMMENTS_OUTPUT"
+fi
+echo
+
+# --- Recent comments authored by the user (from events API) ---
+# NOTE: these are comments you POSTED, not comments left for you to address.
+# The events API only surfaces the authenticated user's own activity.
+echo "## Comments you posted"
 gh-api-read "/users/$USERNAME/events?per_page=100" \
   --jq "[.[] |
      select(.created_at >= \"$DATE_SINCE\") |

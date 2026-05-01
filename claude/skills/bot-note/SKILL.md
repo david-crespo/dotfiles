@@ -31,3 +31,7 @@ The key principle: **the note should be very close to verbatim what was said in 
 ## Before writing
 
 Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one. To append, pipe content to `obsidian-notes bot:append "<name>"`. To edit an existing note directly, use `obsidian-notes bot:path "<name>"` to get the absolute filesystem path, then read/edit the file.
+
+## After writing
+
+End with a single line of the form `Note created at [<name>](<url>)` (or `Note updated at ...` for appends/edits) where `<name>` is just the note filename without the `Base files/Bot notes/` prefix or `.md` extension, and `<url>` is `obsidian://open?vault=<vault>&file=<url-encoded-name>`. Get the vault name from the basename of `obsidian-notes bot:path "<name>"` walked up two directories (i.e., the vault directory containing `Base files/`). The link must be clickable, so URL-encode spaces as `%20`.

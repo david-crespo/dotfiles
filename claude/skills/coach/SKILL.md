@@ -23,7 +23,21 @@ by bare name. Scripts in skill directories (`gh-activity.sh`,
 - Run `tviz logbook -n 30` to see recent completions
 - Run `tviz todos -a Oxide -f tsv` (or relevant area) to see open work items
 - Run `~/.claude/skills/coach/gh-activity.sh 7` to see recent GitHub activity
-  (open PRs, merged PRs, reviews, issues, comments)
+  (open PRs, merged PRs, reviews, issues opened, comments on your PRs from
+  others, comments you posted). Two distinctions matter:
+  - "Comments on your PRs (from others, within window)" — feedback you may
+    need to address. Includes seen comments by design (see below).
+  - "Comments you posted" — comments YOU authored (sourced from the user's
+    events feed). Do not infer "review feedback to address" from this section.
+    To dig into a specific PR's discussion, use `aipr discussion <number>`
+    from the relevant repo.
+
+  The user's triage habit for PR comments is to make a Things todo for each
+  PR after reading the comments. So before raising "comments on your PRs"
+  as a thing to look at, cross-reference the open todos (`tviz todos -a
+  Oxide -f tsv`) — if there's already a todo referencing the PR (by number,
+  title, or topic), the user has triaged it; don't re-raise. Only surface
+  PRs whose comments lack a corresponding todo.
 - Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
   to see recent Claude and Codex sessions. The summary shows activity as `(U N, T M)` (N user messages / M tool executions).
   For substantial sessions (roughly 20+ messages), run
@@ -80,11 +94,12 @@ Cross-reference notes, tasks, GitHub activity, calendar, and sessions; call
 out mismatches, stale tasks, missing rationale, unresolved PR threads, and
 uncaptured work. Ask about specific gaps before recommending focus.
 
-Present work chronologically, citing session activity (e.g., "(U 4, T 63)") to
-convey scale of effort. Format: (U N, T M) = user messages / tool executions.
-Include PR numbers, jj revision IDs, and links. When ordering events, prefer
-session and jj rev times over logbook `stop_date`, which reflects when the
-task was marked done and can trail the work.
+Present work chronologically — the user values seeing how time was actually
+spent. Cite session activity (e.g., "(U 4, T 63)") to convey scale of effort.
+Format: (U N, T M) = user messages / tool executions. Include PR numbers, jj
+revision IDs, and links. When ordering events, prefer session and jj rev
+times over logbook `stop_date`, which reflects when the task was marked done
+and can trail the work.
 
 If it's not clear what the user should be doing next, that's a todo-list
 problem — push back on tasks missing dates, deadlines, or rationale rather
@@ -106,8 +121,8 @@ Pattern analysis across days is welcome.
 
 End by identifying what's next—a short list for the next work block. Write
 a summary to the daily note. To edit an existing note, use `obsidian-notes
-daily:path` or `bot:path <name>` to get the absolute filesystem path, then
-read/edit the file directly.
+daily:path` to get the absolute filesystem path, then read/edit the file
+directly.
 
 ## Note-taking
 
@@ -119,25 +134,19 @@ about the user.
 (use `--date YYYY-MM-DD` to append to a different day's note).
 Do NOT pass content as a positional argument — it breaks on multi-line text.
 
-- Use a callout titled "Coach" with the time and optional topic (e.g., `> [!note] Coach 4:30 pm — end of week`)
+- Use a collapsed callout titled "Coach" with the time and optional topic
+  (e.g., `> [!note]- Coach 4:30 pm — end of week`). The `-` after `[!note]`
+  makes Obsidian render it collapsed by default — these notes accumulate and
+  the daily file is easier to skim collapsed.
 - One callout per session. Multiple sessions in one day get separate callouts.
-- Link to bot notes when they exist
-- Use the full format, not a short summary. The daily note callout should be
-  useful on its own without opening the bot note. Include:
-  - **What got done today/this session**: concrete list with PR numbers and links
-  - **Status of key workstreams**: milestone items, open PRs, in-progress jj
-    revs, with specific states (merged, draft, open, plan only, etc.)
-  - **Priorities for next work block**: numbered, with context on why each
-    matters (deadlines, owed reviews, etc.)
-  - **Todo list state**: if cleanup is needed, say what
-  - **Patterns observed**: if relevant (e.g., nerdsniping, hiring deprioritized)
+- Daily note callout should include:
+  - **Today (chronological)**: timestamped list of what was worked on, with
+    PR numbers, jj revs, links, and `(U N, T M)` annotations for substantial
+    sessions. The user wants to see how time was actually spent.
+  - **Status of key workstreams**: milestone items, ongoing PRs/branches with
+    specific states (merged, draft, open, no movement, etc.)
+  - **Calendar**: what the day looked like (heads-down vs. meeting-heavy,
+    anything notable skipped/declined).
+  - **Pattern**: if relevant (e.g., RFD untouched N days, nerdsniping).
+  - **Next work block**: numbered, with brief why for each.
 - See `obsidian-notes daily:read 2026-02-27` "Coach — end of week" callout for a good example
-
-**Bot note** (when requested) — create with `obsidian-notes bot:create "<name>"`:
-
-- Name: `YYYY-MM-DD coach session <topic>.md`
-- Include: goal, sources consulted, cross-referencing findings, status of
-  in-progress work, plan, productivity patterns observed
-- Bot notes are for deeper analysis that would make the daily note callout too
-  long: weekly retros, PR review breakdowns, detailed cross-referencing.
-  The daily note callout should still be substantive on its own.
