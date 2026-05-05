@@ -90,9 +90,7 @@ async function symlinkIfIgnored(
     .cwd(repoRoot).noThrow().quiet()
   if (ignored.code !== 0) return
   const dest = join(wspath, relPath)
-  await Deno.mkdir(dest.substring(0, dest.lastIndexOf("/")), {
-    recursive: true,
-  })
+  await Deno.mkdir(dirname(dest), { recursive: true })
   await Deno.symlink(src, dest)
 }
 
