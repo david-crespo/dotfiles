@@ -91,67 +91,6 @@ function jab() {
   jj abandon -r "trunk()..$1" && jj bookmark forget "$1"
 }
 
-# Resolve the git directory backing the current jj repo, including from a
-# non-default workspace (where .jj/repo is a file pointing at the default's).
-function _jj_git_dir() {
-  local root repo_dir target
-  root="$(jj root 2>/dev/null)" || return 1
-  if [[ -d "$root/.jj/repo" ]]; then
-    repo_dir="$root/.jj/repo"
-  else
-    repo_dir="$(cd "$root/.jj" && cd "$(<"$root/.jj/repo")" && pwd -P)"
-  fi
-  target="$(<"$repo_dir/store/git_target")"
-  case "$target" in
-    /*) echo "$target" ;;
-    *)  (cd "$repo_dir/store/$target" && pwd -P) ;;
-  esac
-}
-
-# Resolve "owner/repo" from origin so gh works from a jj workspace with no .git.
-function _jj_gh_repo() {
-  local git_dir url
-  git_dir="$(_jj_git_dir)" || return 1
-  url="$(git --git-dir="$git_dir" remote get-url origin 2>/dev/null)" || return 1
-  echo "${${url#*github.com[:/]}%.git}"
-}
-
-# choose a PR, returning the PR number only
-function pick_pr() {
-  local repo
-  repo="$(_jj_gh_repo)" || return
-  gh pr list -R "$repo" --limit 100 --json headRefName,number,title,updatedAt,author --template \
-    '{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}' |
-    fzf --height 25% --reverse --accept-nth=1
-}
-
-function jpr() {
-  local repo
-  repo="$(_jj_gh_repo)" || return
-  local pr="$(pick_pr)"
-  [[ -z "$pr" ]] && return
-  local meta="$(gh pr view -R "$repo" "$pr" --json headRefName,isCrossRepository)"
-  [[ -z "$meta" ]] && return
-  local branch="$(jq -r .headRefName <<<"$meta")"
-  local cross="$(jq -r .isCrossRepository <<<"$meta")"
-  echo "Checking out PR #$pr ($branch)"
-  if [[ "$cross" == "true" ]]; then
-    # Fork PR: branch isn't on origin, but GitHub exposes refs/pull/N/head.
-    # Fetch it into a local bookmark named pr-N. In a jj workspace the cwd
-    # has no .git, so target the default workspace's git dir explicitly.
-    local git_dir
-    git_dir="$(_jj_git_dir)" || return
-    git --git-dir="$git_dir" fetch origin "+refs/pull/$pr/head:refs/heads/pr-$pr" || return
-    jj git import 2>/dev/null
-    jj new "pr-$pr"
-  else
-    jj git fetch
-    jj bookmark track "$branch@origin" 2>/dev/null
-    jj new "$branch"
-  fi
-  jj log -n 2
-}
-
 function nu-run {
   nu -c "source ~/.config/nushell/zsh-functions.nu; $*"
 }
