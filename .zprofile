@@ -300,6 +300,8 @@ function tts() {
   fi
 }
 
+alias codex-cost='npx @ccusage/codex@latest -s $(date -v-7d +%Y-%m-%d)'
+
 function upgrade-agents() {
   parallel ::: \
     'codex --version && npm install -g @openai/codex@latest && codex --version' \
