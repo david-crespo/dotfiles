@@ -241,6 +241,7 @@
       }
     }
   },
+  "cleanupPeriodDays": 60,
   "effortLevel": "high",
   "editorMode": "vim",
   "preferredNotifChannel": "terminal_bell",

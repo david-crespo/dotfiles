@@ -61,8 +61,8 @@ Some information about the user's coding environment:
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
-- Minimize diff size. Avoid no-op restructuring of code you're not otherwise changing (extracting variables, reordering, renaming) — it obscures the real change. Cleanup is fine in code you're already modifying.
-- Code comments should be more about why than what
+- Try to minimize diff size, within reason. Avoid no-op restructuring of code you're not otherwise changing (extracting variables, reordering, renaming) — it obscures the real change. Cleanup is fine in code you're already modifying.
+- Code comments should be more about why than what. When there is context that explains why something is done, and that can't be inferred from the code itself, write comments.
 - After making changes, ALWAYS run linters, formatters, and typecheckers.
   - Check package.json for commands
   - For Deno projects use `deno fmt`, `deno lint`, `deno check`
