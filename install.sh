@@ -80,6 +80,7 @@ ln -sf "$PWD/bin/obsidian-notes.ts" ~/.local/bin/obsidian-notes
 ln -sf "$PWD/bin/jj-jump.ts" ~/.local/bin/jj-jump
 ln -sf "$PWD/bin/jpl.ts" ~/.local/bin/jpl
 ln -sf "$PWD/bin/jpr.ts" ~/.local/bin/jpr
+ln -sf "$PWD/bin/flag-stats.ts" ~/.local/bin/flag-stats
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
