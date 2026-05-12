@@ -7,90 +7,58 @@
  */
 
 import { extname } from "@std/path"
-import { readAll } from "@std/io"
 import { Command } from "@cliffy/command"
 import $ from "@david/dax"
 
 // adoc doesn't display right in glow but it does on github
 const LANGS = ["rs", "ts", "tsx", "js", "json", "adoc", "sh", "html", "md"]
 
-// deno-lint-ignore no-explicit-any
-type ExtractOptions<T extends Command<any>> = T extends // deno-lint-ignore no-explicit-any
-Command<any, any, infer TOptions> ? TOptions
-  : never
-
-type Opts = ExtractOptions<typeof command>
-
 type FileSource = {
   heading: string | undefined
   content: string
+  source: "file" | "clipboard" | "stdin"
 }
 
-function formatFile(
-  /** Filename for files or label for clipboard or stdin */
-  heading: string | undefined,
-  content: string,
-  opts: Opts = {},
-): string {
-  const lines: string[] = []
+// If any source's estimated rendered height (lines, after soft-wrapping long
+// lines at WRAP_WIDTH) exceeds this, wrap every source in a <details> tag so
+// long pastes don't blow out the page when posted to a GitHub gist.
+const COLLAPSE_LINES = 40
+const WRAP_WIDTH = 100
 
-  if (opts.xml) {
-    lines.push("<file>")
-    if (heading) lines.push(`  <name>${heading}</name>`)
-    lines.push(`  <contents>\n${content}</contents>`)
-    lines.push("</file>")
-    return lines.join("\n")
-  }
-
-  if (opts.quote) {
-    return content.split("\n").map((line) => `> ${line}`).join("\n") + "\n"
-  }
-
-  if (opts.details) {
-    lines.push("<details>")
-    if (heading) lines.push(`  <summary>${heading}</summary>\n`)
-  } else if (heading) {
-    lines.push(`\n### \`${heading}\`\n\n`)
-  }
-
-  const ext = heading ? extname(heading).slice(1) : ""
-  // only fall back to opts.lang if file ext isn't good
-  const lang = ext && LANGS.includes(ext) ? ext : opts.lang || ""
-
-  // for markdown, just render the contents directly, no block
-  if (lang === "md") {
-    lines.push(content + "\n")
-  } else {
-    lines.push(`\`\`\`${lang}\n${content}\n\`\`\`\n`)
-  }
-
-  if (opts.details) lines.push("</details>")
-
-  return lines.join("\n")
+function renderedLines(s: string): number {
+  return s.split("\n").reduce(
+    (acc, line) => acc + Math.max(1, Math.ceil(line.length / WRAP_WIDTH)),
+    0,
+  )
 }
 
 async function getStdin() {
   if (Deno.stdin.isTerminal()) return undefined
-  return new TextDecoder().decode(await readAll(Deno.stdin)).trim() || undefined
+  return (await new Response(Deno.stdin.readable).text()).trim() || undefined
 }
 
-const command = new Command()
+await new Command()
   .name("cb")
-  .description(`Wrap file or clipboard contents in markdown codeblocks or XML tags.`)
+  .description(
+    `Wrap file or clipboard contents in markdown for sharing.
+
+Input with a detectable language (file extension or --lang) renders as a
+fenced code block. Input with no language renders as a blockquote.
+
+If any input exceeds ${COLLAPSE_LINES} lines, every input is wrapped in
+a <details> tag so big files don't fill up the page in a GitHub gist.`,
+  )
   .helpOption("-h, --help", "Show help")
   .example("Filename", "cb script.ts")
   .example("Stdin", "cat script.ts | cb")
-  .example("Auto pbpaste", "cb")
+  .example("Auto paste", "cb")
   .example("Multiple files", "cb script.ts data.json")
+  .example("File + clipboard", "cb script.ts -p")
   .example("Specify lang", "echo \"console.log('hi')\" | cb -l js")
-  .example("XML for Claude", "cb --xml script.ts")
-  .example("Details tag", "cb --details script.ts")
   .arguments("[files...]")
-  .option("-l, --lang <lang>", "Code block lang for stdin")
-  .option("-d, --details", "Wrap files in <details>")
+  .option("-l, --lang <lang>", "Code block lang for stdin or clipboard")
+  .option("-c, --code", "Force bare code fence for prose input (no language)")
   .option("-p, --paste", "Pull from pbpaste (automatic when no stdin or files)")
-  .option("-x, --xml", "Wrap files in XML for Claude")
-  .option("-q, --quote", "Use > to quote instead of code blocks")
   .action(async (opts, ...files) => {
     const sources: FileSource[] = []
 
@@ -100,7 +68,7 @@ const command = new Command()
     if (stdin) {
       // only show heading when it needs to be distinguished from other inputs
       const heading = !willUsePaste && files.length === 0 ? undefined : "[stdin]"
-      sources.push({ heading, content: stdin })
+      sources.push({ heading, content: stdin, source: "stdin" })
     }
 
     // Collect clipboard if paste flag is passed OR automatically if
@@ -110,7 +78,7 @@ const command = new Command()
       if (content) {
         // only show heading when it needs to be distinguished from other inputs
         const heading = stdin || files.length > 0 ? "[clipboard contents]" : undefined
-        sources.push({ heading, content })
+        sources.push({ heading, content, source: "clipboard" })
       }
     }
 
@@ -118,21 +86,52 @@ const command = new Command()
     for (const filename of files) {
       if (!(await Deno.lstat(filename)).isFile) continue
       const content = await Deno.readTextFile(filename)
-      sources.push({ heading: filename, content })
+      sources.push({ heading: filename, content, source: "file" })
     }
 
-    // Print all sources with dividers between them
-    for (let i = 0; i < sources.length; i++) {
-      const { heading, content } = sources[i]
-      const isFirst = i === 0
+    // If any source exceeds the threshold, wrap every source in <details>
+    // for uniform presentation.
+    const collapse = sources.some((s) => renderedLines(s.content) > COLLAPSE_LINES)
 
-      // Print divider before this file (but not before the first one)
-      if (!isFirst && !opts.xml && !opts.details && heading) {
-        console.log("\n---\n")
+    for (const { heading, content, source } of sources) {
+      const ext = heading ? extname(heading).slice(1) : ""
+      // only fall back to opts.lang if file ext isn't good
+      const lang = ext && LANGS.includes(ext) ? ext : opts.lang || ""
+
+      let body: string
+      if (lang === "md") {
+        // markdown renders directly, no fence
+        body = content
+      } else if (lang || opts.code) {
+        // known language, or --code forcing a bare fence
+        body = `\`\`\`${lang}\n${content}\n\`\`\``
+      } else if (collapse) {
+        // <details> already delimits, so skip the blockquote
+        body = content
+      } else {
+        // prose: blockquote as a clean markdown delimiter
+        body = content.split("\n").map((line) => `> ${line}`).join("\n")
       }
 
-      console.log(formatFile(heading, content, opts))
+      const lines: string[] = []
+      if (collapse) {
+        const summary = source === "clipboard"
+          ? "Clipboard contents"
+          : source === "stdin"
+          ? "stdin"
+          : heading
+        lines.push(
+          "<details>",
+          `  <summary>${summary}</summary>\n`,
+          body + "\n",
+          "</details>",
+        )
+      } else {
+        if (heading) lines.push(`\n### \`${heading}\`\n`)
+        lines.push("", body + "\n")
+      }
+
+      console.log(lines.join("\n"))
     }
   })
-
-await command.parse(Deno.args)
+  .parse(Deno.args)
