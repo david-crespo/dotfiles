@@ -198,6 +198,7 @@ alias ais='ai --search -m gpt-5'
 alias aisf='ai --search -m flash'
 alias aif='ai -m flash'
 alias cbd='cb -l diff'
+alias alt='ai --ephemeral --image clipboard --model flash "brief alt text. if image is only text, give the full text rather than a description" --quick --raw | ecopy'
 
 # run the same prompt against several models (comma-separated after -m)
 function aic() {
