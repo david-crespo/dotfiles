@@ -322,6 +322,10 @@ async function updateSession(
 
 const MESSAGE_WINDOW = 5
 const MAX_MESSAGE_CHARS = 2000
+// Prompts at or below this length are almost always continuations ("yes", "go
+// ahead", "fix this?", "$ jr"), not topic shifts — skip them so we don't burn
+// Haiku calls re-emitting the same label.
+const MIN_RELEVANT_CHARS = 20
 
 function truncateMessage(s: string): string {
   return s.length <= MAX_MESSAGE_CHARS ? s : s.slice(0, MAX_MESSAGE_CHARS) + "…"
@@ -333,13 +337,19 @@ function truncateMessage(s: string): string {
 const SKIP_COMMANDS = new Set(["/clear", "/compact", "/resume"])
 
 // Extract user-meaningful text from a transcript/hook content string. Returns
-// undefined for tool-result and bash-wrapper payloads that shouldn't drive the
-// summary. Slash-command invocations are kept: they start with `<` too, but
-// `/coach whatever` is exactly the kind of intent we want to summarize from.
+// undefined for tool-result payloads that shouldn't drive the summary.
+// Slash-command invocations and bash-mode commands are kept: they start with
+// `<` too, but `/coach whatever` and `$ cargo test` both name what the user is
+// doing, which is exactly what we want feeding the label.
 function extractUserText(content: string): string | undefined {
   const trimmed = content.trim()
   if (!trimmed) return undefined
   if (!trimmed.startsWith("<")) return trimmed
+  const bashMatch = trimmed.match(/^<bash-input>([\s\S]*?)<\/bash-input>/)
+  if (bashMatch) {
+    const cmd = bashMatch[1].trim()
+    return cmd ? `$ ${cmd}` : undefined
+  }
   const m = trimmed.match(
     /^<command-name>([^<]+)<\/command-name>(?:[\s\S]*?<command-args>([^<]*)<\/command-args>)?/,
   )
@@ -429,11 +439,13 @@ async function buildSummaryPayload(
   const all = promptText && transcriptMessages.at(-1) !== promptText
     ? [...transcriptMessages, truncateMessage(promptText)]
     : transcriptMessages
-  if (all.length === 0) return undefined
+  // filter out short messages
+  const relevant = all.filter((m) => m.length > MIN_RELEVANT_CHARS)
+  if (relevant.length === 0) return undefined
   return {
     priorSummary: priorSummary ?? "",
-    firstMessage: all[0],
-    recentMessages: all.slice(-MESSAGE_WINDOW),
+    firstMessage: relevant[0],
+    recentMessages: relevant.slice(-MESSAGE_WINDOW),
   }
 }
 
@@ -442,6 +454,10 @@ async function handleSummarize() {
   const input = parseHookInput(stdin)
   if (!input || input.hookEventName !== "UserPromptSubmit") return
   if (!input.sessionId || !input.transcriptPath) return
+
+  const promptText = input.prompt ? extractUserText(input.prompt) : undefined
+  // Short turns rarely shift the work theme, so don't bother updating summary
+  if (!promptText || promptText.length <= MIN_RELEVANT_CHARS) return
 
   const session = await loadSessionState(input.sessionId)
   if (!session) return
