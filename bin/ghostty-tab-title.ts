@@ -67,6 +67,8 @@ import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
 import { join } from "@std/path"
 
+$.setErrorTail(true)
+
 const TAB_INFO_SEP = "|||"
 const STATE_ROOT = join(
   Deno.env.get("XDG_STATE_HOME") ?? join(Deno.env.get("HOME")!, ".local", "state"),

@@ -29,8 +29,12 @@ async function pickBase(r: string) {
   // show existing bookmarks (don't log range because there could be too many commits)
   await $`jj log ${bookmarks.flatMap((o) => ["-r", o])}`.printCommand()
 
-  const i = await $.select({ message: "\nChoose base", options: bookmarks, noClear: true })
-  return bookmarks[i]
+  const { value } = await $.select({
+    message: "\nChoose base",
+    options: bookmarks,
+    noClear: true,
+  })
+  return value
 }
 
 await new Command()

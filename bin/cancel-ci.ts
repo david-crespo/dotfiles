@@ -215,7 +215,7 @@ async function main(prArg?: string, repoArg?: string) {
       formatRelativeTime(new Date(startedAt).toISOString())
     }, ${c.checks.length} running)`
   })
-  const index = await $.select({
+  const { index } = await $.select({
     message: "Select commit to cancel CI for:",
     options,
   })

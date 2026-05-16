@@ -3,6 +3,8 @@
 import { Command } from "@cliffy/command"
 import $ from "@david/dax"
 
+$.setErrorTail(true)
+
 async function currBookmark(): Promise<string> {
   const tmpl = 'bookmarks.map(|b| b.name()).join("\\n")'
   const lines = await $`jj log --no-graph -r 'heads(::@ & bookmarks())' -T ${tmpl}`

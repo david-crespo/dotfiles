@@ -4,6 +4,8 @@ import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
 import { dirname, join } from "@std/path"
 
+$.setErrorTail(true)
+
 interface Workspace {
   name: string
   wsPath: string
@@ -134,11 +136,11 @@ const rmCmd = new Command()
       console.error("No non-default workspaces found.")
       Deno.exit(0)
     }
-    const i = await $.select({
+    const { index } = await $.select({
       message: "Remove workspace",
       options: workspaces.map((w) => w.name),
     })
-    const { name, wsPath } = workspaces[i]
+    const { name, wsPath } = workspaces[index]
 
     const cwd = Deno.cwd()
     if (cwd === wsPath || cwd.startsWith(wsPath + "/")) {
@@ -160,11 +162,11 @@ const cdCmd = new Command()
   .description("Pick a jj workspace and print its path")
   .action(async () => {
     const infos = await workspaceInfos(await listWorkspaces())
-    const i = await $.select({
+    const { index } = await $.select({
       message: "cd to workspace",
       options: formatOptions(infos),
     })
-    console.log(infos[i].wsPath)
+    console.log(infos[index].wsPath)
   })
 
 const lsCmd = new Command()

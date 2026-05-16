@@ -2,6 +2,8 @@
 
 import $ from "@david/dax"
 
+$.setErrorTail(true)
+
 /** Extract GitHub owner/repo from jj's origin remote URL. */
 async function getRepoSlug(): Promise<string> {
   const remotes = await $`jj git remote list`.lines()
