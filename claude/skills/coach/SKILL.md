@@ -59,6 +59,12 @@ by bare name. Scripts in skill directories (`gh-activity.sh`,
   - Window: today for end-of-day, full work week for week-planning.
   - Attendance: self `tentative` = probably skipping (exclude from load); `declined` = skipped. Optional attendees on events you only tentatively accepted aren't real commitments.
   - Timezone: dateTimes are rendered in the response's top-level `timeZone`, and the offset confirms it. The per-event `timeZone` is just where it was created — do NOT re-convert from it; that double-shifts. Read the offset.
+- Check recent emails via the Gmail MCP (`mcp__claude_ai_Gmail__search_threads`)
+  for unaddressed asks. A useful starting query is `newer_than:3d in:inbox
+  -category:promotions -category:social`; widen the window for week-planning.
+  Treat email as another inbox to cross-reference: surface threads that look
+  like they want a reply or decision and don't already have a corresponding
+  Things todo or PR thread.
 
 For milestone issues, use the `id` from the milestones fetch above. Use `--jq`
 to keep the output compact — titles, assignees, and state are enough:

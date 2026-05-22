@@ -59,6 +59,7 @@
       "Bash(jj dt:*)",
       "Bash(jj dts:*)",
       "Bash(jj st:*)",
+      "Bash(jj resolve --list)",
       "Bash(jj workspace update-stale)",
       "Bash(cargo tree:*)",
       "Bash(cargo info:*)",
@@ -225,7 +226,7 @@
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": false,
     "eng@oxide": true,
-    "swift-lsp@claude-plugins-official": true,
+    "swift-lsp@claude-plugins-official": false,
     "chrome-devtools-mcp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -243,10 +244,10 @@
     }
   },
   "effortLevel": "high",
+  "tui": "fullscreen",
   "editorMode": "vim",
   "preferredNotifChannel": "terminal_bell",
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
-  "tui": "fullscreen"
+  "skipAutoPermissionPrompt": true
 }
