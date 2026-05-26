@@ -33,7 +33,7 @@ async function gitDir(): Promise<string> {
 
 async function pickPr(repo: string): Promise<string | null> {
   const tmpl = `{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}`
-  const list = $`gh pr list -R ${repo} --limit 100 --json number,title,updatedAt,author --template ${tmpl}`
+  const list = $`gh pr list -R ${repo} --limit 1000 --json number,title,updatedAt,author --template ${tmpl}`
   const choice = await list.pipe($`fzf --height 25% --reverse --accept-nth=1`).noThrow(130).text()
   return choice.trim() || null
 }
