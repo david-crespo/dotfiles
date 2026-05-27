@@ -125,7 +125,7 @@ function ecopy() {
   if [ $# -gt 0 ]; then
     output="$*"
   else
-    read -r output
+    output=$(cat)
   fi
   echo "$output (copied!)"
   echo -n "$output" | pbcopy
