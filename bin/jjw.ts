@@ -129,33 +129,41 @@ const createCmd = new Command()
   })
 
 const rmCmd = new Command()
-  .description("Remove a jj workspace")
+  .description("Remove one or more jj workspaces")
   .action(async () => {
     const workspaces = (await listWorkspaces()).filter((w) => w.name !== "default")
     if (workspaces.length === 0) {
       console.error("No non-default workspaces found.")
       Deno.exit(0)
     }
-    const { index } = await $.select({
-      message: "Remove workspace",
+    const picked = await $.multiSelect({
+      message: "Remove workspaces (space to toggle, enter to confirm)",
       options: workspaces.map((w) => w.name),
     })
-    const { name, wsPath } = workspaces[index]
+    if (picked.length === 0) Deno.exit(0)
+    const selected = picked.map(({ index }) => workspaces[index])
 
     const cwd = Deno.cwd()
-    if (cwd === wsPath || cwd.startsWith(wsPath + "/")) {
-      console.error(`Refusing to delete ${wsPath}: cwd is inside it. cd out first.`)
-      Deno.exit(1)
+    for (const { wsPath } of selected) {
+      if (cwd === wsPath || cwd.startsWith(wsPath + "/")) {
+        console.error(`Refusing to delete ${wsPath}: cwd is inside it. cd out first.`)
+        Deno.exit(1)
+      }
     }
 
-    const ok = await $.confirm({ message: `Delete ${wsPath}?`, default: false })
+    const ok = await $.confirm({
+      message: `Delete ${selected.map((w) => w.wsPath).join(", ")}?`,
+      default: false,
+    })
     if (!ok) Deno.exit(0)
 
-    // snapshot the target's working copy so any un-snapshotted edits land as
-    // commits in the repo before we forget the workspace and delete its files
-    await $`jj util snapshot`.cwd(wsPath).printCommand()
-    await $`jj workspace forget ${name}`.printCommand()
-    await $`rm -rf ${wsPath}`.printCommand()
+    for (const { name, wsPath } of selected) {
+      // snapshot the target's working copy so any un-snapshotted edits land as
+      // commits in the repo before we forget the workspace and delete its files
+      await $`jj util snapshot`.cwd(wsPath).printCommand()
+      await $`jj workspace forget ${name}`.printCommand()
+      await $`rm -rf ${wsPath}`.printCommand()
+    }
   })
 
 const cdCmd = new Command()
