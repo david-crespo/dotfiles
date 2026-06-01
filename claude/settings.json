@@ -134,7 +134,6 @@
     "ask": [
       "Bash(rm:*)",
       "Bash(mv:*)",
-      "Bash(curl:*)",
       "Bash(tviz update:*)",
       "Bash(jj restore:*)",
       "Bash(jj squash:*)",

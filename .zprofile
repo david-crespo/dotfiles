@@ -307,7 +307,8 @@ function ua() {
   parallel ::: \
     'codex --version && npm install -g @openai/codex@latest && codex --version' \
     'claude update' \
-    'opencode upgrade'
+    'opencode upgrade' \
+    'pi update pi'
 }
 
 source "$HOME/.cargo/env"

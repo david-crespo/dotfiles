@@ -84,17 +84,18 @@ ln -sf "$PWD/bin/flag-stats.ts" ~/.local/bin/flag-stats
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
-mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills
+mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills
 ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.config/opencode/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.codex/AGENTS.md
+ln -sf "$PWD/claude/CLAUDE.md" ~/.pi/agent/AGENTS.md
 
 ln -sf "$PWD/claude/settings.json" ~/.claude/settings.json
 ln -sf "$PWD/claude/statusline.ts" ~/.claude/statusline.ts
 ln -sf "$PWD/claude/commands" ~/.claude
 
 # clean up broken symlinks left behind by renamed/deleted skills
-find ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills \
+find ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills \
   -maxdepth 1 -type l ! -exec test -e {} \; -delete
 
 # symlink public skills individually so private skills can live alongside them
@@ -102,4 +103,5 @@ for skill in "$PWD/claude/skills"/*/; do
   ln -sf "$skill" ~/.claude/skills/
   ln -sf "$skill" ~/.config/opencode/skills/
   ln -sf "$skill" ~/.codex/skills/
+  ln -sf "$skill" ~/.pi/agent/skills/
 done
