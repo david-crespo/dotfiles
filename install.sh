@@ -105,3 +105,10 @@ for skill in "$PWD/claude/skills"/*/; do
   ln -sf "$skill" ~/.codex/skills/
   ln -sf "$skill" ~/.pi/agent/skills/
 done
+
+# pi extensions (single-file, dependency-free)
+mkdir -p ~/.pi/agent/extensions
+find ~/.pi/agent/extensions -maxdepth 1 -type l ! -exec test -e {} \; -delete
+for ext in "$PWD/pi/extensions"/*.ts; do
+  ln -sf "$ext" ~/.pi/agent/extensions/
+done
