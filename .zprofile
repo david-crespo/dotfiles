@@ -321,10 +321,13 @@ export PATH="/Users/david/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin:$PATH"
 export PATH="/Users/david/oxide/omicron/out/clickhouse:$PATH"
 export PATH="/Users/david/oxide/omicron/out/cockroachdb/bin:$PATH"
 
+# Untracked secrets/env (API keys, etc.)
+[[ -f "$HOME/.env.local" ]] && source "$HOME/.env.local"
+
+# Added by Obsidian
+export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
+
 # gate these to suppress noisy warnings whenever codex runs things
 [[ -o interactive ]] || return
 eval "$(/opt/homebrew/bin/brew shellenv)"
 eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"
-
-# Added by Obsidian
-export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
