@@ -1,20 +1,21 @@
 ---
 name: session-history
-description: Search and summarize Claude Code and Codex session history. Use when the user wants to look at past conversations, find sessions about a topic, or reconstruct a debugging narrative.
+description: Search and summarize Claude Code, Codex, and opencode session history. Use when the user wants to look at past conversations, find sessions about a topic, or reconstruct a debugging narrative.
 user_invocable: true
 ---
 
 # Session History
 
-Search and summarize conversations from Claude Code and Codex sessions.
+Search and summarize conversations from Claude Code, Codex, and opencode sessions.
 
 If invoked with an argument, treat it as the search term, topic, or date to find across sessions.
 
 ## Helper script
 
-This skill includes `claude-sessions.sh` for common operations on both Claude
-Code and Codex sessions. Use it instead of writing ad hoc jq/rg pipelines. Run
-it without arguments for usage. The script auto-detects session format by path.
+This skill includes `claude-sessions.sh` for common operations on Claude Code,
+Codex, and opencode sessions. Use it instead of writing ad hoc jq/rg/sqlite
+pipelines. Run it without arguments for usage. The script auto-detects session
+format by the identifier (file path vs. `opencode:` prefix).
 
 ```
 claude-sessions.sh dir [path]                              # session dir for a project
@@ -49,13 +50,25 @@ The directory name is the absolute project path with all `/` replaced by `-`
 
     ~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl
 
-With `--all`, commands include both Claude Code and Codex sessions. Codex
-sessions are distinguished by a `codex:` prefix in summary and header output.
+**opencode** sessions are rows in a SQLite DB (not per-session files):
+
+    ~/.local/share/opencode/opencode.db   (tables: session, message, part)
+
+Since they have no file path, they flow through the pipeline as a synthetic
+`opencode:<session_id>` identifier. The DB is the single source of truth — it
+holds the full history, including sessions from before opencode migrated off
+its old JSON file storage, so the legacy `storage/` JSON files are ignored.
+
+With `--all`, commands include Claude Code, Codex, and opencode sessions.
+Codex and opencode rows are distinguished by `codex:` / `opencode:` prefixes in
+summary and header output. Like Codex, opencode sessions surface only with
+`--all`, not when listing/searching a specific project path. `tools-audit` is
+Claude Code only (no permissionMode concept in Codex/opencode).
 
 ## Process
 
-1. **Use the helper script** for both Claude Code and Codex sessions. Only
-   fall back to raw jq for unusual extraction needs.
+1. **Use the helper script** for all three session formats. Only fall back to
+   raw jq/sqlite for unusual extraction needs.
 
 2. **Triage efficiently.** Use `claude-sessions.sh search` to narrow down
    candidates before extracting full content.

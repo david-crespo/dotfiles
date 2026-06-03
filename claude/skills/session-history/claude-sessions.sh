@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Common operations on Claude Code and Codex session history files.
+# Common operations on Claude Code, Codex, and opencode session history.
 # Claude Code sessions: JSONL in ~/.claude/projects/<mangled-path>/*.jsonl
 # Codex sessions: JSONL in ~/.codex/sessions/YYYY/MM/DD/*.jsonl
+# opencode sessions: rows in a SQLite DB (~/.local/share/opencode/opencode.db).
+#   These have no per-session file, so they are referenced by a synthetic
+#   identifier "opencode:<session_id>" that flows through the same pipeline as
+#   Claude/Codex file paths. is_opencode() recognizes it and the oc_* helpers
+#   answer queries against the DB.
 
 SESSIONS_ROOT="$HOME/.claude/projects"
 CODEX_ROOT="$HOME/.codex/sessions"
+OPENCODE_DB="$HOME/.local/share/opencode/opencode.db"
 
 usage() {
   cat <<'EOF'
@@ -46,6 +52,44 @@ is_codex() {
   [[ "$1" == "$CODEX_ROOT"* ]]
 }
 
+# opencode sessions live in a SQLite DB, referenced by a synthetic
+# "opencode:<id>" identifier that flows through the pipeline like a file path.
+# Like Codex, they are only surfaced with --all, not by project path.
+is_opencode() { [[ "$1" == opencode:* ]]; }
+oc_id() { echo "${1#opencode:}"; }   # strip the prefix
+oc_esc() { printf '%s' "$1" | sed "s/'/''/g"; }   # escape for a SQL literal
+ocq() { [[ -f "$OPENCODE_DB" ]] && sqlite3 "$OPENCODE_DB" "$1"; }
+
+# Text parts of a given role for a session, in order (one row per part).
+# Shared by the user/assistant/recap/summary/count paths.
+oc_text() {
+  ocq "select json_extract(p.data,'\$.text')
+       from part p join message m on p.message_id=m.id
+       where p.session_id='$(oc_esc "$1")'
+         and json_extract(m.data,'\$.role')='$2'
+         and json_extract(p.data,'\$.type')='text'
+         and json_extract(p.data,'\$.text') is not null
+       order by p.time_created;"
+}
+
+# Emit "<epoch_seconds> opencode:<id>" for top-level sessions, newest first.
+# Subagent/child sessions (parent_id set) are excluded. Optional days cap.
+# Note: SQLite binds || tighter than /, so (time_updated/1000) needs parens.
+oc_list_rows() {
+  local cap="${1:-}" conds="parent_id is null"
+  [[ -n "$cap" ]] && conds="$conds and time_updated/1000 >= cast(strftime('%s','now','-${cap} days') as integer)"
+  ocq "select (time_updated/1000) || ' opencode:' || id from session where $conds order by time_updated desc;"
+}
+
+# Emit "opencode:<id>" for sessions whose parts or title match a term.
+oc_search_rows() {
+  local esc; esc=$(oc_esc "$1")
+  ocq "select 'opencode:' || id from session
+       where parent_id is null
+         and (id in (select session_id from part where data like '%$esc%') or title like '%$esc%')
+       order by time_updated desc;"
+}
+
 # Convert an absolute path to the Claude session directory name
 session_dir() {
   local project_path="${1:-$PWD}"
@@ -54,23 +98,36 @@ session_dir() {
   echo "$SESSIONS_ROOT/$mangled"
 }
 
-# Filter file paths on stdin to those modified within N days
+# Filter session identifiers on stdin to those modified within N days.
+# Handles both file paths (stat mtime) and opencode ids (DB time_updated).
 filter_by_days() {
   local days="${1:?days required}"
   local cutoff
   cutoff=$(date -v-"${days}"d '+%Y%m%d')
   while IFS= read -r f; do
     [[ -z "$f" ]] && continue
-    if [[ $(stat -f '%Sm' -t '%Y%m%d' "$f") -ge "$cutoff" ]]; then
-      echo "$f"
+    local d
+    if is_opencode "$f"; then
+      d=$(ocq "select strftime('%Y%m%d', time_updated/1000, 'unixepoch', 'localtime') from session where id='$(oc_esc "$(oc_id "$f")")';")
+    else
+      d=$(stat -f '%Sm' -t '%Y%m%d' "$f")
     fi
+    [[ -n "$d" && "$d" -ge "$cutoff" ]] && echo "$f"
   done
+  return 0  # the read loop exits non-zero on EOF; don't let pipefail propagate it
 }
 
 # Format a session path as "project (date)"
 format_session_header() {
   local session="$1"
   local project date
+  if is_opencode "$session"; then
+    local id; id=$(oc_esc "$(oc_id "$session")")
+    project=$(ocq "select directory from session where id='$id';" | sed "s|$HOME/||")
+    date=$(ocq "select date(time_updated/1000, 'unixepoch', 'localtime') from session where id='$id';")
+    echo "=== opencode: ${project:-unknown} ($date) ==="
+    return
+  fi
   if is_codex "$session"; then
     project=$(jq -r 'select(.type == "turn_context") | .payload.cwd' "$session" 2>/dev/null | head -1 | sed "s|$HOME/||")
     project="codex: ${project:-unknown}"
@@ -113,6 +170,7 @@ cmd_list() {
       if [[ -d "$CODEX_ROOT" ]]; then
         fd --extension jsonl --changed-within 30d . "$CODEX_ROOT" --exec stat -f '%m %N' {}
       fi
+      oc_list_rows 30
     } | sort -rn | awk '{print $2}' \
       | maybe_filter_days
     return
@@ -138,6 +196,7 @@ cmd_search() {
       if [[ -d "$CODEX_ROOT" ]]; then
         rg --files-with-matches --glob '*.jsonl' "$term" "$CODEX_ROOT" 2>/dev/null || true
       fi
+      oc_search_rows "$term"
     } | maybe_filter_days
   else
     local dir
@@ -150,6 +209,16 @@ cmd_search() {
 cmd_bash() {
   local session="${1:?session file required}"
   local filter="${2:-}"
+  if is_opencode "$session"; then
+    local cmds
+    cmds=$(ocq "select json_extract(data,'\$.state.input.command') from part
+                where session_id='$(oc_esc "$(oc_id "$session")")'
+                  and json_extract(data,'\$.tool')='bash'
+                  and json_extract(data,'\$.state.input.command') is not null
+                order by time_created;")
+    [[ -n "$filter" ]] && { echo "$cmds" | grep -F -- "$filter" || true; } || echo "$cmds"
+    return
+  fi
   if is_codex "$session"; then
     if [[ -n "$filter" ]]; then
       jq -r --arg f "$filter" '
@@ -178,11 +247,26 @@ cmd_bash() {
 cmd_extract() {
   local session="${1:?session file required}"
   local type="${2:?type required: user, assistant, bash, tools}"
-  if is_codex "$session"; then
+  if is_opencode "$session"; then
+    _extract_opencode "$session" "$type"
+  elif is_codex "$session"; then
     _extract_codex "$session" "$type"
   else
     _extract_cc "$session" "$type"
   fi
+}
+
+_extract_opencode() {
+  local session="$1" type="$2"
+  case "$type" in
+    user|assistant) oc_text "$(oc_id "$session")" "$type" ;;
+    bash)           cmd_bash "$session" ;;
+    tools)          # "<tool>: <input json, truncated>" per tool part
+      ocq "select json_extract(data,'\$.tool') || ': ' || substr(json_extract(data,'\$.state.input'), 1, 120)
+           from part where session_id='$(oc_esc "$(oc_id "$session")")' and json_extract(data,'\$.type')='tool'
+           order by time_created;" ;;
+    *) echo "Unknown type: $type (expected: user, assistant, bash, tools)" >&2; exit 1 ;;
+  esac
 }
 
 _extract_cc() {
@@ -239,7 +323,9 @@ cmd_search_bash() {
   while IFS= read -r session; do
     [[ -z "$session" ]] && continue
     local cmds
-    cmds=$(cmd_bash "$session" "$term")
+    # tolerate per-session extraction failures (e.g. jq choking on bad escapes)
+    # so one bad session doesn't abort the whole sweep under set -e
+    cmds=$(cmd_bash "$session" "$term" 2>/dev/null) || true
     if [[ -n "$cmds" ]]; then
       format_session_header "$session"
       echo "$cmds"
@@ -259,7 +345,7 @@ cmd_search_extract() {
   while IFS= read -r session; do
     [[ -z "$session" ]] && continue
     local content
-    content=$(cmd_extract "$session" "$type")
+    content=$(cmd_extract "$session" "$type" 2>/dev/null) || true
     if [[ -n "$content" ]]; then
       format_session_header "$session"
       echo "$content"
@@ -273,6 +359,16 @@ cmd_search_extract() {
 # M = tool calls by assistant.
 count_session_activity() {
   local session="$1"
+  if is_opencode "$session"; then
+    local id turns tools
+    id=$(oc_esc "$(oc_id "$session")")
+    # U = user messages carrying at least one text part (genuine user turns)
+    turns=$(ocq "select count(distinct m.id) from message m join part p on p.message_id=m.id
+                 where m.session_id='$id' and json_extract(m.data,'\$.role')='user' and json_extract(p.data,'\$.type')='text';")
+    tools=$(ocq "select count(*) from part where session_id='$id' and json_extract(data,'\$.type')='tool';")
+    echo "(U ${turns:-0}, T ${tools:-0})"
+    return
+  fi
   if is_codex "$session"; then
     local turns
     turns=$(jq -s '[.[] | select(.type == "event_msg") | .payload | select(.type == "user_message")] | length' "$session" 2>/dev/null)
@@ -301,7 +397,12 @@ cmd_summary() {
     [[ -z "$session" ]] && continue
     [[ "$session" == */subagents/* ]] && continue
     local project date first_msg msg_count
-    if is_codex "$session"; then
+    if is_opencode "$session"; then
+      local id; id=$(oc_id "$session")
+      project="opencode: $(ocq "select directory from session where id='$(oc_esc "$id")';" | sed "s|$HOME/||")"
+      first_msg=$(oc_text "$id" user | grep -v '^<' | head -1 | cut -c1-120) || true
+      date=$(ocq "select strftime('%Y-%m-%d %H:%M', time_created/1000, 'unixepoch', 'localtime') from session where id='$(oc_esc "$id")';")
+    elif is_codex "$session"; then
       project=$(jq -r 'select(.type == "turn_context") | .payload.cwd' "$session" 2>/dev/null | head -1 | sed "s|$HOME/||")
       project="codex: ${project:-unknown}"
       first_msg=$(jq -rn '
@@ -320,8 +421,8 @@ cmd_summary() {
         ) | .[:120]
       ' "$session" 2>/dev/null || true)
     fi
-    activity=$(count_session_activity "$session")
-    date=$(stat -f '%SB' -t '%Y-%m-%d %H:%M' "$session")
+    activity=$(count_session_activity "$session" 2>/dev/null) || true
+    [[ -z "${date:-}" ]] && date=$(stat -f '%SB' -t '%Y-%m-%d %H:%M' "$session")
     echo "$date | $project | $activity | $first_msg"
   done <<< "$sessions"
 }
@@ -346,8 +447,8 @@ cmd_tools_audit() {
       *) echo "unknown flag: $1" >&2; exit 1 ;;
     esac
   done
-  if is_codex "$session"; then
-    echo "tools-audit is Claude Code only (permissionMode doesn't exist in Codex sessions)" >&2
+  if is_codex "$session" || is_opencode "$session"; then
+    echo "tools-audit is Claude Code only (permissionMode doesn't exist in Codex/opencode sessions)" >&2
     exit 1
   fi
 
@@ -408,6 +509,10 @@ cmd_tools_audit() {
 cmd_recap() {
   local session="${1:?session file required}"
   format_session_header "$session"
+  if is_opencode "$session"; then
+    oc_text "$(oc_id "$session")" user | grep -v '^<' | cut -c1-150 | nl -ba
+    return
+  fi
   if is_codex "$session"; then
     jq -r '
       select(.type == "event_msg") | .payload |
