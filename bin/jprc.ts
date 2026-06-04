@@ -17,17 +17,34 @@ async function getRepoSlug(): Promise<string> {
 const prompt =
   "you will receive a diff and commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
 
+/** Bookmark names on commits in revset, in jj log order (tip first). */
+async function bookmarksInOrder(revset: string) {
+  // Use jj log (not bookmark list, which sorts alphabetically) to preserve
+  // topological order.
+  const tmpl = `local_bookmarks.map(|b| b.name()).join("\n")++"\n"`
+  const lines = await $`jj log -r ${revset} --no-graph -T ${tmpl}`.lines()
+  return lines.filter((x) => !!x)
+}
+
 /** If there are bookmarks between trunk() and r, let user pick. Otherwise use trunk(). */
 async function pickBase(r: string) {
-  // Note the - on ${r}-, which means we go up to one change before r
-  const lines = await $`jj bookmark list -r 'trunk()..${r}-|trunk()' -T 'name++"\n"'`
-    .lines()
-  const bookmarks = lines.filter((x) => !!x)
+  // Query the in-between bookmarks and trunk() separately so trunk() lands at the
+  // bottom of the list. Folding them into one revset lets jj's topological sort
+  // float a diverged trunk to the top. Note the - on ${r}-: up to one change before r.
+  const between = await bookmarksInOrder(`trunk()..${r}-`)
+  const trunk = await bookmarksInOrder(`trunk()`)
+  const bookmarks = [...between, ...trunk]
 
   if (bookmarks.length === 1) return bookmarks[0]
 
-  // show existing bookmarks (don't log range because there could be too many commits)
-  await $`jj log ${bookmarks.flatMap((o) => ["-r", o])}`.printCommand()
+  // Show a skeleton log of just @, trunk, the fork point, the candidate
+  // bookmarks, and the tip r. jj elides the commits in between ("~ (elided
+  // revisions)"), so this stays short even when the range has many commits. The
+  // fork point anchors the bottom and connects the graph when trunk has diverged
+  // from the stack.
+  const skeleton =
+    `@ | trunk() | ${r} | fork_point(trunk() | ${r}) | (bookmarks() & trunk()..${r})`
+  await $`jj log -r ${skeleton}`.printCommand()
 
   const { value } = await $.select({
     message: "\nChoose base",
