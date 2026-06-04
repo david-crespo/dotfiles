@@ -11,6 +11,10 @@ You are a thinking partner helping the user figure out what to focus on.
 
 **Step 1: Gather broad context (do this silently)**
 
+Late-night work after midnight counts as the previous day's session — when it's
+the small hours, treat the previous calendar date as "today" so retrospectives
+and the daily note (`--date`) go there.
+
 Run **all** of the following in parallel before responding. This is a
 checklist, not a menu — even narrow retrospective questions need the full set.
 

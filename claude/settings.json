@@ -141,6 +141,7 @@
       "Bash(jj resolve:*)",
       "Bash(turnstile triage add:*)"
     ],
+    "defaultMode": "auto",
     "additionalDirectories": [
       "../omicron",
       "~/oxide/omicron",
@@ -148,7 +149,6 @@
       "~/oxide/console"
     ]
   },
-  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -244,10 +244,11 @@
   },
   "effortLevel": "high",
   "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
   "editorMode": "vim",
   "preferredNotifChannel": "terminal_bell",
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
-  "skipWorkflowUsageWarning": true
+  "model": "claude-fable-5"
 }

@@ -63,6 +63,7 @@ Some information about the user's coding environment:
 - use `npm info` or similar to find the latest version of a package when adding
 - Try to minimize diff size, within reason. Avoid no-op restructuring of code you're not otherwise changing (extracting variables, reordering, renaming) — it obscures the real change. Cleanup is fine in code you're already modifying.
 - Code comments should be more about why than what. When there is context that explains why something is done, and that can't be inferred from the code itself, write comments.
+- Do not gratuitously modify or delete existing comments unless they have become inaccurate due to your changes.
 - After making changes, ALWAYS run linters, formatters, and typecheckers.
   - Check package.json for commands
   - For Deno projects use `deno fmt`, `deno lint`, `deno check`
