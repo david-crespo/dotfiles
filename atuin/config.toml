@@ -38,6 +38,15 @@ search_mode = "daemon-fuzzy"
 [search]
 ## see filter_mode docs for full set
 filters = ["workspace", "global"]
+## ranking knobs for daemon-fuzzy mode: weight recent commands more heavily so
+## something I ran minutes ago beats tight/frequent fuzzy matches (jrm, jjw rm).
+## final score blends the fuzzy matcher score with frecency
+## (recency*recency_mult + frequency*frequency_mult), scaled by frecency_mult.
+## Requires `atuin daemon restart` to take effect.
+## Default values are all 1.0
+recency_score_multiplier = 20.0
+frequency_score_multiplier = 0.8
+frecency_score_multiplier = 1.0
 
 [stats]
 # Set commands where we should consider the subcommand for statistics. Eg, kubectl get vs just kubectl
