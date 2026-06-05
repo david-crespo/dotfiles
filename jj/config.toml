@@ -50,26 +50,23 @@ log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | diver
 "fork(x)" = "fork_point(trunk() | x)"
 "fork()" = "fork_point(trunk() | @)"
 
+[fileset-aliases]
+# lock files are noise in local diffs; exclude with `~lockfiles` (see dt below)
+'lockfiles' = 'glob:"**/package-lock.json" | glob:"**/Cargo.lock" | glob:"**/deno.lock" | glob:"**/bun.lock"'
+
 [aliases]
 d = ["diff"]
 dm = ["describe", "-m"]
 dp = ["describe", "-r", "@-"]
 # diff rev against fork point like GitHub PR diff or git ...
-# dt/dts exclude lock files; dta/dtas show all files
-dt = ["util", "exec", "--", "zsh", "-c", '''
-  jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}" \
-    '~glob:"**/package-lock.json" & ~glob:"**/Cargo.lock" & ~glob:"**/deno.lock" & ~glob:"**/bun.lock"'
-  ''', 'jj dt']
-dts = ["util", "exec", "--", "zsh", "-c", '''
-  jj diff --stat --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}" \
-    '~glob:"**/package-lock.json" & ~glob:"**/Cargo.lock" & ~glob:"**/deno.lock" & ~glob:"**/bun.lock"'
-  ''', 'jj dts']
-dta = ["util", "exec", "--", "zsh", "-c", '''
-  jj diff --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
-  ''', 'jj dta']
-dtsa = ["util", "exec", "--", "zsh", "-c", '''
-  jj diff --stat --from "fork_point(trunk() | ${1:-@})" --to "${1:-@}"
-  ''', 'jj dtas']
+# dt/dts exclude lock files; dta/dtas show all files.
+# For a different --from (e.g. lower in a stack) or to narrow to a path, use
+# jj diff directly with the fork() and ~lockfiles aliases, e.g.
+#   jj diff -f <rev> '<path> & ~lockfiles'
+dt = ["diff", "--from", "fork()", "~lockfiles"]
+dts = ["diff", "--stat", "--from", "fork()", "~lockfiles"]
+dta = ["diff", "--from", "fork()"]
+dtsa = ["diff", "--stat", "--from", "fork()"]
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
