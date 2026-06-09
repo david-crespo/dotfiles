@@ -409,7 +409,7 @@ cmd_summary() {
         first(inputs | select(.type == "event_msg") | .payload |
           select(.type == "user_message") | .message |
           select(startswith("<") | not)
-        ) | .[:120]
+        ) | gsub("\\s+"; " ") | .[:120]
       ' "$session" 2>/dev/null || true)
     else
       project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
@@ -418,7 +418,7 @@ cmd_summary() {
           if type == "string" then select(startswith("<") | not)
           elif type == "array" then [.[] | select(.type == "text") | .text | select(startswith("<") | not)] | first // empty
           else empty end
-        ) | .[:120]
+        ) | gsub("\\s+"; " ") | .[:120]
       ' "$session" 2>/dev/null || true)
     fi
     activity=$(count_session_activity "$session" 2>/dev/null) || true

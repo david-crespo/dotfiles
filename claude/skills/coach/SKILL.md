@@ -19,46 +19,44 @@ Run **all** of the following in parallel before responding. This is a
 checklist, not a menu — even narrow retrospective questions need the full set.
 
 Tools like `obsidian-notes`, `tviz`, and `gh-api-read` are on PATH — call them
-by bare name. Scripts in skill directories (`gh-activity.sh`,
+by bare name. Scripts in skill directories (`coach-context.sh`,
 `claude-sessions.sh`) need their full path.
 
-- Read recent daily notes with `obsidian-notes daily:recent`
-- Run `tviz today -f tsv` to get the Today list with UUIDs
-- Run `tviz logbook -n 30` to see recent completions
-- Run `tviz todos -a Oxide -f tsv` (or relevant area) to see open work items
-- Run `~/.claude/skills/coach/gh-activity.sh 7` to see recent GitHub activity
-  (open PRs, merged PRs, reviews, issues opened, comments on your PRs from
-  others, comments you posted). Two distinctions matter:
-  - "Comments on your PRs (from others, within window)" — feedback you may
-    need to address. Includes seen comments by design (see below).
-  - "Comments you posted" — comments YOU authored (sourced from the user's
-    events feed). Do not infer "review feedback to address" from this section.
-    To dig into a specific PR's discussion, use `aipr discussion <number>`
-    from the relevant repo.
+- Run `~/.claude/skills/coach/coach-context.sh`. This gathers everything
+  local in one pass: daily notes, Things tasks (Today, logbook, open Oxide
+  todos), GitHub activity, session history with recaps of substantial
+  sessions, milestones, and jj logs. Flags: `--gh-days N` (default 7),
+  `--session-days N` (default 3) — widen for week-planning or longer
+  retrospectives. Notes on interpreting the output:
+  - GitHub activity: two distinctions matter:
+    - "Comments on your PRs (from others, within window)" — feedback you may
+      need to address. Includes seen comments by design (see below).
+    - "Comments you posted" — comments YOU authored (sourced from the user's
+      events feed). Do not infer "review feedback to address" from this
+      section. To dig into a specific PR's discussion, use `aipr discussion
+      <number>` from the relevant repo.
 
-  The user's triage habit for PR comments is to make a Things todo for each
-  PR after reading the comments. So before raising "comments on your PRs"
-  as a thing to look at, cross-reference the open todos (`tviz todos -a
-  Oxide -f tsv`) — if there's already a todo referencing the PR (by number,
-  title, or topic), the user has triaged it; don't re-raise. Only surface
-  PRs whose comments lack a corresponding todo.
-- Run `~/.claude/skills/session-history/claude-sessions.sh summary --all --days 3`
-  to see recent Claude and Codex sessions. The summary shows activity as `(U N, T M)` (N user messages / M tool executions).
-  For substantial sessions (roughly 20+ messages), run
-  `~/.claude/skills/session-history/claude-sessions.sh recap <session-file>`
-  to see the progression of user messages — this reveals what was actually built,
-  not just the opening prompt. Use `claude-sessions.sh list --all --days N` to
-  get raw session file paths for recap. Run `list` and `recap` as separate
-  commands — do not combine them with `$()` subshells or pipes, as that
-  bypasses Bash allowlist prefix matching.
-- Check milestones in main repos for upcoming deadlines. Include the API `number`
-  field (the milestone ID needed for issue queries) so you don't have to re-fetch:
-  `gh-api-read /repos/oxidecomputer/console/milestones --jq '.[] | {id: .number, title, due_on, open_issues, closed_issues}'`
-  (and similarly for omicron or other repos if relevant)
-- Check `jj log` in relevant repos to find in-progress work. The user often has
-  partial implementations in uncommitted jj revisions that the task list doesn't
-  reflect. Use `jj log -R <path>` to check other repos without `cd` — this
-  keeps the command prefix matching the `jj log:*` allowlist entry.
+    The user's triage habit for PR comments is to make a Things todo for each
+    PR after reading the comments. So before raising "comments on your PRs"
+    as a thing to look at, cross-reference the open todos in the Things
+    section — if there's already a todo referencing the PR (by number,
+    title, or topic), the user has triaged it; don't re-raise. Only surface
+    PRs whose comments lack a corresponding todo.
+  - Sessions: activity shows as `(U N, T M)` (N user messages / M tool
+    executions). Sessions with 20+ user messages get a full recap (the
+    progression of user messages) — this reveals what was actually built,
+    not just the opening prompt. To recap a smaller session, run
+    `~/.claude/skills/session-history/claude-sessions.sh recap <session-file>`
+    with the path from the recaps section header or from
+    `claude-sessions.sh list --all --days N`. Run `list` and `recap` as
+    separate commands — do not combine them with `$()` subshells or pipes,
+    as that bypasses Bash allowlist prefix matching.
+  - Milestones: the `id` field is the milestone number needed for issue
+    queries — no need to re-fetch.
+  - jj logs: the user often has partial implementations in uncommitted jj
+    revisions that the task list doesn't reflect. To dig further into a
+    repo, use `jj log -R <path>` — this keeps the command prefix matching
+    the `jj log:*` allowlist entry.
 - Check the calendar via `mcp__claude_ai_Google_Calendar__list_events`.
   - Window: today for end-of-day, full work week for week-planning.
   - Attendance: self `tentative` = probably skipping (exclude from load); `declined` = skipped. Optional attendees on events you only tentatively accepted aren't real commitments.
