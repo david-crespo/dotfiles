@@ -17,9 +17,12 @@ async function currBookmark(): Promise<string> {
   return name.trim()
 }
 
-async function revExists(rev: string): Promise<boolean> {
-  const r = await $`jj log --no-graph -r ${rev} -T '""'`.noThrow().quiet()
-  return r.code === 0
+// True if the revset resolves AND matches at least one commit. An empty revset
+// (e.g. `bm & ::@` when bm is not an ancestor of @) is valid and exits 0, so we
+// must check for output, not just the exit code.
+async function revsetNonEmpty(rev: string): Promise<boolean> {
+  const r = await $`jj log --no-graph -r ${rev} -T '"x"'`.noThrow().quiet()
+  return r.code === 0 && r.stdout.trim().length > 0
 }
 
 await new Command()
@@ -41,17 +44,24 @@ await new Command()
 
     await $`jj git fetch`
 
+    // jj git fetch only advances the remote-tracking bookmark (fetched
+    // bookmarks are untracked by default); the local bookmark stays put. So
+    // target bm@origin, falling back to the local bookmark if it was never
+    // pushed.
+    const hasRemote = await revsetNonEmpty(`${bm}@origin`)
+
     if (!source) {
-      if (await revExists(`${bm} & ::@`)) {
+      const target = hasRemote ? `${bm}@origin` : bm
+      if (await revsetNonEmpty(`${target} & ::@`)) {
         console.log(`already on top of ${bm}, nothing to do`)
         return
       }
       console.log(`checking out on top of ${bm}`)
-      await $`jj new ${bm}`
+      await $`jj new ${target}`
       return
     }
 
-    const dest = (await revExists(`${bm}@origin`)) ? bm : "trunk()"
+    const dest = hasRemote ? `${bm}@origin` : "trunk()"
     console.log(`rebasing ${source} onto ${dest}`)
     await $`jj rebase -s ${source} -d ${dest}`
   })
