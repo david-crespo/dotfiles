@@ -243,6 +243,14 @@ end run
 
 // Set the title of the tab currently containing `terminalId`. The tab may
 // differ from the one captured at SessionStart if the pane has been moved.
+//
+// We perform the action on the matched terminal itself, not on
+// `focused terminal of targetTab`. `set_tab_title` routes the title to the
+// target surface's window controller, and the matched terminal is by
+// construction a member of targetTab, so this hits the right tab with no
+// dependency on Ghostty's focused-surface tracking — which can be transiently
+// stale after dragging a pane between tabs and would otherwise land the title
+// on whatever tab the stale focused surface now lives in.
 async function setTabTitleByTerminal(terminalId: string, title: string) {
   const script = `
 on run argv
@@ -254,7 +262,7 @@ on run argv
       repeat with targetTab in tabs of targetWindow
         repeat with targetTerminal in terminals of targetTab
           if (id of targetTerminal as text) is targetTerminalId then
-            perform action ("set_tab_title:" & newTitle) on (focused terminal of targetTab)
+            perform action ("set_tab_title:" & newTitle) on targetTerminal
             return
           end if
         end repeat
