@@ -139,7 +139,25 @@
       "Bash(jj squash:*)",
       "Bash(jj rebase:*)",
       "Bash(jj resolve:*)",
-      "Bash(turnstile triage add:*)"
+      "Bash(turnstile triage add:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr close:*)",
+      "Bash(gh pr comment:*)",
+      "Bash(gh pr review:*)",
+      "Bash(gh pr ready:*)",
+      "Bash(gh issue create:*)",
+      "Bash(gh issue edit:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(gh issue close:*)",
+      "Bash(gh api:*)"
+    ],
+    "deny": [
+      "Bash(gh secret:*)",
+      "Bash(gh variable:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo delete:*)"
     ],
     "defaultMode": "auto",
     "additionalDirectories": [
@@ -243,7 +261,7 @@
       }
     }
   },
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,
   "editorMode": "vim",
