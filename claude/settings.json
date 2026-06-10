@@ -149,6 +149,7 @@
       "~/oxide/console"
     ]
   },
+  "model": "fable",
   "hooks": {
     "SessionStart": [
       {
@@ -249,6 +250,5 @@
   "preferredNotifChannel": "terminal_bell",
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
-  "model": "fable"
+  "skipAutoPermissionPrompt": true
 }
