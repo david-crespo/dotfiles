@@ -15,7 +15,7 @@ async function getRepoSlug(): Promise<string> {
 }
 
 const prompt =
-  "you will receive a diff and commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
+  "you will receive the commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
 
 /** Bookmark names on commits in revset, in jj log order (tip first). */
 async function bookmarksInOrder(revset: string) {
@@ -73,7 +73,10 @@ await new Command()
     const range = `${base}..${r}`
     await $`jj log -r ${range}`.printCommand()
 
-    const generated = await $`jj diff -r ${range}; jj log -r ${range}`
+    // Feed just the commit descriptions (no graph, no diff). The full diff can
+    // be huge on branches that touch many files, and it's overkill for naming.
+    const logTmpl = `description ++ "\n"`
+    const generated = await $`jj log -r ${range} --no-graph -T ${logTmpl}`
       .pipe($`ai --system "${prompt}" --model flash --quick --raw --ephemeral`)
       .text()
 

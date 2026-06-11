@@ -131,6 +131,12 @@
       "WebFetch(domain:support.claude.com)",
       "WebFetch(domain:docs.anthropic.com)"
     ],
+    "deny": [
+      "Bash(gh secret:*)",
+      "Bash(gh variable:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo delete:*)"
+    ],
     "ask": [
       "Bash(rm:*)",
       "Bash(mv:*)",
@@ -152,12 +158,6 @@
       "Bash(gh issue comment:*)",
       "Bash(gh issue close:*)",
       "Bash(gh api:*)"
-    ],
-    "deny": [
-      "Bash(gh secret:*)",
-      "Bash(gh variable:*)",
-      "Bash(gh auth:*)",
-      "Bash(gh repo delete:*)"
     ],
     "defaultMode": "auto",
     "additionalDirectories": [
