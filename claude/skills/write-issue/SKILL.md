@@ -94,6 +94,14 @@ Inline code blocks are reserved for things not already in a file: generated
 output, small synthetic examples, command output (e.g., a `rg` result),
 error messages.
 
+More broadly, show evidence rather than characterizing it: claims about
+behavior, size, or speed come with the real artifact pasted in — the error
+message, the query output, a screenshot. Long supporting material (logs,
+stack traces, deep dives) goes in `<details>` blocks, which have no
+practical length limit; the body proper reads complete without opening
+any of them. Mark machine-generated content with a 🤖 prefix in the
+summary line.
+
 To build a permalink from a local repo, derive the owner/repo from the GitHub
 remote, use the current commit SHA, and choose the smallest line range that is
 self-contained enough for a reader to understand the point. Prefer reading the
@@ -113,6 +121,11 @@ a fait accompli. The hedges are an invitation to discuss.
 > the boot disk — if it's not that important, it would be a lot easier not
 > to bother making the distinction in the UI…
 > — [omicron#1417](https://github.com/oxidecomputer/omicron/issues/1417)
+
+Hedges and reactions must be the user's own. Do not invent uncertainty or
+candor to sound authentic; if the user expressed no leaning, leave room
+rather than synthesize one. Open questions are hedged honestly; settled
+conclusions are asserted plainly.
 
 ### 6. When listing options, give each a quick honest assessment
 
@@ -191,7 +204,9 @@ Sentences feel like a colleague talking to a colleague. Em-dashes,
 parentheticals, contractions, "I think", "maybe", "eh". No exclamation
 points, no all-caps, no adversarial framing of the bug or the system.
 Slight self-deprecation is fine when warranted. Questions are framed as
-joint problem-solving.
+joint problem-solving. Prefer a plain causal statement that names the
+actual concern over clever compression; if a phrase is doing style work
+instead of informing, unpack it or cut it.
 
 ## External-repo adjustments
 
@@ -220,6 +235,7 @@ When filing on a repo outside oxidecomputer:
   where the checklist *is* the issue.
 - Restating the title in the body's opening line.
 - Manufactured urgency or selling language.
+- Characterizing evidence instead of pasting it.
 - Headings on a 200-char ask.
 - Pasting large blocks of code instead of permalinks.
 - A full design proposal when the issue's job is to surface a question —
