@@ -9,64 +9,63 @@ You are a thinking partner helping the user figure out what to focus on.
 
 ## On invocation
 
-**Step 1: Gather broad context (do this silently)**
+**Step 1: Gather broad context via a cheap subagent**
 
 Late-night work after midnight counts as the previous day's session — when it's
 the small hours, treat the previous calendar date as "today" so retrospectives
 and the daily note (`--date`) go there.
 
-Run **all** of the following in parallel before responding. This is a
-checklist, not a menu — even narrow retrospective questions need the full set.
+The raw context (coach-context.sh output, calendar and Gmail JSON) is large,
+and the session model is expensive. Do NOT read the raw sources in the main
+loop. Instead, launch ONE subagent (Agent tool, `subagent_type:
+general-purpose`, `model: haiku`) to gather everything and return a digest;
+the session model works only from the digest. Prompt for the subagent:
 
-Tools like `obsidian-notes`, `tviz`, and `gh-api-read` are on PATH — call them
-by bare name. Scripts in skill directories (`coach-context.sh`,
-`claude-sessions.sh`) need their full path.
+> Read ~/.claude/skills/coach/GATHER.md and follow it exactly. Parameters:
+> gh-days=<N>, session-days=<N>, calendar window=<start>..<end>, gmail
+> window=<Nd>.
 
-- Run `~/.claude/skills/coach/coach-context.sh`. This gathers everything
-  local in one pass: daily notes, Things tasks (Today, logbook, open Oxide
-  todos), GitHub activity, session history with recaps of substantial
-  sessions, milestones, and jj logs. Flags: `--gh-days N` (default 7),
-  `--session-days N` (default 3) — widen for week-planning or longer
-  retrospectives. Notes on interpreting the output:
-  - GitHub activity: two distinctions matter:
-    - "Comments on your PRs (from others, within window)" — feedback you may
-      need to address. Includes seen comments by design (see below).
-    - "Comments you posted" — comments YOU authored (sourced from the user's
-      events feed). Do not infer "review feedback to address" from this
-      section. To dig into a specific PR's discussion, use `aipr discussion
-      <number>` from the relevant repo.
+Defaults: gh-days=7, session-days=3, calendar window = today for end-of-day,
+the full work week for week-planning, gmail window=3d. Widen all of them for
+week-planning or longer retrospectives.
 
-    The user's triage habit for PR comments is to make a Things todo for each
-    PR after reading the comments. So before raising "comments on your PRs"
-    as a thing to look at, cross-reference the open todos in the Things
-    section — if there's already a todo referencing the PR (by number,
-    title, or topic), the user has triaged it; don't re-raise. Only surface
-    PRs whose comments lack a corresponding todo.
-  - Sessions: activity shows as `(U N, T M)` (N user messages / M tool
-    executions). Sessions with 20+ user messages get a full recap (the
-    progression of user messages) — this reveals what was actually built,
-    not just the opening prompt. To recap a smaller session, run
-    `~/.claude/skills/session-history/claude-sessions.sh recap <session-file>`
-    with the path from the recaps section header or from
-    `claude-sessions.sh list --all --days N`. Run `list` and `recap` as
-    separate commands — do not combine them with `$()` subshells or pipes,
-    as that bypasses Bash allowlist prefix matching.
-  - Milestones: the `id` field is the milestone number needed for issue
-    queries — no need to re-fetch.
-  - jj logs: the user often has partial implementations in uncommitted jj
-    revisions that the task list doesn't reflect. To dig further into a
-    repo, use `jj log -R <path>` — this keeps the command prefix matching
-    the `jj log:*` allowlist entry.
-- Check the calendar via `mcp__claude_ai_Google_Calendar__list_events`.
-  - Window: today for end-of-day, full work week for week-planning.
-  - Attendance: self `tentative` = probably skipping (exclude from load); `declined` = skipped. Optional attendees on events you only tentatively accepted aren't real commitments.
-  - Timezone: dateTimes are rendered in the response's top-level `timeZone`, and the offset confirms it. The per-event `timeZone` is just where it was created — do NOT re-convert from it; that double-shifts. Read the offset.
-- Check recent emails via the Gmail MCP (`mcp__claude_ai_Gmail__search_threads`)
-  for unaddressed asks. A useful starting query is `newer_than:3d in:inbox
-  -category:promotions -category:social`; widen the window for week-planning.
-  Treat email as another inbox to cross-reference: surface threads that look
-  like they want a reply or decision and don't already have a corresponding
-  Things todo or PR thread.
+If the subagent reports the calendar or Gmail MCP tools were unavailable,
+fetch those two directly (load via ToolSearch); keep the rest of the digest.
+
+Notes on interpreting the digest:
+
+- GitHub activity: two distinctions matter:
+  - "Comments on your PRs (from others, within window)" — feedback you may
+    need to address. Includes seen comments by design (see below).
+  - "Comments you posted" — comments YOU authored (sourced from the user's
+    events feed). Do not infer "review feedback to address" from this
+    section. To dig into a specific PR's discussion, use `aipr discussion
+    <number>` from the relevant repo.
+
+  The user's triage habit for PR comments is to make a Things todo for each
+  PR after reading the comments. So before raising "comments on your PRs"
+  as a thing to look at, cross-reference the open todos in the Things
+  section — if there's already a todo referencing the PR (by number,
+  title, or topic), the user has triaged it; don't re-raise. Only surface
+  PRs whose comments lack a corresponding todo.
+- Sessions: activity shows as `(U N, T M)` (N user messages / M tool
+  executions). Sessions with 20+ user messages get a recap (the progression
+  of user messages) — this reveals what was actually built, not just the
+  opening prompt. To recap a smaller session, run
+  `~/.claude/skills/session-history/claude-sessions.sh recap <session-file>`.
+  Run `list` and `recap` as separate commands — do not combine them with
+  `$()` subshells or pipes, as that bypasses Bash allowlist prefix matching.
+- Milestones: the `id` field is the milestone number needed for issue
+  queries — no need to re-fetch.
+- jj logs: the user often has partial implementations in uncommitted jj
+  revisions that the task list doesn't reflect. To dig further into a
+  repo, use `jj log -R <path>` — this keeps the command prefix matching
+  the `jj log:*` allowlist entry.
+- Calendar attendance: self `tentative` = probably skipping (exclude from
+  load); `declined` = skipped. Optional attendee on an event you only
+  tentatively accepted isn't a real commitment.
+- Email: another inbox to cross-reference — surface threads that want a reply
+  or decision and don't already have a corresponding Things todo or PR thread.
 
 For milestone issues, use the `id` from the milestones fetch above. Use `--jq`
 to keep the output compact — titles, assignees, and state are enough:
@@ -74,9 +73,17 @@ to keep the output compact — titles, assignees, and state are enough:
 
 **Step 1b: Targeted follow-up (only as needed)**
 
-After reviewing the broad context, only make additional API calls when there is
-a specific gap to fill. Do not speculatively fetch individual PR details
+After reviewing the digest, only make additional calls when there is a
+specific gap to fill. Do not speculatively fetch individual PR details
 (reviewers, mergeable state) unless a specific PR is in question.
+
+Tools like `obsidian-notes`, `tviz`, and `gh-api-read` are on PATH — call them
+by bare name. Scripts in skill directories (`coach-context.sh`,
+`claude-sessions.sh`) need their full path.
+
+Small targeted lookups are fine in the main loop. For anything with bulky
+output (a full PR discussion, a long session recap), delegate to another
+haiku subagent that returns just the relevant extract.
 
 tviz supports creating and updating tasks — use `/tviz` for write syntax.
 

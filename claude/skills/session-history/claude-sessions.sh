@@ -396,7 +396,10 @@ cmd_summary() {
   while IFS= read -r session; do
     [[ -z "$session" ]] && continue
     [[ "$session" == */subagents/* ]] && continue
-    local project date first_msg msg_count
+    # date must be reset each iteration: only the opencode branch assigns it,
+    # so a stale value from a prior session would suppress the stat fallback
+    local project first_msg msg_count
+    local date=""
     if is_opencode "$session"; then
       local id; id=$(oc_id "$session")
       project="opencode: $(ocq "select directory from session where id='$(oc_esc "$id")';" | sed "s|$HOME/||")"

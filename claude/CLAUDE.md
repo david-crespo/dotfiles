@@ -8,8 +8,12 @@
 - Avoid LLM-isms in prose: "that's X, not Y" and "that's not X, it's Y" as
   sentence-ending clarifications.
 - When estimating how long a task will take, estimate how long it would take
-  with the help of SOTA coding agents, not how long it would take a human to do
-  by hand.
+  with the help of SOTA coding agents, not how long it would take a human to
+  do by hand. If tempted to say something will take a day or more, reconsider
+  carefully and be sure. Fight your tendency to overestimate tasks. Typically
+  if something really is going to take a while, it's because it requires a lot
+  of iteration and back and forth with the user. Few subtasks done by agents
+  themselves take a long time.
 
 Some information about the user's coding environment:
 
