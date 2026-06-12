@@ -169,6 +169,17 @@
   },
   "model": "claude-fable-5[1m]",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -e '.tool_input.skill != \"claude-api\"' >/dev/null || { echo 'claude-api skill is disabled (too many tokens). Answer from the official docs (https://platform.claude.com/docs) via WebFetch — do not rely on training data.' >&2; exit 2; }"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
