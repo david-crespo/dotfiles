@@ -9,9 +9,14 @@ window, and a Gmail window. Use them where referenced below.
 
 ## Sources (run all in parallel)
 
-1. `~/.claude/skills/coach/coach-context.sh --gh-days <N> --session-days <N>`
+1. `~/.claude/skills/coach/coach-context.sh --gh-days <N> --session-days <N> > /tmp/coach-context.txt`
    — daily notes, Things tasks, GitHub activity, session history with recaps,
-   milestones, jj logs.
+   milestones, jj logs. The output is much larger than the Bash tool's output
+   truncation limit, so ALWAYS redirect to a file and use the Read tool on it
+   (in chunks via offset/limit if it exceeds one Read). Before digesting,
+   confirm you reached the final section (`# jj log`); the file has seven
+   `# `-headed sections and a digest built from a truncated read silently
+   loses the later ones.
 2. Calendar: load `mcp__claude_ai_Google_Calendar__list_events` via ToolSearch,
    then fetch the requested window.
 3. Gmail: load `mcp__claude_ai_Gmail__search_threads` via ToolSearch. Query

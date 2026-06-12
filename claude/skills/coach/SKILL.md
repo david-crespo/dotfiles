@@ -18,7 +18,7 @@ and the daily note (`--date`) go there.
 The raw context (coach-context.sh output, calendar and Gmail JSON) is large,
 and the session model is expensive. Do NOT read the raw sources in the main
 loop. Instead, launch ONE subagent (Agent tool, `subagent_type:
-general-purpose`, `model: haiku`) to gather everything and return a digest;
+general-purpose`, `model: sonnet`) to gather everything and return a digest;
 the session model works only from the digest. Prompt for the subagent:
 
 > Read ~/.claude/skills/coach/GATHER.md and follow it exactly. Parameters:

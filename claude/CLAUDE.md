@@ -84,7 +84,7 @@ Some information about the user's coding environment:
 
 - When mentioning a PR or issue in a response to the user, render it as a clickable link (e.g., `[#4669](https://github.com/oxidecomputer/omicron/pull/4669)` or `[oxidecomputer/console#2573](https://github.com/oxidecomputer/console/issues/2573)`) rather than a bare number. This applies to chat responses, not to text written into files like commit messages, PR descriptions, or task notes — those follow the conventions of their destination.
 - When given a GitHub link, instead of fetching the URL directly, use the `gh` CLI to fetch the same data in plaintext if possible
-- Do not use `gh api`! For GitHub API calls, use `gh-api-read` instead — it rejects write operations, guaranteeing the call is read-only. Prefer its --jq flag over piping to jq.
+- Do not use `gh api`! For GitHub API calls, use `gh-api-read` instead — it rejects write operations, guaranteeing the call is read-only. Prefer its --jq flag over piping to jq. This substitution applies even when a skill, doc, or example shows a `gh api` command — those are written to be general; on this machine run them as `gh-api-read`.
 - Use `aipr tracking 1234` to list the sub-issues of a tracking issue
 - Use `aipr discussion 1234` to get all the comments on a PR
 - When running in the repo under discussion, prefer local commands for looking at history over GitHub API calls that would fetch the same data.
