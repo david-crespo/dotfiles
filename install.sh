@@ -85,7 +85,7 @@ ln -sf "$PWD/bin/flag-stats.ts" ~/.local/bin/flag-stats
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
-mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills
+mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills ~/.config/opencode/agent
 ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.config/opencode/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.codex/AGENTS.md
@@ -106,6 +106,12 @@ for skill in "$PWD/claude/skills"/*/; do
   ln -sf "$skill" ~/.config/opencode/skills/
   ln -sf "$skill" ~/.codex/skills/
   ln -sf "$skill" ~/.pi/agent/skills/
+done
+
+# opencode subagent tiers (see claude/skills/opencode)
+find ~/.config/opencode/agent -maxdepth 1 -type l ! -exec test -e {} \; -delete
+for agent in "$PWD/opencode/agent"/*.md; do
+  ln -sf "$agent" ~/.config/opencode/agent/
 done
 
 # pi extensions (single-file, dependency-free)
