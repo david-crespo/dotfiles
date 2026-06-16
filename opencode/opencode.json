@@ -1,0 +1,33 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "openrouter": {
+      "models": {
+        "moonshotai/kimi-k2.7-code": {
+          "options": {
+            "provider": {
+              "only": ["deepinfra", "novita", "fireworks"],
+              "allow_fallbacks": true
+            }
+          }
+        },
+        "deepseek/deepseek-v4-pro": {
+          "options": {
+            "provider": {
+              "only": ["deepinfra", "novita", "fireworks"],
+              "allow_fallbacks": true
+            }
+          }
+        },
+        "z-ai/glm-5.2": {
+          "options": {
+            "provider": {
+              "only": ["deepinfra", "novita", "fireworks"],
+              "allow_fallbacks": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

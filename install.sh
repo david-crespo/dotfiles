@@ -87,6 +87,7 @@ ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
 mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills ~/.config/opencode/agent
 ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
+ln -sf "$PWD/opencode/opencode.json" ~/.config/opencode/opencode.json
 ln -sf "$PWD/claude/CLAUDE.md" ~/.config/opencode/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.codex/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.pi/agent/AGENTS.md
