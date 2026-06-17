@@ -60,6 +60,7 @@ Some information about the user's coding environment:
 ### Rust projects
 
 - Always use nextest for running tests (e.g., `cargo nextest run` instead of `cargo test`).
+- When testing something in a single Rust file (a quick experiment, reproducing a bug, checking an API), use cargo script rather than scaffolding a project: `cargo +nightly -Zscript foo.rs`. Declare any deps in a frontmatter block at the top of the file (`---\n[dependencies]\n...\n---`). Still nightly-only as of mid-2026 but on track to stabilize.
 
 ### Skills
 
