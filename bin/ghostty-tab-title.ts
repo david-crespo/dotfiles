@@ -58,10 +58,17 @@
 //
 // # Fragilities
 //
-// Ghostty's AppleScript dictionary doesn't let us map GHOSTTY_SURFACE_ID to a
-// terminal, so at shell startup we capture "focused terminal of frontmost tab"
-// and call it ours. If focus shifts between pane creation and .zshrc running,
-// the wrong terminal gets pinned — small window, but not zero.
+// Ghostty's AppleScript dictionary exposes each terminal's controlling tty, so
+// at shell startup we match our own $TTY against `tty of terminal` to find our
+// pane exactly — no dependency on which tab happens to be frontmost. This
+// matters most on restart: with window-save-state=always, Ghostty respawns
+// every pane's shell roughly at once, and a "focused terminal of front window"
+// guess would resolve all of them to the single front tab, pinning many
+// sessions to one pane. The tty match is immune to that.
+//
+// Remaining fragility: the SessionStart fallback (when GHOSTTY_TERMINAL_ID is
+// unset and no tty was captured, e.g. claude launched from a non-Ghostty shell)
+// still guesses the frontmost pane, since the hook has no tty to match on.
 
 import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
@@ -204,6 +211,38 @@ tell application "Ghostty"
 end tell
 `
   const raw = (await $`osascript -e ${script}`.text().catch(() => "")).trim()
+  if (!raw) return undefined
+
+  const [terminalId, terminalCountText] = raw.split(TAB_INFO_SEP)
+  const terminalCount = Number.parseInt(terminalCountText ?? "", 10)
+  if (!terminalId || Number.isNaN(terminalCount)) return undefined
+
+  return { terminalId, terminalCount }
+}
+
+// Resolve the terminal whose controlling tty matches `tty` (e.g. /dev/ttys035),
+// returning its stable id and the pane count of its tab. Matching on tty pins
+// the shell to its own pane regardless of which tab is frontmost, which is what
+// makes capture correct when many shells start at once (Ghostty restore).
+async function terminalInfoForTty(tty: string): Promise<FrontTerminalInfo | undefined> {
+  const script = `
+on run argv
+  set targetTty to item 1 of argv
+  tell application "Ghostty"
+    repeat with targetWindow in windows
+      repeat with targetTab in tabs of targetWindow
+        repeat with targetTerminal in terminals of targetTab
+          if (tty of targetTerminal as text) is targetTty then
+            return (id of targetTerminal as text) & "${TAB_INFO_SEP}" & (count of terminals of targetTab as text)
+          end if
+        end repeat
+      end repeat
+    end repeat
+  end tell
+  return ""
+end run
+`
+  const raw = (await $`osascript -e ${script} ${[tty]}`.text().catch(() => "")).trim()
   if (!raw) return undefined
 
   const [terminalId, terminalCountText] = raw.split(TAB_INFO_SEP)
@@ -511,12 +550,13 @@ async function handlePreview(transcriptPath: string) {
   console.log(JSON.stringify(payload, null, 2))
 }
 
-async function handleShell(label: string) {
-  // Two callers: zsh startup (no GHOSTTY_TERMINAL_ID yet — find frontmost
-  // terminal and emit the export) and chpwd (env var already set — look up
-  // pane count for that specific terminal). The chpwd path must NOT use
-  // "frontmost terminal", since a backgrounded osascript can race with focus
-  // changes and would also retitle the wrong tab if the user has switched.
+async function handleShell(label: string, tty?: string) {
+  // Two callers: zsh startup (no GHOSTTY_TERMINAL_ID yet — resolve our own pane
+  // by $TTY and emit the export) and chpwd (env var already set — look up pane
+  // count for that specific terminal). Neither path may use "frontmost
+  // terminal": at startup it would mis-pin when another tab is front (acute on
+  // restart, when every shell starts at once); at chpwd a backgrounded osascript
+  // could race with focus changes and retitle the wrong tab.
   const envTerminalId = Deno.env.get("GHOSTTY_TERMINAL_ID")
   let terminalId: string | undefined
   let terminalCount: number | undefined
@@ -524,12 +564,14 @@ async function handleShell(label: string) {
   if (envTerminalId) {
     terminalId = envTerminalId
     terminalCount = await paneCountForTerminal(envTerminalId)
-  } else {
-    const info = await currentFrontTerminalInfo()
+  } else if (tty) {
+    const info = await terminalInfoForTty(tty)
     if (!info) return
     terminalId = info.terminalId
     terminalCount = info.terminalCount
     console.log(`export GHOSTTY_TERMINAL_ID=${info.terminalId}`)
+  } else {
+    return
   }
 
   const cleanLabel = sanitizeTitle(label)
@@ -600,8 +642,12 @@ await new Command()
     "shell",
     new Command()
       .description("Set the base Ghostty tab title for a shell")
+      .option(
+        "--tty <tty:string>",
+        "Controlling tty of this shell, used to pin the pane on first call",
+      )
       .arguments("<label:string>")
-      .action((_opts: void, label: string) => handleShell(label)),
+      .action((opts: { tty?: string }, label: string) => handleShell(label, opts.tty)),
   )
   .command(
     "hook",

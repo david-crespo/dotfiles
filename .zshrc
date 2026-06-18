@@ -93,7 +93,9 @@ function set_title() {
     # First call: run synchronously so GHOSTTY_TERMINAL_ID lands in the shell
     # env before Claude is launched. Subsequent calls (chpwd) can background.
     if [[ -z $GHOSTTY_TERMINAL_ID ]]; then
-      eval "$(ghostty-tab-title shell "$title" 2>/dev/null)"
+      # Pass $TTY so capture matches our own pane, not the frontmost tab —
+      # essential on restart, when every restored shell starts concurrently.
+      eval "$(ghostty-tab-title shell --tty "$TTY" "$title" 2>/dev/null)"
     else
       ghostty-tab-title shell "$title" >/dev/null 2>&1 &!
     fi
