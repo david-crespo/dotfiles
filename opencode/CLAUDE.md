@@ -17,13 +17,14 @@ train flag, so check the provider's own policy or a tracker like Opper.
 - **moonshotai/kimi-k2.7-code** — `allow_fallbacks: true`. As of 2026-06, both
   DeepInfra and Novita host it (Fireworks does not), so fallback stays within
   the trusted set.
-- **z-ai/glm-5.2** — `allow_fallbacks: false`. As of 2026-06, GLM-5.2 is only
-  hosted by **Z.AI** (first-party, Singapore HQ, consumer policy permits
-  training) and **Io Net** (US HQ but decentralized — prompts run on
-  third-party GPU nodes). Neither meets the privacy bar. Pinning it to the same
-  trusted allowlist with fallbacks **off** means the request is **rejected**
-  rather than silently routed to a provider we don't trust. If one of the
-  trusted providers starts hosting GLM-5.2, it begins working automatically with
-  no config change.
+- **z-ai/glm-5.2** — `allow_fallbacks: true`. As of 2026-06-18, all three
+  trusted providers (DeepInfra, Novita, Fireworks) now host GLM-5.2, all with
+  tool support, so fallback stays within the trusted set. (Earlier it was only
+  hosted by **Z.AI** — Singapore HQ, consumer policy permits training — and
+  **Io Net** — US HQ but decentralized, prompts run on third-party GPU nodes;
+  neither met the privacy bar, so fallbacks were kept **off** to fail closed.
+  That changed once the trusted providers picked it up.) Note: DeepInfra's
+  endpoint was deranked (status -2, ~85% uptime) at the time of writing, which
+  is another reason fallbacks should be on.
 
 The rule: restrict to good providers; if none host the model, fail closed.
