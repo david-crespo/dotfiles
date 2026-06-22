@@ -310,6 +310,27 @@ function ua() {
     'pi update pi'
 }
 
+# Reinstall the global npm toolchain. fnm has no default-packages mechanism
+# (Schniz/fnm#139), so every `fnm install` starts with an empty global prefix
+# and wipes these. Run after installing/switching a node version. Most are
+# editor LSPs referenced in helix/languages.toml; pi and codex are CLI agents
+# (also kept current by `ua`). This list is the source of truth.
+#
+# typescript@rc is the native (Go) TS7 RC: `tsc` is the compiler and
+# `tsc --lsp --stdio` is the language server Helix calls. It supersedes the old
+# @typescript/native-preview `tsgo` binary. Pinned to the rc tag rather than a
+# caret because prerelease versions don't range-match cleanly; once TS7 ships
+# stable, switch to a caret.
+function npm-globals() {
+  npm install -g \
+    typescript@rc \
+    vscode-langservers-extracted@^4.10.0 \
+    @tailwindcss/language-server@^0.14.29 \
+    @astrojs/language-server@^2.16.10 \
+    @earendil-works/pi-coding-agent@latest \
+    @openai/codex@latest
+}
+
 source "$HOME/.cargo/env"
 
 export PATH="$HOME/.local/bin:$PATH"

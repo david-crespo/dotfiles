@@ -1,9 +1,10 @@
-# npm i -g typescript @typescript/native-preview vscode-langservers-extracted @tailwindcss/language-server @astrojs/language-server
+# LSP servers below are installed globally via the `npm-globals` zsh function
+# (see .zprofile in the dotfiles repo), which is the source of truth for the list.
 
 [[language]]
 name = "typescript"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.ts"] }
-language-servers = ["tsgo-lsp", "vscode-eslint-language-server"]
+language-servers = ["tsc-lsp", "vscode-eslint-language-server"]
 auto-format = true
 
 [[language]]
@@ -14,7 +15,7 @@ auto-format = true
 [[language]]
 name = "tsx"
 formatter = { command = "prettierd", args = ["--stdin-filepath", "x.tsx"] }
-language-servers = ["tsgo-lsp", "tailwindcss-ls", "vscode-eslint-language-server"]
+language-servers = ["tsc-lsp", "tailwindcss-ls", "vscode-eslint-language-server"]
 auto-format = true
 block-comment-tokens = ["{/*", "*/}"]
 
@@ -44,8 +45,9 @@ name = "css"
 auto-format = false
 language-servers = ["vscode-css-language-server", "tailwindcss-ls"]
 
-[language-server.tsgo-lsp]
-command = "tsgo"
+# typescript@rc (native TS7); see the npm-globals function in .zprofile
+[language-server.tsc-lsp]
+command = "tsc"
 args = ["--lsp", "--stdio"]
 
 [language-server.deno-lsp]
