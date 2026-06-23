@@ -38,8 +38,13 @@ merge-editor = "vscode"
 diff-formatter = ":git"
 
 [revsets]
-# default is 2 ancestors and I found it wasn't enough
-log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | divergent()"
+# default is 2 ancestors and I found it wasn't enough. divergent() surfaces
+# divergent changes that the other terms wouldn't show, but fetch imports
+# every *@origin ref, so a bare divergent() floods the log with other people's
+# divergences. So we scope it to mine() (changes I authored, on any branch)
+# | ::@ (ancestors of my checkout, so someone else's divergent commit on a
+# branch I'm contributing to still shows).
+log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | (divergent() & (mine() | ::@))"
 
 [revset-aliases]
 # Treat commits not authored by me as immutable. The `trunk().. &` bit is an

@@ -183,3 +183,6 @@ export PATH=/Users/david/.opencode/bin:$PATH
 # This section can be safely removed at any time if needed.
 [[ ! -r '/Users/david/.opam/opam-init/init.zsh' ]] || source '/Users/david/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
 # END opam configuration
+
+# nub
+export PATH="$HOME/.nub/bin:$PATH"

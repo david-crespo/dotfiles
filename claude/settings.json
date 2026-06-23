@@ -278,5 +278,6 @@
   "preferredNotifChannel": "terminal_bell",
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "respondToBashCommands": false
 }
