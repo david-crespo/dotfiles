@@ -97,16 +97,34 @@ ln -sf "$PWD/claude/settings.json" ~/.claude/settings.json
 ln -sf "$PWD/claude/statusline.ts" ~/.claude/statusline.ts
 ln -sf "$PWD/claude/commands" ~/.claude
 
-# clean up broken symlinks left behind by renamed/deleted skills
-find ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills \
-  -maxdepth 1 -type l ! -exec test -e {} \; -delete
+# Skills. Claude Code follows symlinks, so symlink skills there for live editing
+# (edit in repo, no reinstall needed). opencode/codex/pi do NOT follow symlinks
+# when scanning for skills (opencode's Bun glob and codex's scanner skip
+# symlinked entries), so copy into those instead. Each copy gets a marker file
+# so the next install can delete stale copies (renamed/removed skills) without
+# touching private skills that live alongside or tool-internal dirs like
+# codex's .system.
+skill_marker=.dotfiles-managed
+skill_copy_dests=(~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills)
 
-# symlink public skills individually so private skills can live alongside them
+# Claude: drop broken symlinks from renamed/deleted skills before relinking.
+find ~/.claude/skills -maxdepth 1 -type l ! -exec test -e {} \; -delete
+
+# Copy targets: remove what a previous install put there — marked copies plus
+# any leftover symlinks from the old symlink-based setup — so deletions and
+# renames propagate. (BSD find lacks -printf, so resolve dirs via dirname.)
+find "${skill_copy_dests[@]}" -maxdepth 2 -name "$skill_marker" |
+  while read -r marker; do rm -rf "$(dirname "$marker")"; done
+find "${skill_copy_dests[@]}" -maxdepth 1 -type l -delete
+
 for skill in "$PWD/claude/skills"/*/; do
+  name=$(basename "$skill")
   ln -sf "$skill" ~/.claude/skills/
-  ln -sf "$skill" ~/.config/opencode/skills/
-  ln -sf "$skill" ~/.codex/skills/
-  ln -sf "$skill" ~/.pi/agent/skills/
+  for dest in "${skill_copy_dests[@]}"; do
+    rm -rf "$dest/$name"
+    cp -R "${skill%/}" "$dest/"
+    touch "$dest/$name/$skill_marker"
+  done
 done
 
 # opencode subagent tiers (see claude/skills/opencode)
