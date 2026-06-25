@@ -338,6 +338,7 @@ export PATH="$HOME/.local/bin:$PATH"
 # omicron things obviously
 export PATH="/Users/david/oxide/omicron/out/dendrite-stub/root/opt/oxide/dendrite/bin:$PATH"
 export PATH="/Users/david/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin:$PATH"
+export PATH="/Users/david/oxide/omicron/out/mg-ddm/root/opt/oxide/mg-ddm/bin:$PATH"
 export PATH="/Users/david/oxide/omicron/out/clickhouse:$PATH"
 export PATH="/Users/david/oxide/omicron/out/cockroachdb/bin:$PATH"
 
