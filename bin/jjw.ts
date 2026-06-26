@@ -158,6 +158,10 @@ const rmCmd = new Command()
     if (!ok) Deno.exit(0)
 
     for (const { name, wsPath } of selected) {
+      // A stale working copy (e.g. advanced by another checkout) makes the
+      // snapshot/forget below refuse to run. update-stale reconciles it, and
+      // is a no-op when the working copy isn't stale.
+      await $`jj workspace update-stale --quiet`.cwd(wsPath).printCommand()
       // snapshot the target's working copy so any un-snapshotted edits land as
       // commits in the repo before we forget the workspace and delete its files
       await $`jj util snapshot`.cwd(wsPath).printCommand()
