@@ -21,7 +21,6 @@ Some information about the user's coding environment:
 - Text editor: Helix
 - Shell: zsh
 - Non-standard bash commands available:
-  - `rg` (ripgrep): use instead of grep. Recursive by default; `-r` means --replace
   - `sg` (ast-grep): structural code search/transform using AST patterns
   - `tokei`: lines-of-code statistics by language
   - `gh`: GitHub CLI for PRs, issues, repos
@@ -38,7 +37,7 @@ Some information about the user's coding environment:
 ### jj (Jujutsu)
 
 - When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files. You can update the description if appropriate as you go.
-- To trace the origin of a line: `jj file annotate <file> | rg '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
+- To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
 - Shell loops (`for`/`while`) bypass Bash allowlist prefix matching. For a handful of commands, run them individually to avoid permission prompts.
 - NEVER use git unless jj has no way to do the thing. Always use jj: jj status, jj diff, jj diff -r @-, jj log, etc.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
