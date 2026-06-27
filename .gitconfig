@@ -18,6 +18,11 @@ diffFilter = delta --color-only
 [delta]
 navigate = true # use n and N to move between diff sections
 light = false   # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
+# wrap long lines across up to 50 rows instead of truncating after 2 (the
+# default). matters for asciidoc/markdown, which have very long prose lines. a
+# finite cap bounds the blast radius of pathological one-liners (minified JS,
+# base64 blobs).
+wrap-max-lines = 50
 
 [color "diff-highlight"]
 oldNormal = red bold
