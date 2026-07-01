@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-env --allow-run=obsidian --allow-read=/Applications/Obsidian.app
+#!/usr/bin/env -S deno run --allow-env --allow-run=/Applications/Obsidian.app/Contents/MacOS/obsidian-cli --allow-read=/Applications/Obsidian.app
 
 // Scoped access to daily notes and bot notes in Obsidian.
 // Wraps the obsidian CLI so it can be allowlisted as a single command.
@@ -9,7 +9,12 @@ import $ from "@david/dax"
 const BOT_NOTES = "Base files/Bot notes"
 const DAILY_NOTES = "Daily notes"
 
-const OBSIDIAN = "/Applications/Obsidian.app/Contents/MacOS/obsidian"
+// obsidian-cli is the official CLI entrypoint; the lowercase app binary path
+// ("MacOS/obsidian") case-insensitively resolves to the main Electron binary,
+// which boots a full app instance (UI and all) when Obsidian isn't already
+// running and takes the window down with it when this process exits.
+// https://obsidian.md/help/cli
+const OBSIDIAN = "/Applications/Obsidian.app/Contents/MacOS/obsidian-cli"
 
 async function obs(...args: string[]): Promise<string> {
   const result = (await $`${OBSIDIAN} ${args}`.stderr("null").text()).trim()
