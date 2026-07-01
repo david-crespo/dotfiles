@@ -165,17 +165,6 @@
       "~/oxide/console"
     ]
   },
-  "autoMode": {
-    "environment": [
-      "$defaults",
-      "Local repos live under ~/oxide/<repo> and ~/repos/<repo>. jj workspaces (additional working copies of those repos, created via the `jjw` helper) live under ~/jj-workspaces/<repo>-<n>, e.g. ~/jj-workspaces/console-1. Treat a jj workspace as part of its repo, not a foreign repo.",
-      "Scratch/throwaway dirs: /tmp, /var/tmp, $TMPDIR (macOS /private/tmp and /var/folders), and the per-session Claude scratchpad under /private/tmp/claude-501/."
-    ],
-    "soft_deny": [
-      "$defaults",
-      "Deleting, moving, or overwriting files outside the current repository, its git/jj worktrees and workspaces, or the scratch dirs listed in Environment — e.g. removing or relocating files elsewhere in $HOME or in another repo."
-    ]
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -254,6 +243,7 @@
       }
     ]
   },
+  "respondToBashCommands": false,
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.ts"
@@ -288,5 +278,15 @@
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
-  "respondToBashCommands": false
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Deleting, moving, or overwriting files outside the current repository, its git/jj worktrees and workspaces, or the scratch dirs listed in Environment — e.g. removing or relocating files elsewhere in $HOME or in another repo."
+    ],
+    "environment": [
+      "$defaults",
+      "Local repos live under ~/oxide/<repo> and ~/repos/<repo>. jj workspaces (additional working copies of those repos, created via the `jjw` helper) live under ~/jj-workspaces/<repo>-<n>, e.g. ~/jj-workspaces/console-1. Treat a jj workspace as part of its repo, not a foreign repo.",
+      "Scratch/throwaway dirs: /tmp, /var/tmp, $TMPDIR (macOS /private/tmp and /var/folders), and the per-session Claude scratchpad under /private/tmp/claude-501/."
+    ]
+  }
 }

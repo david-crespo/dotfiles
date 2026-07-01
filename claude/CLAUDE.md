@@ -45,7 +45,7 @@ Some information about the user's coding environment:
 - when iterating on an existing rev A, work in a new rev on top of A and leave it there for the user to review and squash themselves. Do not squash into A on your own initiative, even in auto mode. If the user says "go ahead and squash" (or similar), that's fine; otherwise default to leaving the rev for review.
 - for parallel approaches, use `jj new <base>` to create siblings from a common base, implement each approach, then compare. bookmarks are unnecessary for this workflow
 - use `jjw` to manage jj workspaces: `jjw create` (or `jjw c`) creates a workspace and cds into it, `jjw ls` lists workspaces, `jjw rm` interactively removes one
-- Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv to jj desc + jj new) after chunks of work to snapshot each step in a reviewable way
+- Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv to jj desc + jj new) after chunks of work to snapshot each step in a reviewable way. Look at jj log first before `jj new` to make sure you're not already on an empty commit.
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message. These flags are mutually exclusive.
 - whether to run a destructive `jj` op (squash, abandon, rebase) depends on which commits it would touch:
   - Scratch commits you created earlier in the session whose only purpose was to snapshot intermediate work can be reorganized among themselves (squashed together, abandoned, reworded) as long as the result is still a rev on top of the user's target, not folded into it.
@@ -63,6 +63,14 @@ Some information about the user's coding environment:
 ### Skills
 
 - Place project-specific skills in-repo at `.claude/skills/<skill-name>/SKILL.md`.
+
+### Subagents
+
+- When delegating to a read-only or lookup subagent that doesn't need
+  Opus-level reasoning (e.g. `claude-code-guide`, doc/API lookups, simple
+  `Explore` searches), pass `model: sonnet` explicitly so it doesn't inherit
+  an expensive session model. Reserve the default (inherited) model for
+  subagents doing real implementation or hard reasoning.
 
 ### Misc. coding rules
 
