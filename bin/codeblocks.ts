@@ -82,9 +82,21 @@ a <details> tag so big files don't fill up the page in a GitHub gist.`,
       }
     }
 
-    // Collect files
+    // Collect files. On a missing/unreadable file, fail with a clean message on
+    // stderr and a non-zero exit, leaving stdout empty so a downstream consumer
+    // (e.g. `cb x | ai ...`) can tell the input never materialized.
     for (const filename of files) {
-      if (!(await Deno.lstat(filename)).isFile) continue
+      let info: Deno.FileInfo
+      try {
+        info = await Deno.lstat(filename)
+      } catch (e) {
+        if (e instanceof Deno.errors.NotFound) {
+          console.error(`cb: file not found: ${filename}`)
+          Deno.exit(1)
+        }
+        throw e
+      }
+      if (!info.isFile) continue
       const content = await Deno.readTextFile(filename)
       sources.push({ heading: filename, content, source: "file" })
     }
