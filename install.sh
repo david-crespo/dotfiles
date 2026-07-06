@@ -82,6 +82,7 @@ ln -sf "$PWD/bin/jj-jump.ts" ~/.local/bin/jj-jump
 ln -sf "$PWD/bin/jpl.ts" ~/.local/bin/jpl
 ln -sf "$PWD/bin/jpr.ts" ~/.local/bin/jpr
 ln -sf "$PWD/bin/flag-stats.ts" ~/.local/bin/flag-stats
+ln -sf "$PWD/bin/clip-bot-note.sh" ~/.local/bin/clip-bot-note
 ln -sf "$PWD/bin/web-watch/main.ts" ~/.local/bin/ww
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
