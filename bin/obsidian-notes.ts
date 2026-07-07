@@ -17,13 +17,21 @@ const DAILY_NOTES = "Daily notes"
 const OBSIDIAN = "/Applications/Obsidian.app/Contents/MacOS/obsidian-cli"
 
 async function obs(...args: string[]): Promise<string> {
-  const result = (await $`${OBSIDIAN} ${args}`.stderr("null").text()).trim()
+  const cmd = await $`${OBSIDIAN} ${args}`.noThrow().captureCombined()
+  const result = cmd.combined.trim()
+  // obsidian-cli exits nonzero when the Obsidian app isn't running ("The CLI
+  // is unable to find Obsidian..."). Fail fast with that message rather than
+  // letting dax throw an opaque ShellError stack trace.
+  if (cmd.code !== 0) {
+    console.error(result || `obsidian-cli exited with code ${cmd.code}`)
+    Deno.exit(1)
+  }
   if (result.startsWith("Error:")) throw new Error(result)
   return result
 }
 
 async function vaultPath(): Promise<string> {
-  return obs("vault", "info=path")
+  return await obs("vault", "info=path")
 }
 
 /** Append to a file, creating it if it doesn't exist. Always prepends a
@@ -68,9 +76,7 @@ const dailyAppend = new Command()
   .option("--date <date:string>", "Date of the note (YYYY-MM-DD, default: today)")
   .action(async ({ date }) => {
     const content = await readStdin()
-    const path = date
-      ? `${DAILY_NOTES}/${date}.md`
-      : await obs("daily:path")
+    const path = date ? `${DAILY_NOTES}/${date}.md` : await obs("daily:path")
     await appendOrCreate(path, content)
   })
 
