@@ -43,10 +43,19 @@ two days will otherwise cause work to be attributed to the wrong day.
 
 Sections, in order:
 
+**Sources** — first: one line per source (each context-script section,
+calendar, Gmail) saying `ok` or `FAILED: <error message>`. An empty section
+must be distinguishable from a broken source — never render a failed fetch
+as "(none)".
+
 **Daily notes** — user-authored prose (journal entries) verbatim, with dates.
 Prior "Coach" callouts: compress each to 3-6 lines covering what happened, the
 pattern flagged, and the "next work block" list (keep links/IDs in that list
-verbatim — the synthesis checks follow-through against it).
+verbatim — the synthesis checks follow-through against it). Always include
+the most recent Coach callout even if it predates the window — it carries the
+follow-through baseline. If the script's window missed it, find the note via
+`obsidian-notes daily:list` and read it with `obsidian-notes daily:read
+<date>`.
 
 **Things tasks** — three parts:
 - Today list: verbatim (title, uuid, scheduled, deadline).
