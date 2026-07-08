@@ -324,7 +324,7 @@ function ua() {
 # stable, switch to a caret.
 function npm-globals() {
   npm install -g \
-    typescript@rc \
+    typescript@^7.0.2 \
     vscode-langservers-extracted@^4.10.0 \
     @tailwindcss/language-server@^0.14.29 \
     @astrojs/language-server@^2.16.10 \
