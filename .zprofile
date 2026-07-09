@@ -53,7 +53,7 @@ alias jrm="jj git fetch && jj new 'trunk()'"
 alias jb="jj-jump" # see bin/jj-jump.ts
 alias jsq="jj squash"
 alias sk="node ~/oxide/skepsis/cli.ts"
-alias cmux-desc='cmux workspace-action --action set-description --description'
+alias rfd-local='LOCAL_RFD_REPO=~/oxide/rfd npm --prefix ~/oxide/rfd-site run dev'
 
 function jjw() {
   if [[ ("$1" == "create" || "$1" == "c") && "$#" -eq 1 ]]; then
