@@ -83,6 +83,7 @@ const STATE_ROOT = join(
 )
 const TERMINAL_SESSION_DIR = join(STATE_ROOT, "terminal-sessions")
 const SESSION_DIR = join(STATE_ROOT, "sessions")
+const LOG_PATH = join(STATE_ROOT, "events.jsonl")
 
 const HOOK_EVENTS = [
   "SessionStart",
@@ -115,6 +116,21 @@ interface FrontTerminalInfo {
 }
 
 const STALE_MS = 7 * 24 * 60 * 60 * 1000
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+async function logEvent(event: string, details: Record<string, unknown> = {}) {
+  const entry = JSON.stringify({
+    timestamp: new Date().toISOString(),
+    pid: Deno.pid,
+    event,
+    ...details,
+  })
+  await Deno.mkdir(STATE_ROOT, { recursive: true }).catch(() => {})
+  await Deno.writeTextFile(LOG_PATH, `${entry}\n`, { append: true }).catch(() => {})
+}
 
 // List regular files in `dir` with their stats. Stats run concurrently;
 // missing dir or stat failures are skipped so callers don't need try/catch.
@@ -210,7 +226,10 @@ tell application "Ghostty"
   return (id of targetTerminal as text) & "${TAB_INFO_SEP}" & (count of terminals of targetTab as text)
 end tell
 `
-  const raw = (await $`osascript -e ${script}`.text().catch(() => "")).trim()
+  const raw = (await $`osascript -e ${script}`.quiet().text().catch(async (error) => {
+    await logEvent("front_terminal_lookup_failed", { error: errorMessage(error) })
+    return ""
+  })).trim()
   if (!raw) return undefined
 
   const [terminalId, terminalCountText] = raw.split(TAB_INFO_SEP)
@@ -242,7 +261,11 @@ on run argv
   return ""
 end run
 `
-  const raw = (await $`osascript -e ${script} ${[tty]}`.text().catch(() => "")).trim()
+  const raw =
+    (await $`osascript -e ${script} ${[tty]}`.quiet().text().catch(async (error) => {
+      await logEvent("tty_lookup_failed", { tty, error: errorMessage(error) })
+      return ""
+    })).trim()
   if (!raw) return undefined
 
   const [terminalId, terminalCountText] = raw.split(TAB_INFO_SEP)
@@ -273,8 +296,12 @@ on run argv
   return ""
 end run
 `
-  const raw = (await $`osascript -e ${script} ${[terminalId]}`.text().catch(() => ""))
-    .trim()
+  const raw = (await $`osascript -e ${script} ${[terminalId]}`.quiet().text().catch(
+    async (error) => {
+      await logEvent("pane_count_failed", { terminalId, error: errorMessage(error) })
+      return ""
+    },
+  )).trim()
   if (!raw) return undefined
   const n = Number.parseInt(raw, 10)
   return Number.isNaN(n) ? undefined : n
@@ -302,7 +329,7 @@ on run argv
         repeat with targetTerminal in terminals of targetTab
           if (id of targetTerminal as text) is targetTerminalId then
             perform action ("set_tab_title:" & newTitle) on targetTerminal
-            return
+            return "set"
           end if
         end repeat
       end repeat
@@ -310,7 +337,23 @@ on run argv
   end tell
 end run
 `
-  await $`osascript -e ${script} ${[terminalId, title]}`.quiet().noThrow()
+  const result =
+    (await $`osascript -e ${script} ${[terminalId, title]}`.quiet().text().catch(
+      async (error) => {
+        await logEvent("title_set_failed", {
+          terminalId,
+          title,
+          error: errorMessage(error),
+        })
+        return "error"
+      },
+    )).trim()
+  if (result !== "error") {
+    await logEvent(result === "set" ? "title_set" : "terminal_not_found", {
+      terminalId,
+      title,
+    })
+  }
 }
 
 // Returns the session_id of the Claude currently running in this pane, or
@@ -558,6 +601,7 @@ async function handleShell(label: string, tty?: string) {
   // restart, when every shell starts at once); at chpwd a backgrounded osascript
   // could race with focus changes and retitle the wrong tab.
   const envTerminalId = Deno.env.get("GHOSTTY_TERMINAL_ID")
+  await logEvent("shell_started", { label, tty, envTerminalId })
   let terminalId: string | undefined
   let terminalCount: number | undefined
 
@@ -566,21 +610,51 @@ async function handleShell(label: string, tty?: string) {
     terminalCount = await paneCountForTerminal(envTerminalId)
   } else if (tty) {
     const info = await terminalInfoForTty(tty)
-    if (!info) return
+    if (!info) {
+      await logEvent("shell_skipped", { label, tty, reason: "tty_not_found" })
+      return
+    }
     terminalId = info.terminalId
     terminalCount = info.terminalCount
     console.log(`export GHOSTTY_TERMINAL_ID=${info.terminalId}`)
   } else {
+    await logEvent("shell_skipped", { label, reason: "no_terminal_id_or_tty" })
     return
   }
 
   const cleanLabel = sanitizeTitle(label)
-  if (!cleanLabel || !terminalId) return
+  if (!cleanLabel || !terminalId) {
+    await logEvent("shell_skipped", {
+      label,
+      terminalId,
+      reason: "invalid_label_or_terminal",
+    })
+    return
+  }
 
   await ensureStateDirs()
-  if (await sessionForTerminal(terminalId)) return
-  if (terminalCount !== 1) return
+  const sessionId = await sessionForTerminal(terminalId)
+  if (sessionId) {
+    await logEvent("shell_skipped", {
+      label: cleanLabel,
+      terminalId,
+      terminalCount,
+      sessionId,
+      reason: "active_session",
+    })
+    return
+  }
+  if (terminalCount !== 1) {
+    await logEvent("shell_skipped", {
+      label: cleanLabel,
+      terminalId,
+      terminalCount,
+      reason: "not_single_pane",
+    })
+    return
+  }
 
+  await logEvent("shell_setting_title", { label: cleanLabel, terminalId, terminalCount })
   await setTabTitleByTerminal(terminalId, cleanLabel)
 }
 
