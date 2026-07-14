@@ -243,16 +243,26 @@ end tell
 // returning its stable id and the pane count of its tab. Matching on tty pins
 // the shell to its own pane regardless of which tab is frontmost, which is what
 // makes capture correct when many shells start at once (Ghostty restore).
-async function terminalInfoForTty(tty: string): Promise<FrontTerminalInfo | undefined> {
+async function setInitialTitleForTty(
+  tty: string,
+  title: string,
+): Promise<FrontTerminalInfo | undefined> {
   const script = `
 on run argv
   set targetTty to item 1 of argv
+  set newTitle to item 2 of argv
   tell application "Ghostty"
     repeat with targetWindow in windows
       repeat with targetTab in tabs of targetWindow
         repeat with targetTerminal in terminals of targetTab
           if (tty of targetTerminal as text) is targetTty then
-            return (id of targetTerminal as text) & "${TAB_INFO_SEP}" & (count of terminals of targetTab as text)
+            set terminalId to id of targetTerminal as text
+            set terminalCount to count of terminals of targetTab
+            if terminalCount is equal to 1 then
+              perform action ("set_tab_title:" & newTitle) on targetTerminal
+              return terminalId & "${TAB_INFO_SEP}" & (terminalCount as text) & "${TAB_INFO_SEP}set"
+            end if
+            return terminalId & "${TAB_INFO_SEP}" & (terminalCount as text) & "${TAB_INFO_SEP}skipped"
           end if
         end repeat
       end repeat
@@ -262,16 +272,30 @@ on run argv
 end run
 `
   const raw =
-    (await $`osascript -e ${script} ${[tty]}`.quiet().text().catch(async (error) => {
-      await logEvent("tty_lookup_failed", { tty, error: errorMessage(error) })
+    (await $`osascript -e ${script} ${[tty, title]}`.quiet().text().catch(async (error) => {
+      await logEvent("initial_title_failed", { tty, title, error: errorMessage(error) })
       return ""
     })).trim()
   if (!raw) return undefined
 
-  const [terminalId, terminalCountText] = raw.split(TAB_INFO_SEP)
+  const [terminalId, terminalCountText, status] = raw.split(TAB_INFO_SEP)
   const terminalCount = Number.parseInt(terminalCountText ?? "", 10)
-  if (!terminalId || Number.isNaN(terminalCount)) return undefined
+  if (
+    !terminalId || Number.isNaN(terminalCount) ||
+    (status !== "set" && status !== "skipped")
+  ) {
+    await logEvent("initial_title_invalid_result", { tty, title, raw })
+    return undefined
+  }
 
+  const titleSet = status === "set"
+  await logEvent(titleSet ? "title_set" : "shell_skipped", {
+    tty,
+    terminalId,
+    terminalCount,
+    title,
+    ...(titleSet ? {} : { reason: "not_single_pane" }),
+  })
   return { terminalId, terminalCount }
 }
 
@@ -602,6 +626,11 @@ async function handleShell(label: string, tty?: string) {
   // could race with focus changes and retitle the wrong tab.
   const envTerminalId = Deno.env.get("GHOSTTY_TERMINAL_ID")
   await logEvent("shell_started", { label, tty, envTerminalId })
+  const cleanLabel = sanitizeTitle(label)
+  if (!cleanLabel) {
+    await logEvent("shell_skipped", { label, reason: "invalid_label" })
+    return
+  }
   let terminalId: string | undefined
   let terminalCount: number | undefined
 
@@ -609,7 +638,7 @@ async function handleShell(label: string, tty?: string) {
     terminalId = envTerminalId
     terminalCount = await paneCountForTerminal(envTerminalId)
   } else if (tty) {
-    const info = await terminalInfoForTty(tty)
+    const info = await setInitialTitleForTty(tty, cleanLabel)
     if (!info) {
       await logEvent("shell_skipped", { label, tty, reason: "tty_not_found" })
       return
@@ -617,17 +646,17 @@ async function handleShell(label: string, tty?: string) {
     terminalId = info.terminalId
     terminalCount = info.terminalCount
     console.log(`export GHOSTTY_TERMINAL_ID=${info.terminalId}`)
+    return
   } else {
     await logEvent("shell_skipped", { label, reason: "no_terminal_id_or_tty" })
     return
   }
 
-  const cleanLabel = sanitizeTitle(label)
-  if (!cleanLabel || !terminalId) {
+  if (!terminalId) {
     await logEvent("shell_skipped", {
       label,
       terminalId,
-      reason: "invalid_label_or_terminal",
+      reason: "invalid_terminal",
     })
     return
   }
