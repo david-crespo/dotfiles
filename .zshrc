@@ -116,6 +116,16 @@ function chpwd() {
 
 set_title "$(prompt_pwd)"
 
+# Codex has no SessionEnd hook, so release its pane ownership when the CLI exits.
+function codex() {
+  command codex "$@"
+  local codex_status=$?
+  if [[ -n $GHOSTTY_TERMINAL_ID ]] && (( $+commands[ghostty-tab-title] )); then
+    ghostty-tab-title release >/dev/null 2>&1
+  fi
+  return $codex_status
+}
+
 # ctrl-xe to edit command in $EDITOR
 autoload -U edit-command-line
 # # Emacs style shortcuts

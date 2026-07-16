@@ -100,6 +100,9 @@ ln -sf "$PWD/claude/settings.json" ~/.claude/settings.json
 ln -sf "$PWD/claude/statusline.ts" ~/.claude/statusline.ts
 ln -sf "$PWD/claude/commands" ~/.claude
 
+mkdir -p ~/.codex
+ln -sf "$PWD/codex/hooks.json" ~/.codex/hooks.json
+
 # Skills. Claude Code follows symlinks, so symlink skills there for live editing
 # (edit in repo, no reinstall needed). opencode/codex/pi do NOT follow symlinks
 # when scanning for skills (opencode's Bun glob and codex's scanner skip

@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ghostty-tab-title hook"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ghostty-tab-title hook"
+          },
+          {
+            "type": "command",
+            "command": "ghostty-tab-title detach summarize"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ghostty-tab-title hook"
+          }
+        ]
+      }
+    ]
+  }
+}

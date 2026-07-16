@@ -1,6 +1,6 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=osascript,ai
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=osascript,ai,ghostty-tab-title
 
-// Keeps Ghostty tab titles stable across split panes and Claude sessions.
+// Keeps Ghostty tab titles stable across split panes and agent sessions.
 //
 // # Data model
 //
@@ -21,7 +21,7 @@
 // acceptable for now. A tab-level lock would be the real fix.
 //
 // Disk state, under $STATE_ROOT (~/.local/state/ghostty-tab-titles). The
-// <session_id> in paths below is Claude Code's own session UUID, passed on
+// <session_id> in paths below is the agent's own session UUID, passed on
 // every hook invocation and stable from SessionStart through SessionEnd:
 //   - sessions/<session_id>: JSON { terminalId, label, state?, summary? }
 //       - label:   stable base string pinned at SessionStart (e.g. "dotfiles")
@@ -29,15 +29,15 @@
 //       - summary: async-generated label suffix, refreshed on UserPromptSubmit
 //   - terminal-sessions/<terminal_id>: session_id currently running in this
 //     pane. Acts as a reverse index (terminal_id → session_id) so the shell
-//     path can cheaply answer "is a Claude alive in this pane?" without
+//     path can cheaply answer "is an agent alive in this pane?" without
 //     scanning every session file. The shell uses this to avoid overwriting
-//     Claude's tab title from chpwd; SessionEnd uses it to decide whether to
-//     reset the title back to the base label. It does NOT arbitrate between
-//     concurrent Claudes — you can't have two Claudes in one pane.
+//     the agent's tab title from chpwd. SessionEnd or an explicit release uses
+//     it to decide whether to reset the title back to the base label. It does
+//     NOT arbitrate between concurrent agents in one pane.
 //
-// Env vars, read from the shell / claude process:
+// Env vars, read from the shell / agent process:
 //   - GHOSTTY_TERMINAL_ID:    terminal id captured by `shell` at zsh startup,
-//                             inherited into claude so SessionStart doesn't
+//                             inherited into the agent so SessionStart doesn't
 //                             have to re-guess the frontmost pane.
 //   - GHOSTTY_TAB_BASE_LABEL: label the shell would like to use for the tab.
 //                             Preferred over the abbreviated cwd at SessionStart.
@@ -51,12 +51,15 @@
 //                and (on a fresh, Claude-free, unsplit tab) writes the base label.
 //   - pane-count: synchronously snapshot a shell's tab pane count before an async
 //                 chpwd title update, so a subsequent split cannot change the decision.
-//   - hook:      run from Claude hooks (SessionStart, UserPromptSubmit, Stop,
+//   - hook:      run from agent hooks (SessionStart, UserPromptSubmit, Stop,
 //                SessionEnd). Updates disk state and tab title synchronously.
-//   - summarize: async UserPromptSubmit hook. Calls `ai` on recent messages to
+//   - detach:    run a subcommand detached from a synchronous hook.
+//   - summarize: UserPromptSubmit hook worker. Calls `ai` on recent messages to
 //                refresh the `summary` field, then re-renders the tab using the
 //                session's current `state` (so it doesn't overwrite a Stop that
 //                raced ahead of the LLM call).
+//   - release:   reset and remove the session associated with this terminal.
+//                Used by the Codex shell wrapper because Codex has no SessionEnd.
 //
 // # Fragilities
 //
@@ -478,24 +481,58 @@ function extractUserText(content: string): string | undefined {
   return args ? `${name} ${args}` : name
 }
 
-async function readUserMessages(transcriptPath: string): Promise<string[]> {
+type TranscriptEvent = Record<string, unknown>
+type TranscriptFormat = "claude" | "codex"
+
+function detectTranscriptFormat(events: TranscriptEvent[]): TranscriptFormat | undefined {
+  for (const event of events) {
+    if (event.type === "user") return "claude"
+    if (event.type !== "response_item") continue
+    const payload = event.payload as Record<string, unknown> | undefined
+    if (payload?.type === "message" && payload.role === "user") return "codex"
+  }
+  return undefined
+}
+
+function claudeUserText(event: TranscriptEvent): string | undefined {
+  if (event.type !== "user") return undefined
+  const message = event.message as { content?: unknown } | undefined
+  return typeof message?.content === "string" ? extractUserText(message.content) : undefined
+}
+
+function codexUserText(event: TranscriptEvent): string | undefined {
+  if (event.type !== "response_item") return undefined
+  const payload = event.payload as Record<string, unknown> | undefined
+  if (payload?.type !== "message" || payload.role !== "user") return undefined
+  const content = payload.content
+  if (!Array.isArray(content)) return undefined
+
+  const text = content.flatMap((item) => {
+    if (!item || typeof item !== "object") return []
+    const part = item as Record<string, unknown>
+    return part.type === "input_text" && typeof part.text === "string" ? [part.text] : []
+  }).join("\n")
+  return extractUserText(text)
+}
+
+export async function readUserMessages(transcriptPath: string): Promise<string[]> {
   const raw = await Deno.readTextFile(transcriptPath).catch(() => "")
   if (!raw) return []
 
-  const messages: string[] = []
-  for (const line of raw.split("\n")) {
-    if (!line) continue
+  const events: TranscriptEvent[] = []
+  for (const line of raw.split("\n").filter(Boolean)) {
     try {
-      const event = JSON.parse(line) as Record<string, unknown>
-      if (event.type !== "user") continue
-      const message = event.message as { content?: unknown } | undefined
-      const content = message?.content
-      if (typeof content !== "string") continue
-      const text = extractUserText(content)
-      if (text) messages.push(truncateMessage(text))
+      events.push(JSON.parse(line) as TranscriptEvent)
     } catch { /* skip malformed lines */ }
   }
-  return messages
+
+  const format = detectTranscriptFormat(events)
+  if (!format) return []
+  const readText = format === "claude" ? claudeUserText : codexUserText
+  return events.flatMap((event) => {
+    const text = readText(event)
+    return text ? [truncateMessage(text)] : []
+  })
 }
 
 const SUMMARY_SYSTEM_PROMPT = `
@@ -547,7 +584,7 @@ interface SummaryPayload {
   recentMessages: string[]
 }
 
-async function buildSummaryPayload(
+export async function buildSummaryPayload(
   transcriptPath: string,
   priorSummary?: string,
   extraPrompt?: string,
@@ -591,6 +628,24 @@ async function handleSummarize() {
   if (!summary) return
 
   await updateSession(input.sessionId, { summary })
+}
+
+async function handleDetach(subcommand: string) {
+  if (subcommand !== "summarize") {
+    throw new ValidationError(`Cannot detach unsupported subcommand: ${subcommand}`)
+  }
+
+  const stdin = await new Response(Deno.stdin.readable).text()
+  const child = new Deno.Command("ghostty-tab-title", {
+    args: [subcommand],
+    stdin: "piped",
+    stdout: "null",
+    stderr: "null",
+  }).spawn()
+  const writer = child.stdin.getWriter()
+  await writer.write(new TextEncoder().encode(stdin))
+  await writer.close()
+  child.unref()
 }
 
 // Look up the most recent active session whose cwd matches `path`, and print
@@ -711,6 +766,20 @@ async function handlePaneCount(terminalId: string) {
   console.log(terminalCount)
 }
 
+async function handleRelease() {
+  const terminalId = Deno.env.get("GHOSTTY_TERMINAL_ID")
+  if (!terminalId) return
+
+  const sessionId = await sessionForTerminal(terminalId)
+  if (!sessionId) return
+  const session = await loadSessionState(sessionId)
+  if (session) await setTabTitleByTerminal(terminalId, session.label)
+  await Promise.all([
+    Deno.remove(join(TERMINAL_SESSION_DIR, terminalId)).catch(() => {}),
+    Deno.remove(join(SESSION_DIR, sessionId)).catch(() => {}),
+  ])
+}
+
 async function handleHook() {
   const stdin = (await new Response(Deno.stdin.readable).text()).trim()
   const input = parseHookInput(stdin)
@@ -759,64 +828,81 @@ async function handleHook() {
   }
 }
 
-await new Command()
-  .name("ghostty-tab-title")
-  .description("Keep Ghostty tab titles stable across split panes and Claude sessions")
-  .action(() => {
-    throw new ValidationError("Subcommand required")
-  })
-  .command(
-    "shell",
-    new Command()
-      .description("Set the base Ghostty tab title for a shell")
-      .option(
-        "--tty <tty:string>",
-        "Controlling tty of this shell, used to pin the pane on first call",
-      )
-      .option(
-        "--pane-count <count:string>",
-        "Pane count captured synchronously when the directory changed",
-      )
-      .arguments("<label:string>")
-      .action((opts: { tty?: string; paneCount?: string }, label: string) =>
-        handleShell(label, opts.tty, opts.paneCount)
-      ),
-  )
-  .command(
-    "pane-count",
-    new Command()
-      .description("Print the pane count for the tab containing a terminal")
-      .arguments("<terminal-id:string>")
-      .action((_opts: void, terminalId: string) => handlePaneCount(terminalId)),
-  )
-  .command(
-    "hook",
-    new Command()
-      .description("Update Ghostty tab titles from Claude hook JSON on stdin")
-      .action(() => handleHook()),
-  )
-  .command(
-    "summarize",
-    new Command()
-      .description("Async UserPromptSubmit hook: regenerate the tab label from the prompt")
-      .action(() => handleSummarize()),
-  )
-  .command(
-    "description",
-    new Command()
-      .description(
-        "Print the active session summary for a path, if one exists. Used by external tools to surface what's going on at a given workspace.",
-      )
-      .arguments("<path:string>")
-      .action((_opts: void, path: string) => handleDescription(path)),
-  )
-  .command(
-    "preview",
-    new Command()
-      .description(
-        "Print the JSON payload the summarizer would feed the LLM for a transcript",
-      )
-      .arguments("<transcript-path:string>")
-      .action((_opts: void, transcriptPath: string) => handlePreview(transcriptPath)),
-  )
-  .parse(Deno.args)
+if (import.meta.main) {
+  await new Command()
+    .name("ghostty-tab-title")
+    .description("Keep Ghostty tab titles stable across split panes and agent sessions")
+    .action(() => {
+      throw new ValidationError("Subcommand required")
+    })
+    .command(
+      "shell",
+      new Command()
+        .description("Set the base Ghostty tab title for a shell")
+        .option(
+          "--tty <tty:string>",
+          "Controlling tty of this shell, used to pin the pane on first call",
+        )
+        .option(
+          "--pane-count <count:string>",
+          "Pane count captured synchronously when the directory changed",
+        )
+        .arguments("<label:string>")
+        .action((opts: { tty?: string; paneCount?: string }, label: string) =>
+          handleShell(label, opts.tty, opts.paneCount)
+        ),
+    )
+    .command(
+      "pane-count",
+      new Command()
+        .description("Print the pane count for the tab containing a terminal")
+        .arguments("<terminal-id:string>")
+        .action((_opts: void, terminalId: string) => handlePaneCount(terminalId)),
+    )
+    .command(
+      "hook",
+      new Command()
+        .description("Update Ghostty tab titles from agent hook JSON on stdin")
+        .action(() => handleHook()),
+    )
+    .command(
+      "detach",
+      new Command()
+        .description("Run a hook worker after detaching it from the calling process")
+        .arguments("<subcommand:string>")
+        .action((_opts: void, subcommand: string) => handleDetach(subcommand)),
+    )
+    .command(
+      "release",
+      new Command()
+        .description("Release the session associated with GHOSTTY_TERMINAL_ID")
+        .action(() => handleRelease()),
+    )
+    .command(
+      "summarize",
+      new Command()
+        .description(
+          "Async UserPromptSubmit hook: regenerate the tab label from the prompt",
+        )
+        .action(() => handleSummarize()),
+    )
+    .command(
+      "description",
+      new Command()
+        .description(
+          "Print the active session summary for a path, if one exists. Used by external tools to surface what's going on at a given workspace.",
+        )
+        .arguments("<path:string>")
+        .action((_opts: void, path: string) => handleDescription(path)),
+    )
+    .command(
+      "preview",
+      new Command()
+        .description(
+          "Print the JSON payload the summarizer would feed the LLM for a transcript",
+        )
+        .arguments("<transcript-path:string>")
+        .action((_opts: void, transcriptPath: string) => handlePreview(transcriptPath)),
+    )
+    .parse(Deno.args)
+}
