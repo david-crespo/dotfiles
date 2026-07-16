@@ -62,8 +62,12 @@ ln -sf "$PWD/nushell/config.nu" ~/.config/nushell/config.nu
 ln -sf "$PWD/nushell/zsh-functions.nu" ~/.config/nushell/zsh-functions.nu
 
 mkdir -p ~/.local/bin
-# Deno searches for config from symlink location, not target, so we need this here
+# Deno resolves imports from the command symlink, so mirror the config and
+# source directories that command entrypoints import from beside those symlinks.
 ln -sf "$PWD/deno.jsonc" ~/.local/bin/deno.jsonc
+ln -sf "$PWD/deno.lock" ~/.local/bin/deno.lock
+ln -sfn "$PWD/bin/lib" ~/.local/bin/lib
+ln -sfn "$PWD/bin/web-watch" ~/.local/bin/web-watch
 ln -sf "$PWD/bin/codeblocks.ts" ~/.local/bin/cb
 ln -sf "$PWD/bin/ghrel.nu" ~/.local/bin/ghrel
 ln -sf "$PWD/bin/dq.ts" ~/.local/bin/dq
@@ -84,7 +88,7 @@ ln -sf "$PWD/bin/jpl.ts" ~/.local/bin/jpl
 ln -sf "$PWD/bin/jpr.ts" ~/.local/bin/jpr
 ln -sf "$PWD/bin/flag-stats.ts" ~/.local/bin/flag-stats
 ln -sf "$PWD/bin/clip-bot-note.sh" ~/.local/bin/clip-bot-note
-ln -sf "$PWD/bin/web-watch/main.ts" ~/.local/bin/ww
+ln -sf "$PWD/bin/ww.ts" ~/.local/bin/ww
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 

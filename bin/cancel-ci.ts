@@ -2,6 +2,8 @@
 
 import $ from "@david/dax"
 import { Command } from "@cliffy/command"
+import { getGitHubRepoSlug, listOpenPullRequests } from "./lib/github.ts"
+import { stackBookmarks } from "./lib/jj.ts"
 
 interface CheckRun {
   id: number
@@ -28,12 +30,6 @@ interface WorkflowRun {
 interface Commit {
   sha: string
   commit: { message: string }
-}
-
-interface PrInfo {
-  number: number
-  title: string
-  url: string
 }
 
 interface RepoRef {
@@ -64,24 +60,27 @@ async function getCurrentRepo(): Promise<RepoRef> {
 }
 
 async function findPrFromBookmark(): Promise<PrRef & { title: string; branch: string }> {
-  const bookmarksOutput =
-    await $`jj log -r 'ancestors(@, 10) & bookmarks()' --no-graph -T 'local_bookmarks ++ "\n"'`
-      .text()
-  const bookmarks = bookmarksOutput
-    .split("\n")
-    .map((b: string) => b.trim())
-    .filter((b: string) => b && b !== "main")
-
+  const bookmarks = await stackBookmarks()
   if (bookmarks.length === 0) {
-    throw new Error("No feature branch bookmark found in recent ancestors")
+    throw new Error("No feature branch bookmark found in ancestors of @")
   }
 
-  const bookmark = bookmarks[0]
-  const prInfo: PrInfo = await $`gh pr view ${bookmark} --json number,title,url`.json()
+  const repoSlug = await getGitHubRepoSlug()
+  const [owner, repo] = repoSlug.split("/")
+  if (!owner || !repo) throw new Error(`Invalid GitHub repository: ${repoSlug}`)
 
-  const { owner, repo } = await getCurrentRepo()
-
-  return { owner, repo, pr: prInfo.number, title: prInfo.title, branch: bookmark }
+  const prsByBookmark = new Map(
+    (await listOpenPullRequests(repoSlug)).map((pr) => [pr.headRefName, pr]),
+  )
+  // Walk the stack tip-first so the closest bookmark with an open PR wins,
+  // even if a nearer bookmark has no PR yet.
+  for (const bookmark of bookmarks) {
+    const prInfo = prsByBookmark.get(bookmark)
+    if (prInfo) {
+      return { owner, repo, pr: prInfo.number, title: prInfo.title, branch: bookmark }
+    }
+  }
+  throw new Error(`No open PR found for: ${bookmarks.join(", ")}`)
 }
 
 async function getPrCommits(prRef: PrRef): Promise<string[]> {

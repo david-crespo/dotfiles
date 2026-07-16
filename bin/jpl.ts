@@ -2,28 +2,9 @@
 
 import { Command } from "@cliffy/command"
 import $ from "@david/dax"
+import { closestBookmark, revsetNonEmpty } from "./lib/jj.ts"
 
 $.setErrorTail(true)
-
-async function currBookmark(): Promise<string> {
-  const tmpl = 'bookmarks.map(|b| b.name()).join("\\n")'
-  const lines = await $`jj log --no-graph -r 'heads(::@ & bookmarks())' -T ${tmpl}`
-    .lines()
-  const name = lines.find((l) => l.trim())
-  if (!name) {
-    console.error("No bookmark found in ancestors of @")
-    Deno.exit(1)
-  }
-  return name.trim()
-}
-
-// True if the revset resolves AND matches at least one commit. An empty revset
-// (e.g. `bm & ::@` when bm is not an ancestor of @) is valid and exits 0, so we
-// must check for output, not just the exit code.
-async function revsetNonEmpty(rev: string): Promise<boolean> {
-  const r = await $`jj log --no-graph -r ${rev} -T '"x"'`.noThrow().quiet()
-  return r.code === 0 && r.stdout.trim().length > 0
-}
 
 await new Command()
   .name("jpl")
@@ -39,7 +20,7 @@ await new Command()
     "Bookmark to pull (default: nearest ancestor bookmark)",
   )
   .action(async ({ source, bookmark }: { source?: string; bookmark?: string }) => {
-    const bm = bookmark ?? await currBookmark()
+    const bm = bookmark ?? await closestBookmark()
     console.log(`bookmark: ${bm}`)
 
     await $`jj git fetch`

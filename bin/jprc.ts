@@ -2,37 +2,19 @@
 
 import $ from "@david/dax"
 import { Command, ValidationError } from "@cliffy/command"
-
-/** Extract GitHub owner/repo from jj's origin remote URL. */
-async function getRepoSlug(): Promise<string> {
-  const remotes = await $`jj git remote list`.lines()
-  const originLine = remotes.find((r) => r.startsWith("origin"))
-  if (!originLine) throw new Error("No origin remote found")
-  const url = originLine.split(/\s+/)[1]
-  const match = url.match(/github\.com[:/](.+?)(?:\.git)?$/)
-  if (!match) throw new Error(`Cannot parse GitHub repo from: ${url}`)
-  return match[1]
-}
+import { getGitHubRepoSlug } from "./lib/github.ts"
+import { bookmarksInLogOrder } from "./lib/jj.ts"
 
 const prompt =
   "you will receive the commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
-
-/** Bookmark names on commits in revset, in jj log order (tip first). */
-async function bookmarksInOrder(revset: string) {
-  // Use jj log (not bookmark list, which sorts alphabetically) to preserve
-  // topological order.
-  const tmpl = `local_bookmarks.map(|b| b.name()).join("\n")++"\n"`
-  const lines = await $`jj log -r ${revset} --no-graph -T ${tmpl}`.lines()
-  return lines.filter((x) => !!x)
-}
 
 /** If there are bookmarks between trunk() and r, let user pick. Otherwise use trunk(). */
 async function pickBase(r: string) {
   // Query the in-between bookmarks and trunk() separately so trunk() lands at the
   // bottom of the list. Folding them into one revset lets jj's topological sort
   // float a diverged trunk to the top. Note the - on ${r}-: up to one change before r.
-  const between = await bookmarksInOrder(`trunk()..${r}-`)
-  const trunk = await bookmarksInOrder(`trunk()`)
+  const between = await bookmarksInLogOrder(`stack_bookmarks(${r}-)`)
+  const trunk = await bookmarksInLogOrder(`trunk()`)
   const bookmarks = [...between, ...trunk]
 
   if (bookmarks.length === 1) return bookmarks[0]
@@ -85,7 +67,7 @@ await new Command()
 
     await $`jj git push --named ${bookmark}=${r}`.printCommand()
     // gh needs --repo because there's no .git dir in jj worktrees
-    const repo = await getRepoSlug()
+    const repo = await getGitHubRepoSlug()
     await $`gh pr create --head ${bookmark} --base ${base} --repo ${repo} --web`
       .printCommand()
   })

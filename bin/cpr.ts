@@ -1,41 +1,16 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh
 
 import $ from "@david/dax"
+import { getGitHubRepoSlug, listOpenPullRequests } from "./lib/github.ts"
+import { stackBookmarks } from "./lib/jj.ts"
 
-interface PullRequest {
-  number: number
-  title: string
-  url: string
-  headRefName: string
-}
-
-async function getRepoSlug(): Promise<string> {
-  const remotes = await $`jj git remote list`.lines()
-  const origin = remotes.find((line) => line.startsWith("origin "))?.split(/\s+/)[1]
-  if (!origin) throw new Error("No origin remote found")
-
-  const match = origin.match(/github\.com[:/](.+?)(?:\.git)?$/)
-  if (!match) throw new Error(`Cannot parse GitHub repo from: ${origin}`)
-  return match[1]
-}
-
-async function getStackBookmarks(): Promise<string[]> {
-  const template = `local_bookmarks.map(|b| b.name()).join("\\n") ++ "\\n"`
-  const lines =
-    await $`jj log --ignore-working-copy --no-graph -r ${"trunk()..@ & bookmarks()"} -T ${template}`
-      .lines()
-  return lines.filter((line) => line.length > 0)
-}
-
-const bookmarks = await getStackBookmarks()
+const bookmarks = await stackBookmarks()
 if (bookmarks.length === 0) {
   throw new Error("No local bookmark found between trunk and the working copy")
 }
 
-const repo = await getRepoSlug()
-const allPrs =
-  await $`gh pr list --repo ${repo} --state open --limit 1000 --json ${"number,title,url,headRefName"}`
-    .json<PullRequest[]>()
+const repo = await getGitHubRepoSlug()
+const allPrs = await listOpenPullRequests(repo)
 const prsByBookmark = new Map(allPrs.map((pr) => [pr.headRefName, pr]))
 const prs = bookmarks.flatMap((bookmark) => {
   const pr = prsByBookmark.get(bookmark)

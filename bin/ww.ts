@@ -6,11 +6,11 @@
 // Relevance gating comes in a later stage.
 
 import $ from "@david/dax"
-import { ccChangelog } from "./watchers/cc-changelog.ts"
-import { ccNpm } from "./watchers/cc-npm.ts"
-import { ghostty, helix } from "./watchers/github.ts"
-import { loadSeen, saveSeen } from "./state.ts"
-import type { Watcher } from "./types.ts"
+import { ccChangelog } from "./web-watch/watchers/cc-changelog.ts"
+import { ccNpm } from "./web-watch/watchers/cc-npm.ts"
+import { ghostty, helix } from "./web-watch/watchers/github.ts"
+import { loadSeen, saveSeen } from "./web-watch/state.ts"
+import type { Watcher } from "./web-watch/types.ts"
 
 $.setErrorTail(true)
 

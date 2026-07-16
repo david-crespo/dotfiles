@@ -1,19 +1,9 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-run=jj,gh,fzf,git
 
 import $ from "@david/dax"
+import { getGitHubRepoSlug } from "./lib/github.ts"
 
 $.setErrorTail(true)
-
-/** Extract GitHub owner/repo from jj's origin remote URL. */
-async function getRepoSlug(): Promise<string> {
-  const remotes = await $`jj git remote list`.lines()
-  const originLine = remotes.find((r) => r.startsWith("origin"))
-  if (!originLine) throw new Error("No origin remote found")
-  const url = originLine.split(/\s+/)[1]
-  const match = url.match(/github\.com[:/](.+?)(?:\.git)?$/)
-  if (!match) throw new Error(`Cannot parse GitHub repo from: ${url}`)
-  return match[1]
-}
 
 /**
  * Resolve the git dir backing the current jj repo. In a non-default workspace
@@ -32,9 +22,12 @@ async function gitDir(): Promise<string> {
 }
 
 async function pickPr(repo: string): Promise<string | null> {
-  const tmpl = `{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}`
-  const list = $`gh pr list -R ${repo} --limit 1000 --json number,title,updatedAt,author --template ${tmpl}`
-  const choice = await list.pipe($`fzf --height 25% --reverse --accept-nth=1`).noThrow(130).text()
+  const tmpl =
+    `{{range .}}{{tablerow .number .title .author.name (timeago .updatedAt)}}{{end}}`
+  const list =
+    $`gh pr list -R ${repo} --limit 1000 --json number,title,updatedAt,author --template ${tmpl}`
+  const choice = await list.pipe($`fzf --height 25% --reverse --accept-nth=1`).noThrow(130)
+    .text()
   return choice.trim() || null
 }
 
@@ -43,7 +36,7 @@ interface PrMeta {
   isCrossRepository: boolean
 }
 
-const repo = await getRepoSlug()
+const repo = await getGitHubRepoSlug()
 const pr = await pickPr(repo)
 if (!pr) Deno.exit(0)
 

@@ -54,6 +54,10 @@ log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | (dive
 "immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())"
 "fork(x)" = "fork_point(trunk() | x)"
 "fork()" = "fork_point(trunk() | @)"
+# These are plural because merge ancestry can have multiple closest bookmarks.
+"closest_bookmarks(to)" = "heads(::to & bookmarks())"
+"stack_bookmarks(to)" = "bookmarks() & trunk()..to"
+"closest_stack_bookmarks(to)" = "heads(stack_bookmarks(to))"
 
 [fileset-aliases]
 # lock files are noise in local diffs; exclude with `~lockfiles` (see dt below)
@@ -81,8 +85,8 @@ cm = ["commit"]
 # per matching rev; grep -q tests whether there's any output (i.e., the
 # revset matched something). if not, we widen the revset to include trunk.
 tug = ["util", "exec", "--", "zsh", "-c", '''
-  from='heads(::@ & bookmarks()) ~ trunk()'
-  jj --no-pager log -r "$from" --no-graph -T '"x"' 2>/dev/null | grep -q . || from='heads(::@ & bookmarks())'
+  from='closest_stack_bookmarks(@)'
+  jj --no-pager log -r "$from" --no-graph -T '"x"' 2>/dev/null | grep -q . || from='closest_bookmarks(@)'
   jj bookmark move --from "$from" --to '@-'
   ''', 'jj tug']
 # jj collapse START [END]
