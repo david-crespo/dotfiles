@@ -262,7 +262,6 @@ function ghpr() {
 
 alias prc='git push -u && gh pr create --web'
 alias prv='gh pr view --web'
-alias cpr='gh pr view "$(curr_bookmark)" --json number --jq .number'
 
 function oxdocs() {
   (cd ~/oxide/docs/content && claude "/answer $*")

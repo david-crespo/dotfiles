@@ -68,6 +68,7 @@ ln -sf "$PWD/bin/codeblocks.ts" ~/.local/bin/cb
 ln -sf "$PWD/bin/ghrel.nu" ~/.local/bin/ghrel
 ln -sf "$PWD/bin/dq.ts" ~/.local/bin/dq
 ln -sf "$PWD/bin/jprc.ts" ~/.local/bin/jprc
+ln -sf "$PWD/bin/cpr.ts" ~/.local/bin/cpr
 ln -sf "$PWD/bin/aipr.ts" ~/.local/bin/aipr
 ln -sf "$PWD/bin/hxai.ts" ~/.local/bin/hxai
 ln -sf "$PWD/bin/edit-cmd.sh" ~/.local/bin/ecmd
