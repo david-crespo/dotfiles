@@ -97,7 +97,12 @@ function set_title() {
       # essential on restart, when every restored shell starts concurrently.
       eval "$(ghostty-tab-title shell --tty "$TTY" "$title" 2>/dev/null)"
     else
-      ghostty-tab-title shell "$title" >/dev/null 2>&1 &!
+      # Snapshot while chpwd is still running so a split opened immediately
+      # afterward cannot change whether this directory change owns the title.
+      local pane_count
+      if pane_count=$(ghostty-tab-title pane-count "$GHOSTTY_TERMINAL_ID" 2>/dev/null); then
+        ghostty-tab-title shell --pane-count "$pane_count" "$title" >/dev/null 2>&1 &!
+      fi
     fi
   else
     echo -ne "\033]0;$title\007"

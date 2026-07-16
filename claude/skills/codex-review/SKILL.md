@@ -1,6 +1,6 @@
 ---
 name: codex-review
-description: Get a Codex second opinion on your changes. Claude sends the diff to Codex for review, discusses the feedback, and synthesizes actionable results.
+description: For non-Codex agents, get a Codex second opinion on your changes. Claude sends the diff to Codex for review, discusses the feedback, and synthesizes actionable results.
 ---
 
 # Codex Review

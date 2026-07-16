@@ -49,6 +49,8 @@
 //
 //   - shell:     run from .zshrc. Emits `export GHOSTTY_TERMINAL_ID=...` on stdout
 //                and (on a fresh, Claude-free, unsplit tab) writes the base label.
+//   - pane-count: synchronously snapshot a shell's tab pane count before an async
+//                 chpwd title update, so a subsequent split cannot change the decision.
 //   - hook:      run from Claude hooks (SessionStart, UserPromptSubmit, Stop,
 //                SessionEnd). Updates disk state and tab title synchronously.
 //   - summarize: async UserPromptSubmit hook. Calls `ai` on recent messages to
@@ -617,10 +619,10 @@ async function handlePreview(transcriptPath: string) {
   console.log(JSON.stringify(payload, null, 2))
 }
 
-async function handleShell(label: string, tty?: string) {
+async function handleShell(label: string, tty?: string, paneCountAtRequest?: string) {
   // Two callers: zsh startup (no GHOSTTY_TERMINAL_ID yet — resolve our own pane
-  // by $TTY and emit the export) and chpwd (env var already set — look up pane
-  // count for that specific terminal). Neither path may use "frontmost
+  // by $TTY and emit the export) and chpwd (env var already set — use the pane
+  // count snapshotted synchronously for that terminal). Neither path may use "frontmost
   // terminal": at startup it would mis-pin when another tab is front (acute on
   // restart, when every shell starts at once); at chpwd a backgrounded osascript
   // could race with focus changes and retitle the wrong tab.
@@ -636,7 +638,20 @@ async function handleShell(label: string, tty?: string) {
 
   if (envTerminalId) {
     terminalId = envTerminalId
-    terminalCount = await paneCountForTerminal(envTerminalId)
+    if (paneCountAtRequest !== undefined) {
+      terminalCount = Number(paneCountAtRequest)
+      if (!Number.isInteger(terminalCount) || terminalCount < 1) {
+        await logEvent("shell_skipped", {
+          label: cleanLabel,
+          terminalId,
+          paneCountAtRequest,
+          reason: "invalid_pane_count_snapshot",
+        })
+        return
+      }
+    } else {
+      terminalCount = await paneCountForTerminal(envTerminalId)
+    }
   } else if (tty) {
     const info = await setInitialTitleForTty(tty, cleanLabel)
     if (!info) {
@@ -685,6 +700,15 @@ async function handleShell(label: string, tty?: string) {
 
   await logEvent("shell_setting_title", { label: cleanLabel, terminalId, terminalCount })
   await setTabTitleByTerminal(terminalId, cleanLabel)
+}
+
+async function handlePaneCount(terminalId: string) {
+  const terminalCount = await paneCountForTerminal(terminalId)
+  if (terminalCount === undefined) {
+    Deno.exitCode = 1
+    return
+  }
+  console.log(terminalCount)
 }
 
 async function handleHook() {
@@ -749,8 +773,21 @@ await new Command()
         "--tty <tty:string>",
         "Controlling tty of this shell, used to pin the pane on first call",
       )
+      .option(
+        "--pane-count <count:string>",
+        "Pane count captured synchronously when the directory changed",
+      )
       .arguments("<label:string>")
-      .action((opts: { tty?: string }, label: string) => handleShell(label, opts.tty)),
+      .action((opts: { tty?: string; paneCount?: string }, label: string) =>
+        handleShell(label, opts.tty, opts.paneCount)
+      ),
+  )
+  .command(
+    "pane-count",
+    new Command()
+      .description("Print the pane count for the tab containing a terminal")
+      .arguments("<terminal-id:string>")
+      .action((_opts: void, terminalId: string) => handlePaneCount(terminalId)),
   )
   .command(
     "hook",
