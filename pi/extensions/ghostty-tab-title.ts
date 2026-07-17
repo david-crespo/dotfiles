@@ -6,15 +6,15 @@
 //
 // Event mapping (pi -> hook_event_name):
 //   session_start         -> SessionStart      (pins terminal, sets base label)
-//   before_agent_start    -> UserPromptSubmit  (state "🌀") + async summarize
+//   before_agent_start    -> prompt             (state "🌀") + async summarize
 //   agent_end             -> Stop              (state "")
-//   session_shutdown/quit -> SessionEnd        (reset title, clean up state)
+//   session_shutdown/quit -> SessionEnd        (retain an idle sticky segment)
 //
 // GHOSTTY_TERMINAL_ID and GHOSTTY_TAB_BASE_LABEL are inherited from the shell
 // env (set by `ghostty-tab-title shell` in .zshrc), same as under Claude.
 //
-// The `summarize` subcommand wants a transcript path. Pi's session format
-// differs from Claude's, so we synthesize a minimal transcript (one
+// The prompt command forwards a transcript path to its detached summarizer.
+// Pi's session format differs from Claude's, so we synthesize a minimal transcript (one
 // {"type":"user","message":{"content":...}} line per user message) in a temp
 // file. That is all readUserMessages() needs.
 
@@ -31,9 +31,7 @@ function transcriptPathFor(sessionId: string): string {
 }
 
 // Run the tool with hook JSON on stdin. A spawn error (missing binary) or
-// non-zero exit just resolves, so it never breaks the session. Await for the
-// fast hook calls; drop the await for the slow summarize so it doesn't delay
-// the turn.
+// non-zero exit just resolves, so it never breaks the session.
 function runTool(args: string[], stdin: string): Promise<void> {
   return new Promise((resolve) => {
     const child = spawn(BIN, args, { stdio: ["pipe", "ignore", "ignore"] })
@@ -89,8 +87,6 @@ export default function (pi: ExtensionAPI) {
   })
 
   pi.on("before_agent_start", async (event, ctx) => {
-    await runTool(["hook"], hookJson("UserPromptSubmit", ctx, { prompt: event.prompt }))
-
     const id = sessionId(ctx)
     if (!id) return
     const transcriptPath = transcriptPathFor(id)
@@ -103,9 +99,8 @@ export default function (pi: ExtensionAPI) {
     } catch {
       return
     }
-    // Fire-and-forget: the summarizer makes an LLM call; don't block the turn.
-    void runTool(
-      ["summarize"],
+    await runTool(
+      ["prompt"],
       hookJson("UserPromptSubmit", ctx, {
         prompt: event.prompt,
         transcript_path: transcriptPath,

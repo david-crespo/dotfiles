@@ -15,11 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ghostty-tab-title hook"
-          },
-          {
-            "type": "command",
-            "command": "ghostty-tab-title detach summarize"
+            "command": "ghostty-tab-title prompt"
           }
         ]
       }

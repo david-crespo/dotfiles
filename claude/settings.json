@@ -192,12 +192,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ghostty-tab-title hook"
-          },
-          {
-            "type": "command",
-            "command": "ghostty-tab-title summarize",
-            "async": true
+            "command": "ghostty-tab-title prompt"
           }
         ]
       }

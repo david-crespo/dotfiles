@@ -97,12 +97,7 @@ function set_title() {
       # essential on restart, when every restored shell starts concurrently.
       eval "$(ghostty-tab-title shell --tty "$TTY" "$title" 2>/dev/null)"
     else
-      # Snapshot while chpwd is still running so a split opened immediately
-      # afterward cannot change whether this directory change owns the title.
-      local pane_count
-      if pane_count=$(ghostty-tab-title pane-count "$GHOSTTY_TERMINAL_ID" 2>/dev/null); then
-        ghostty-tab-title shell --pane-count "$pane_count" "$title" >/dev/null 2>&1 &!
-      fi
+      ghostty-tab-title shell "$title" >/dev/null 2>&1 &!
     fi
   else
     echo -ne "\033]0;$title\007"
@@ -115,16 +110,6 @@ function chpwd() {
 }
 
 set_title "$(prompt_pwd)"
-
-# Codex has no SessionEnd hook, so release its pane ownership when the CLI exits.
-function codex() {
-  command codex "$@"
-  local codex_status=$?
-  if [[ -n $GHOSTTY_TERMINAL_ID ]] && (( $+commands[ghostty-tab-title] )); then
-    ghostty-tab-title release >/dev/null 2>&1
-  fi
-  return $codex_status
-}
 
 # ctrl-xe to edit command in $EDITOR
 autoload -U edit-command-line
