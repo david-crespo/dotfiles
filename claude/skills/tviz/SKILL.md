@@ -54,6 +54,9 @@ tviz add todo "Fix login bug" --project "Auth redesign" --when today
 tviz add todo "Review PR" --project "Auth redesign" --heading "Code review" --deadline 2026-04-01
 echo "Detailed notes here" | tviz add todo "Research options" --area Oxide
 
+# Checklist items (repeat the flag once per item, max 100 per todo)
+tviz add todo "Pack toiletries" --project "Trip" --checklist "toothbrush" --checklist "sunscreen"
+
 # Create a project
 tviz add project "Kitchen renovation" --area Home
 tviz add project "Q2 planning" --area Oxide --deadline 2026-04-15
@@ -65,6 +68,8 @@ tviz update <uuid> --canceled
 tviz update <uuid> --when today --deadline 2026-04-01
 tviz update <uuid> --append-notes "Additional context"
 tviz update <uuid> --add-tags "urgent,blocked"
+tviz update <uuid> --append-checklist "one more thing"   # also --prepend-checklist
+tviz update <uuid> --checklist "a" --checklist "b"       # REPLACES all checklist items
 ```
 
 Notes for create commands can be piped via stdin. The `--project` flag on
@@ -79,3 +84,16 @@ Use plain URLs in Things item notes, not markdown links — Things 3 doesn't
 render markdown, so `[text](url)` shows as raw bracket syntax. A bare URL
 like `https://github.com/oxidecomputer/omicron/pull/4669` becomes a
 clickable link automatically.
+
+Checklists are a native Things feature with their own UI, distinct from
+markdown checkboxes in notes (which don't render). Use the `--checklist`
+flags above, never `- [ ]` in notes.
+
+To seed a new project from a past one (e.g. copying items from an old
+trip's project), always create fresh todos with `tviz add todo`. Copy/paste
+of items in the Things app preserves the original creation date, which
+pollutes date-based views and stats, and the URL scheme's `creation-date`
+param can only move a date backward — fixing it requires an Apple Shortcut
+("Set Creation Date"). ⌘D duplication assigns fresh dates (tested
+2026-07-18), but fresh creation via the CLI is the reliable path. Full
+details in the Obsidian bot note "things 3 url scheme creation-date".
