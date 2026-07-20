@@ -147,4 +147,7 @@ The point is to produce a solid design and make the case for it.
 
 Analysis markdown files should go in `.claude/notes` relative to repo root. That
 directory is gitignored globally. Give the file a descriptive name and start it
-with a YYYY-MM-DD date.
+with a YYYY-MM-DD date. Because these files are unversioned, never reference
+them from checked-in files (skills, docs, code, commit messages) — the path is
+meaningless to anyone else and will eventually dangle even locally. Links to
+notes files belong only in other notes files or in chat.

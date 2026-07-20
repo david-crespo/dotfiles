@@ -3,9 +3,7 @@ name: browser-interact
 description: Drive a real browser during frontend work — verify a change rendered, click through a flow, fill forms, read console errors, take screenshots, or debug performance/memory/network. Use whenever interacting with a local web app in a browser (Playwright script templates, chrome-devtools tradeoffs, SPA mock-API gotchas).
 ---
 
-How to interact with a browser during frontend dev work. Benchmarked 2026-07
-against the Oxide console; full data in
-`dotfiles/.claude/notes/2026-07-20-browser-interaction-bench.md`.
+How to interact with a browser during frontend dev work.
 
 ## Default: one Playwright script per check
 
