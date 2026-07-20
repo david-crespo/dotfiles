@@ -81,6 +81,39 @@ Some information about the user's coding environment:
   an expensive session model. Reserve the default (inherited) model for
   subagents doing real implementation or hard reasoning.
 
+### Browser interaction (frontend dev work)
+
+- For any multi-step browser flow (load a page, click around, fill a form,
+  verify a change), write a Playwright script and run it with node rather than
+  driving the browser action-by-action with MCP tools. Each MCP action costs a
+  full model round trip; a flow that takes ~25 round trips (minutes) runs in
+  ~5 seconds as one script. Most frontend repos already have `@playwright/test`
+  installed — run scripts from inside the repo so imports resolve (ESM ignores
+  `NODE_PATH`).
+- Headless chromium launches in under 100ms, so one-shot scripts that launch
+  and close their own browser are fine. A persistent browser server only saves
+  CPU, not wall-clock; skip it unless running many checks in a tight loop.
+- In scripts: use role-based selectors (crib from the repo's e2e tests when
+  they exist), print `page.locator('body').ariaSnapshot()` as a compact
+  (~3KB) page summary instead of dumping HTML, register `page.on('console')`
+  and `page.on('pageerror')` handlers to catch errors, and save screenshots to
+  files to Read afterward.
+- SPAs backed by an in-memory mock API (MSW — e.g. the Oxide console): any
+  full page load (`page.goto`, reload, URL navigation) restarts the mock and
+  wipes state created earlier in the flow. Navigate in-app via clicks when
+  verifying a mutation.
+- Browser MCP tools are still fine for one-off interactive inspection (a
+  screenshot, reading console errors, a single click on a page that's already
+  up) — per-call latency is only 1–3s; it's the per-action round trips that
+  make long flows slow.
+- For debugging, pick by job. chrome-devtools MCP/CLI is uniquely capable at:
+  performance traces analyzed with DevTools' own insight engine, heap analysis
+  (CLI `--memoryDebugging`), source-mapped stack traces, and attaching to the
+  user's real logged-in Chrome (`--autoConnect`). Playwright is better for
+  network debugging — `request.timing()` per-request breakdowns, route
+  interception/mocking, HAR record/replay — which the chrome-devtools network
+  tools lack (inspection-only, no timing).
+
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
