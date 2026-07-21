@@ -15,13 +15,8 @@
   - Fake-therapy imperatives: "That's something to sit with", "Sharpen that",
     "Notice the arc of what just happened", "a signal to slow down, not a
     verdict"
-- When estimating how long a task will take, estimate how long it would take
-  with the help of SOTA coding agents, not how long it would take a human to
-  do by hand. If tempted to say something will take a day or more, reconsider
-  carefully and be sure. Fight your tendency to overestimate tasks. Typically
-  if something really is going to take a while, it's because it requires a lot
-  of iteration and back and forth with the user. Few subtasks done by agents
-  themselves take a long time.
+- When estimating how long a task will take, assume SOTA coding agents are doing the work. If tempted to say something will take a day or more, reconsider
+  carefully and be sure.
 
 Some information about the user's coding environment:
 
@@ -37,24 +32,18 @@ Some information about the user's coding environment:
   - `yq`: YAML/TOML processing (mikefarah v4; jq-like syntax but not identical
     — Go regex, different function set; check docs for unfamiliar functions)
 
-### TypeScript projects
-
-- Read online docs for libraries to understand how to use them
-- When working on types, work hard to avoid casting or `any`. Do it right.
-- TS 5.5 (June 2024)+ infers type predicates from `.filter()` callbacks, so `.filter(x => !!x)` narrows.
-
 ### jj (Jujutsu)
 
 - When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files. You can update the description if appropriate as you go.
 - To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
 - Shell loops (`for`/`while`) bypass Bash allowlist prefix matching. For a handful of commands, run them individually to avoid permission prompts.
-- NEVER use git unless jj has no way to do the thing. Always use jj: jj status, jj diff, jj diff -r @-, jj log, etc.
+- In jj repos, NEVER use git unless jj has no way to do the thing. Always use jj: jj status, jj diff, jj diff -r @-, jj log, etc.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
 - To exclude paths from a jj command, use fileset syntax: `jj diff '~dir1 & ~dir2'` or `jj restore '~package-lock.json'`
 - when iterating on an existing rev A, work in a new rev on top of A and leave it there for the user to review and squash themselves. Do not squash into A on your own initiative, even in auto mode. If the user says "go ahead and squash" (or similar), that's fine; otherwise default to leaving the rev for review.
 - for parallel approaches, use `jj new <base>` to create siblings from a common base, implement each approach, then compare. bookmarks are unnecessary for this workflow
 - use `jjw` to manage jj workspaces: `jjw create` (or `jjw c`) creates a workspace and cds into it, `jjw ls` lists workspaces, `jjw rm` interactively removes one
-- Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv to jj desc + jj new) after chunks of work to snapshot each step in a reviewable way. Look at jj log first before `jj new` to make sure you're not already on an empty commit.
+- Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv to jj desc + jj new) after chunks of work to snapshot each step in a reviewable way. Check `jj log` immediately before any `jj new` — the working copy may have changed since you last looked — and if you're already on an empty undescribed commit, use it instead of stacking another.
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message. These flags are mutually exclusive.
 - whether to run a destructive `jj` op (squash, abandon, rebase) depends on which commits it would touch:
   - Scratch commits you created earlier in the session whose only purpose was to snapshot intermediate work can be reorganized among themselves (squashed together, abandoned, reworded) as long as the result is still a rev on top of the user's target, not folded into it.
@@ -97,17 +86,14 @@ Some information about the user's coding environment:
 
 - use `npm info` or similar to find the latest version of a package when adding
 - Try to minimize diff size, within reason. Avoid no-op restructuring of code you're not otherwise changing (extracting variables, reordering, renaming) — it obscures the real change. Cleanup is fine in code you're already modifying.
-- Code comments should be more about why than what. When there is context that explains why something is done, and that can't be inferred from the code itself, write comments.
 - Explanations of how third party code works should be backed up by citations, ideally with GitHub permalinks to docs or code. If that is not available, link to other sources online. When including a GH permalink, use a 7 char short commit hash to keep the URL short.
-- Do not gratuitously modify or delete existing comments unless they have become inaccurate due to your changes.
-- After making changes, ALWAYS run linters, formatters, and typecheckers.
+- After making changes, run linters, formatters, and typecheckers.
   - Check package.json for commands
   - For Deno projects use `deno fmt`, `deno lint`, `deno check`
 - in scripts, prefer full length flags instead of abbreviations for readability
 - Don't browse other oxide repos under ~/oxide speculatively. Only read from another oxide repo when the task explicitly requires it (the user named the repo, or a cross-repo reference can't be resolved otherwise). In that case, prefer the local clone over GitHub; if it's not cloned, ask before cloning.
-- Always run tests after changing test code. Generally you should run relevant tests after changing any code.
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
-- Do NOT use python3 for JSON processing. Use jq — it is allowlisted in your permissions. Only fall back to python3 for JSON if jq truly cannot be made to work (e.g., the transformation requires state across records that jq can't express).
+- Use jq for JSON processing — it is allowlisted in your permissions. Only fall back to python3 for JSON if jq truly cannot be made to work (e.g., the transformation requires state across records that jq can't express).
 
 ### Working with GitHub
 
