@@ -92,10 +92,15 @@ function set_title() {
   if [[ -n $GHOSTTY_RESOURCES_DIR ]] && (( $+commands[ghostty-tab-title] )); then
     # First call: run synchronously so GHOSTTY_TERMINAL_ID lands in the shell
     # env before Claude is launched. Subsequent calls (chpwd) can background.
-    if [[ -z $GHOSTTY_TERMINAL_ID ]]; then
+    # An inherited GHOSTTY_TERMINAL_ID is only trusted alongside a matching
+    # GHOSTTY_TERMINAL_TTY: the id can leak into the Ghostty app process itself
+    # (relaunching from a terminal), and from there into every new shell.
+    if [[ -z $GHOSTTY_TERMINAL_ID || $GHOSTTY_TERMINAL_TTY != "$TTY" ]]; then
+      unset GHOSTTY_TERMINAL_ID
       # Pass $TTY so capture matches our own pane, not the frontmost tab —
       # essential on restart, when every restored shell starts concurrently.
       eval "$(ghostty-tab-title shell --tty "$TTY" "$title" 2>/dev/null)"
+      [[ -n $GHOSTTY_TERMINAL_ID ]] && export GHOSTTY_TERMINAL_TTY="$TTY"
     else
       ghostty-tab-title shell "$title" >/dev/null 2>&1 &!
     fi
