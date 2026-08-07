@@ -12,10 +12,11 @@ interface Workspace {
 }
 
 /**
- * Resolve the default workspace's path. `jj workspace root --name default`
- * errors with "Workspace has no recorded path", so we chase the .jj/repo
- * pointer from the current workspace: it's either a directory (we're in
- * default already) or a text file pointing at default's .jj/repo.
+ * Resolve the default workspace's path by chasing the .jj/repo pointer from
+ * the current workspace: it's either a directory (we're in default already)
+ * or a text file pointing at default's .jj/repo. Used instead of
+ * `jj workspace root --name default`, which errors in repos whose default
+ * workspace has no recorded root (created before jj 0.38).
  */
 async function defaultRoot(): Promise<string> {
   const cwdRoot = (await $`jj root`.text()).trim()
@@ -29,20 +30,18 @@ async function defaultRoot(): Promise<string> {
 }
 
 /**
- * List workspaces (name + path) in one subprocess call. `self.root()` errors
- * for the default workspace, so the template skips it and we substitute the
- * default's path resolved via .jj/repo.
+ * List workspaces (name + path) in one subprocess call. `self.root()` renders
+ * empty for workspaces with no recorded root (moved/deleted dirs, or repos
+ * created before jj 0.38 — all local repos were backfilled 2026-08).
  */
 async function listWorkspaces(): Promise<Workspace[]> {
-  const tmpl = 'name ++ "\t" ++ if(name == "default", "", self.root()) ++ "\n"'
-  const [lines, defaultPath] = await Promise.all([
-    $`jj workspace list -T ${tmpl}`.lines(),
-    defaultRoot(),
-  ])
-  return lines.filter((l) => l).map((line) => {
-    const [name, path] = line.split("\t")
-    return { name, wsPath: name === "default" ? defaultPath : path }
-  })
+  const tmpl = 'name ++ "\t" ++ self.root() ++ "\n"'
+  return (await $`jj workspace list -T ${tmpl}`.lines())
+    .filter((l) => l)
+    .map((line) => {
+      const [name, wsPath] = line.split("\t")
+      return { name, wsPath }
+    })
 }
 
 interface WorkspaceInfo {

@@ -38,13 +38,13 @@ merge-editor = "vscode"
 diff-formatter = ":git"
 
 [revsets]
-# default is 2 ancestors and I found it wasn't enough. divergent() surfaces
-# divergent changes that the other terms wouldn't show, but fetch imports
-# every *@origin ref, so a bare divergent() floods the log with other people's
-# divergences. So we scope it to mine() (changes I authored, on any branch)
-# | ::@ (ancestors of my checkout, so someone else's divergent commit on a
-# branch I'm contributing to still shows).
-log = "present(@) | ancestors(immutable_heads().., 4) | present(trunk()) | (divergent() & (mine() | ::@))"
+# builtin_log() shows 2 ancestors and I found it wasn't enough. divergent()
+# surfaces divergent changes that the other terms wouldn't show, but fetch
+# imports every *@origin ref, so a bare divergent() floods the log with other
+# people's divergences. So we scope it to mine() (changes I authored, on any
+# branch) | ::@ (ancestors of my checkout, so someone else's divergent commit
+# on a branch I'm contributing to still shows).
+log = "builtin_log() | ancestors(immutable_heads().., 4) | (divergent() & (mine() | ::@))"
 
 [revset-aliases]
 # Treat commits not authored by me as immutable. The `trunk().. &` bit is an
@@ -69,8 +69,10 @@ dm = ["describe", "-m"]
 dp = ["describe", "-r", "@-"]
 # diff rev against fork point like GitHub PR diff or git ...
 # dt/dts exclude lock files; dta/dtas show all files.
-# For a different --from (e.g. lower in a stack) or to narrow to a path, use
-# jj diff directly with the fork() and ~lockfiles aliases, e.g.
+# Baked-in args can be overridden since jj 0.44 (last occurrence wins), e.g.
+# `jj dt -f <rev>` for a different base (lower in a stack). Fileset args are
+# unioned rather than intersected, so narrowing to a path still requires
+# dropping to jj diff directly:
 #   jj diff -f <rev> '<path> & ~lockfiles'
 dt = ["diff", "--from", "fork()", "~lockfiles"]
 dts = ["diff", "--stat", "--from", "fork()", "~lockfiles"]
