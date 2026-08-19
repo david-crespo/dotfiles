@@ -1,7 +1,4 @@
 - The user is an experienced product engineer who mostly works in TypeScript and Rust
-- Avoid referring to yourself in the first person. You are a computer program, not a person.
-- Speak with neutral affect. Do not praise the user for good ideas or questions.
-- When discussing features, commands, or APIs of specific tools, verify claims with docs or web search rather than relying on training data, which may be wrong.
 - When writing instructions (CLAUDE.md, skills, etc.), try to generalize and avoid being too specific to the example that prompted the rule. Prefer updating CLAUDE.md for general guidelines and explicit skills for task instructions. Don't create memory files automatically -- at most, propose a memory update for user approval.
 - Avoid LLM-isms in prose: formulaic rhetorical gestures that perform insight,
   sincerity, or gravity. Common forms:
@@ -84,15 +81,10 @@ Some information about the user's coding environment:
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
-- Try to minimize diff size, within reason. Avoid no-op restructuring of code you're not otherwise changing (extracting variables, reordering, renaming) — it obscures the real change. Cleanup is fine in code you're already modifying.
 - Explanations of how third party code works should be backed up by citations, ideally with GitHub permalinks to docs or code. If that is not available, link to other sources online. When including a GH permalink, use a 7 char short commit hash to keep the URL short.
-- After making changes, run linters, formatters, and typecheckers.
-  - Check package.json for commands
-  - For Deno projects use `deno fmt`, `deno lint`, `deno check`
 - in scripts, prefer full length flags instead of abbreviations for readability
 - Don't browse other oxide repos under ~/oxide speculatively. Only read from another oxide repo when the task explicitly requires it (the user named the repo, or a cross-repo reference can't be resolved otherwise). In that case, prefer the local clone over GitHub; if it's not cloned, ask before cloning.
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
-- Use jq for JSON processing — it is allowlisted in your permissions. Only fall back to python3 for JSON if jq truly cannot be made to work (e.g., the transformation requires state across records that jq can't express).
 
 ### Working with GitHub
 
@@ -120,19 +112,16 @@ everything in parallel. Consider saving the procedure in a skill for future use.
 
 When asked to do analysis and planning for a possible feature, make sure to
 work in a way that is easily resumable by another session. Start a report in a
-markdown file immediately, include the prompt or goal at the top, and fill it
-in as you go instead of at the end. Create separate markdown files for analysis
-and planning, where planning is the shorter and more focused doc developers
-are likely to read, and the analysis is more like a reference backing up the
-plan and making it easy for agents to resume work on the plan. Be thorough and
-consider alternative approaches explicitly, but don't give too much space to
-alternatives that are obviously implausible for whatever reason. When asked to
-review or improve a design doc, engage with the design, not just the prose.
-The point is to produce a solid design and make the case for it.
+markdown file immediately, include the prompt or goal at the top, and fill it in
+as you go instead of at the end. Be thorough and consider alternative approaches
+explicitly, but don't give too much space to alternatives that are obviously
+implausible for whatever reason. When asked to review or improve a design doc,
+engage with the design, not just the prose. The point is to produce a solid
+design and make the case for it.
 
-Analysis markdown files should go in `.claude/notes` relative to repo root. That
-directory is gitignored globally. Give the file a descriptive name and start it
-with a YYYY-MM-DD date. Because these files are unversioned, never reference
+Markdown notes should go in `.claude/notes` relative to repo root. That
+directory is gitignored globally. Give the file a descriptive name and start
+it with a YYYY-MM-DD date. Because these files are unversioned, never reference
 them from checked-in files (skills, docs, code, commit messages) — the path is
 meaningless to anyone else and will eventually dangle even locally. Links to
 notes files belong only in other notes files or in chat.
