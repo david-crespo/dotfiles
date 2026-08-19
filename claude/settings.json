@@ -132,6 +132,22 @@
       "WebFetch(domain:docs.anthropic.com)"
     ],
     "deny": [
+      "Read(//**/.env)",
+      "Read(//**/.env.*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.config/oxide/credentials.toml)",
+      "Read(~/.npmrc)",
+      "Read(~/.codex/auth.json)",
+      "Read(~/.local/share/atuin/**)",
+      "Read(~/.local/state/matrix-read/**)",
+      "Read(~/.zsh_history)",
+      "Read(~/.claude.json)",
+      "Read(~/.claude.json.backup)",
+      "Edit(//**/.env)",
+      "Edit(//**/.env.*)",
       "Bash(gh secret:*)",
       "Bash(gh variable:*)",
       "Bash(gh auth:*)",
@@ -155,6 +171,7 @@
       "Bash(gh issue edit:*)",
       "Bash(gh issue comment:*)",
       "Bash(gh issue close:*)",
+      "Bash(gh gist:*)",
       "Bash(gh api:*)"
     ],
     "defaultMode": "auto",
@@ -264,6 +281,18 @@
         "repo": "ChromeDevTools/chrome-devtools-mcp"
       }
     }
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": false,
+    "excludedCommands": [
+      "gh *",
+      "gh-api-read *",
+      "git push *",
+      "git fetch *",
+      "git pull *",
+      "jj git *"
+    ]
   },
   "effortLevel": "high",
   "tui": "fullscreen",
