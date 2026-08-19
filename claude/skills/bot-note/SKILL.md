@@ -34,4 +34,4 @@ Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a to
 
 ## After writing
 
-End with a single line of the form `Note created at [<name>](<url>)` (or `Note updated at ...` for appends/edits) where `<name>` is just the note filename without the `Base files/Bot notes/` prefix or `.md` extension, and `<url>` is `obsidian://open?vault=<vault>&file=<url-encoded-name>`. Get the vault name from the basename of `obsidian-notes bot:path "<name>"` walked up two directories (i.e., the vault directory containing `Base files/`). The link must be clickable, so URL-encode spaces as `%20`.
+End with a single line of the form `Note created at [<name>](<url>)` (or `Note updated at ...` for appends/edits) where `<name>` is just the note filename without the `Base files/Bot notes/` prefix or `.md` extension, and `<url>` is `obsidian://open?vault=<vault>&file=<url-encoded-name>`. `bot:create` and `bot:append` print the note's absolute path; the vault name is the basename of that path walked up two directories (i.e., the vault directory containing `Base files/`). The link must be clickable, so URL-encode spaces as `%20`.

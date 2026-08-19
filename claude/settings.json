@@ -87,6 +87,8 @@
       "Bash(gh issue list:*)",
       "Bash(gh pr view:*)",
       "Bash(gh pr list:*)",
+      "Bash(gh gist view:*)",
+      "Bash(gh gist list:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh repo view:*)",
       "Bash(gh run list:*)",
@@ -174,7 +176,10 @@
       "Bash(gh issue edit:*)",
       "Bash(gh issue comment:*)",
       "Bash(gh issue close:*)",
-      "Bash(gh gist:*)"
+      "Bash(gh gist create:*)",
+      "Bash(gh gist edit:*)",
+      "Bash(gh gist delete:*)",
+      "Bash(gh gist rename:*)"
     ],
     "defaultMode": "auto",
     "additionalDirectories": [
@@ -288,6 +293,12 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": false,
     "excludedCommands": [
+      "bun add *",
+      "bun install *",
+      "bun update *",
+      "bun remove *",
+      "bun audit *",
+      "obsidian-notes *",
       "gh *",
       "gh-api-read *",
       "gh-unsub *",

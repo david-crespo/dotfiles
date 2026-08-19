@@ -72,12 +72,15 @@ const dailyRecent = new Command()
   })
 
 const dailyAppend = new Command()
-  .description("Append content to a daily note (default: today). Reads from stdin.")
+  .description(
+    "Append content to a daily note (default: today). Reads from stdin, prints the note's path.",
+  )
   .option("--date <date:string>", "Date of the note (YYYY-MM-DD, default: today)")
   .action(async ({ date }) => {
     const content = await readStdin()
     const path = date ? `${DAILY_NOTES}/${date}.md` : await obs("daily:path")
     await appendOrCreate(path, content)
+    console.log(`${await vaultPath()}/${path}`)
   })
 
 const dailyPath = new Command()
@@ -117,19 +120,23 @@ const botList = new Command()
   })
 
 const botCreate = new Command()
-  .description("Create a bot note. Reads content from stdin.")
+  .description("Create a bot note. Reads content from stdin, prints the note's path.")
   .arguments("<name:string>")
   .action(async (_opts, name: string) => {
     const content = await readStdin()
     await obs("create", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
+    console.log(`${await vaultPath()}/${BOT_NOTES}/${name}.md`)
   })
 
 const botAppend = new Command()
-  .description("Append content to a bot note (creates if needed). Reads from stdin.")
+  .description(
+    "Append content to a bot note (creates if needed). Reads from stdin, prints the note's path.",
+  )
   .arguments("<name:string>")
   .action(async (_opts, name: string) => {
     const content = await readStdin()
     await appendOrCreate(`${BOT_NOTES}/${name}.md`, content)
+    console.log(`${await vaultPath()}/${BOT_NOTES}/${name}.md`)
   })
 
 await new Command()
