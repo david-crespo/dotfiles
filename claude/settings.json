@@ -96,6 +96,9 @@
       "Bash(gh release list:*)",
       "Bash(gh search:*)",
       "Bash(gh-api-read *)",
+      "Bash(gh-unsub *)",
+      "mcp__claude_ai_Gmail__label_thread",
+      "mcp__claude_ai_Gmail__unlabel_thread",
       "Bash(jq:*)",
       "Bash(tmux new-session:*)",
       "Bash(tmux capture-pane:*)",
@@ -171,8 +174,7 @@
       "Bash(gh issue edit:*)",
       "Bash(gh issue comment:*)",
       "Bash(gh issue close:*)",
-      "Bash(gh gist:*)",
-      "Bash(gh api:*)"
+      "Bash(gh gist:*)"
     ],
     "defaultMode": "auto",
     "additionalDirectories": [
@@ -288,6 +290,7 @@
     "excludedCommands": [
       "gh *",
       "gh-api-read *",
+      "gh-unsub *",
       "git push *",
       "git fetch *",
       "git pull *",
