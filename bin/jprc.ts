@@ -58,11 +58,22 @@ await new Command()
     // Feed just the commit descriptions (no graph, no diff). The full diff can
     // be huge on branches that touch many files, and it's overkill for naming.
     const logTmpl = `description ++ "\n"`
-    const generated = await $`jj log -r ${range} --no-graph -T ${logTmpl}`
-      .pipe($`ai --system "${prompt}" --model flash --quick --raw --ephemeral`)
-      .text()
+    // Capture both streams instead of using .text(): ai prints its error output
+    // to stdout, which .text() throws away, leaving only "Exited with code: 1".
+    const aiResult = await $`jj log -r ${range} --no-graph -T ${logTmpl}`
+      .pipe($`ai --system "${prompt}" --model luna --quick --raw --ephemeral`)
+      .stdout("piped")
+      .stderr("piped")
+      .noThrow()
 
-    const opts = { noClear: true, default: generated.trim() }
+    if (aiResult.code !== 0) {
+      console.error(`\nai exited with code ${aiResult.code}`)
+      const output = [aiResult.stdout, aiResult.stderr].join("").trim()
+      if (output) console.error(output)
+      Deno.exit(1)
+    }
+
+    const opts = { noClear: true, default: aiResult.stdout.trim() }
     const bookmark = await $.prompt("\nCreate branch?", opts)
 
     await $`jj git push --named ${bookmark}=${r}`.printCommand()
