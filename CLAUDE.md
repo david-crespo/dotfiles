@@ -8,14 +8,19 @@ When adding new scripts to `bin/`, add a corresponding symlink entry in
 `install.sh` and run `install.sh` to create the symlink. Never run `ln -sf`
 directly — `install.sh` is the source of truth for what gets symlinked where.
 
+This repo is public on GitHub. A private counterpart at `../dotfiles-private`
+follows the same conventions (`bin/` scripts, its own `install.sh`, invoked by
+this repo's `install.sh` when present). When adding a script, consider which
+repo it belongs in; when looking for an existing script or config, check both.
+
 When the user asks about their work, productivity, or what they've been up to,
 use the `/coach` skill. It knows how to gather context from daily notes, tasks,
-GitHub, and sessions. Key utilities live in this repo: `bin/obsidian-notes.ts`
-(daily notes and bot notes), `claude/skills/coach/gh-activity.sh`, and
-`claude/skills/session-history/claude-sessions.sh`. Use these tools directly —
-don't go searching the filesystem for Obsidian vaults or other external state.
-When the user asks you to update a skill, look first in ./claude/skills in this
-repo.
+GitHub, and sessions. Key utilities: `bin/obsidian-notes.ts` (daily notes and
+bot notes), `claude/skills/session-history/claude-sessions.sh`, and — in the
+private repo — `../dotfiles-private/claude/skills/coach/gh-activity.sh`. Use
+these tools directly — don't go searching the filesystem for Obsidian vaults
+or other external state. When the user asks you to update a skill, look in
+./claude/skills here and in ../dotfiles-private/claude/skills.
 
 Prefer the simplest approach that gets the job done well, but don't avoid
 dependencies just for the sake of minimalism — a well-known tool like GNU

@@ -73,7 +73,6 @@ ln -sf "$PWD/bin/jpr.ts" ~/.local/bin/jpr
 ln -sf "$PWD/bin/flag-stats.ts" ~/.local/bin/flag-stats
 ln -sf "$PWD/bin/clip-bot-note.sh" ~/.local/bin/clip-bot-note
 ln -sf "$PWD/bin/ww.ts" ~/.local/bin/ww
-ln -sf "$PWD/bin/matrix-read.ts" ~/.local/bin/matrix-read
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
@@ -134,3 +133,8 @@ find ~/.pi/agent/extensions -maxdepth 1 -type l ! -exec test -e {} \; -delete
 for ext in "$PWD/pi/extensions"/*.ts; do
   ln -sf "$ext" ~/.pi/agent/extensions/
 done
+
+# private dotfiles (separate private repo, not required)
+if [ -d "$HOME/repos/dotfiles-private" ]; then
+  "$HOME/repos/dotfiles-private/install.sh"
+fi
