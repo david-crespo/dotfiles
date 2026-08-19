@@ -30,6 +30,12 @@ The key principle: **the note should be very close to verbatim what was said in 
 
 ## Before writing
 
+Run all `obsidian-notes` commands outside the execution sandbox from the first
+call. Obsidian's official CLI discovers and connects to the running macOS app,
+but sandboxed processes cannot see that app and misleadingly report that
+Obsidian is not running. Do not launch Obsidian in response to that error unless
+an unsandboxed `obsidian-notes` command reports the same error.
+
 Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one. To append, pipe content to `obsidian-notes bot:append "<name>"`. To edit an existing note directly, use `obsidian-notes bot:path "<name>"` to get the absolute filesystem path, then read/edit the file.
 
 ## After writing
