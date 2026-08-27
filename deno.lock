@@ -172,6 +172,7 @@
       "jsr:@cliffy/table@1.2.1",
       "jsr:@david/dax@~0.48.3",
       "jsr:@std/cli@1",
+      "jsr:@std/fmt@1",
       "jsr:@std/fs@^1.0.24",
       "jsr:@std/io@~0.225.2",
       "jsr:@std/path@^1.0.8",
