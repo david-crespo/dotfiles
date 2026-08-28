@@ -81,7 +81,7 @@ Some information about the user's coding environment:
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
-- Explanations of how third party code works should be backed up by citations, ideally with GitHub permalinks to docs or code. If that is not available, link to other sources online. When including a GH permalink, use a 7 char short commit hash to keep the URL short.
+- Explanations of how third party code works should be backed up by citations, ideally with GitHub permalinks to docs or code. If that is not available, link to other sources online. When including a GH permalink, use a 7 char short commit hash to keep the URL short — except in GitHub issue/PR bodies and comments, where the code embed only renders with the full hash.
 - in scripts, prefer full length flags instead of abbreviations for readability
 - Don't browse other oxide repos under ~/oxide speculatively. Only read from another oxide repo when the task explicitly requires it (the user named the repo, or a cross-repo reference can't be resolved otherwise). In that case, prefer the local clone over GitHub; if it's not cloned, ask before cloning.
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.

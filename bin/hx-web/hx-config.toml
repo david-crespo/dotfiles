@@ -1,0 +1,11 @@
+# Config for the hx instance embedded in the web page. Passed via
+# `hx --config`, which REPLACES the user's config.toml for this instance
+# (the Steel init.scm still loads from the normal location).
+theme = "onedark"
+
+[editor.auto-save]
+focus-lost = true
+
+[editor.auto-save.after-delay]
+enable = true
+timeout = 650
