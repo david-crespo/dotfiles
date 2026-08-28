@@ -76,6 +76,8 @@ ln -sf "$PWD/bin/clip-bot-note.sh" ~/.local/bin/clip-bot-note
 ln -sf "$PWD/bin/ww.ts" ~/.local/bin/ww
 ln -sf "$PWD/bin/say-last.ts" ~/.local/bin/say-last
 ln -sf "$PWD/bin/x-list.ts" ~/.local/bin/x-list
+ln -sf "$PWD/bin/prose.ts" ~/.local/bin/prose
+ln -sf "$PWD/bin/prose-tab.ts" ~/.local/bin/prose-tab
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 

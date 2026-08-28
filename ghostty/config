@@ -74,6 +74,10 @@ keybind = cmd+backspace=esc:w
 
 keybind = shift+enter=text:\x1b\r
 
+# free cmd+enter (default: toggle_fullscreen) for apps in panes,
+# e.g. terminal-browser
+keybind = cmd+enter=unbind
+
 # restore em dash and en dash (option key is captured as alt by default)
 keybind = alt+shift+-=text:—
 keybind = alt+-=text:–
