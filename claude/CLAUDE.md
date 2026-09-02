@@ -31,7 +31,7 @@ Some information about the user's coding environment:
 
 ### jj (Jujutsu)
 
-- When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files. You can update the description if appropriate as you go.
+- When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme.
 - To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
 - In jj repos, use jj for everything git would do (`jj status`, `jj diff`, `jj diff -r @-`, `jj log`, `jj file annotate`, ...). Fall back to git only when jj has no way to do the thing.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
@@ -45,6 +45,8 @@ Some information about the user's coding environment:
   - Scratch commits you created earlier in the session whose only purpose was to snapshot intermediate work can be reorganized among themselves (squashed together, abandoned, reworded) as long as the result is still a rev on top of the user's target, not folded into it.
   - Do not modify commits that existed before the current session — including the rev the user is iterating on — without being asked. Auto mode does not relax this; auto mode is latitude for routine work, not for rewriting history the user didn't ask you to touch.
   - When the user does ask for a destructive op on pre-existing commits, make sure you understand which commits are involved and what they want before running it.
+  - `jj restore` and `jj resolve` follow the same logic. Restoring specific paths to undo this session's own edits (an abandoned experiment, an accidental lockfile or config change, taking one side of a conflict created by squashing or rebasing your own revs) is routine. Restoring paths the user edited themselves, restoring from a rev outside the current stack, or a bare `jj restore` that resets the whole working copy is not — ask first.
+  - These rules are what decide whether a destructive jj op is acceptable in auto mode. The subcommand name (`squash`, `rebase`, `restore`, `resolve`, `abandon`) is not by itself a reason to prompt; what matters is which commits and whose edits it touches.
 - The user may squash your work into the previous commit while you're working. This is normal — check `@-` (e.g., `jj diff -r @-`) if you need to confirm your changes landed.
 - `--ignore-immutable` may be needed when abandoning divergent commits from other authors, e.g., after rebasing on their branch and force pushing
 - `jj dt` and `jj dts` are custom aliases that diff a rev against its fork point from trunk (like a GitHub PR diff). `jj dt` shows the full diff, `jj dts` shows `--stat`. Both default to `@` but accept an optional rev argument.

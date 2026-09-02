@@ -161,10 +161,6 @@
     ],
     "ask": [
       "Bash(tviz update:*)",
-      "Bash(jj restore:*)",
-      "Bash(jj squash:*)",
-      "Bash(jj rebase:*)",
-      "Bash(jj resolve:*)",
       "Bash(turnstile triage add:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr edit:*)",
@@ -190,6 +186,7 @@
       "~/oxide/console"
     ]
   },
+  "model": "claude-fable-5-1",
   "hooks": {
     "PreToolUse": [
       {
@@ -310,6 +307,11 @@
     ]
   },
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "medium"
+    }
+  },
   "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,
   "editorMode": "vim",
@@ -327,6 +329,5 @@
       "Local repos live under ~/oxide/<repo> and ~/repos/<repo>. jj workspaces (additional working copies of those repos, created via the `jjw` helper) live under ~/jj-workspaces/<repo>-<n>, e.g. ~/jj-workspaces/console-1. Treat a jj workspace as part of its repo, not a foreign repo.",
       "Scratch/throwaway dirs: /tmp, /var/tmp, $TMPDIR (macOS /private/tmp and /var/folders), and the per-session Claude scratchpad under /private/tmp/claude-501/."
     ]
-  },
-  "model": "claude-fable-5-1"
+  }
 }
