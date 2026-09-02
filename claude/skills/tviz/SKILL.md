@@ -40,7 +40,7 @@ Tips:
 - When referring to specific tasks, link them with `[title](things:///show?id=<uuid>)`. Use the full original title so the user can search Things for it.
 - Find oldest items: `tviz todos -f json | jq -r 'sort_by(.created) | .[0:20] | .[] | "\(.created[0:10]) \(.title)"'`
 - Check GitHub status with `gh issue view` / `gh pr view` or `aipr tracking` / `aipr discussion`
-- For large outputs, spawn a Task subagent to process and summarize
+- For large outputs, spawn a subagent to process and summarize
 
 ## Write commands
 

@@ -18,13 +18,11 @@ train flag, so check the provider's own policy or a tracker like Opper.
   DeepInfra and Novita host it (Fireworks does not), so fallback stays within
   the trusted set.
 - **z-ai/glm-5.2** — `allow_fallbacks: true`. As of 2026-06-18, all three
-  trusted providers (DeepInfra, Novita, Fireworks) now host GLM-5.2, all with
-  tool support, so fallback stays within the trusted set. (Earlier it was only
-  hosted by **Z.AI** — Singapore HQ, consumer policy permits training — and
-  **Io Net** — US HQ but decentralized, prompts run on third-party GPU nodes;
-  neither met the privacy bar, so fallbacks were kept **off** to fail closed.
-  That changed once the trusted providers picked it up.) Note: DeepInfra's
-  endpoint was deranked (status -2, ~85% uptime) at the time of writing, which
-  is another reason fallbacks should be on.
+  trusted providers (DeepInfra, Novita, Fireworks) host GLM-5.2 with tool
+  support, so fallback stays within the trusted set. Providers that do not
+  meet the bar and have hosted it: **Z.AI** (Singapore HQ, consumer policy
+  permits training) and **Io Net** (US HQ but decentralized; prompts run on
+  third-party GPU nodes). DeepInfra's endpoint had ~85% uptime (status -2) on
+  2026-06-18, another reason to keep fallbacks on.
 
 The rule: restrict to good providers; if none host the model, fail closed.

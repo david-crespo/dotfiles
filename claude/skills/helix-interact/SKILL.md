@@ -7,7 +7,7 @@ Interact with the Helix editor through tmux, typically to iterate on configurati
 
 If the user specifies a file path to use for testing, open that file in helix. For a language name (like "rust", "python", "typescript"), create a temporary file with representative code. Some language servers require a full project structure (e.g., `cargo init` for Rust) rather than a standalone file.
 
-Note that this iteration process with tmux is error-prone, so err on the side of pausing to let the user test what you've come up with rather than churning and churning.
+Driving Helix through tmux is timing-sensitive: captures race LSP startup and popups, so a failed check is often the harness rather than the config. Verify that the config loads without errors and that the feature works once. If a check keeps failing in ways that look like capture timing rather than a config problem, hand it to the user to try interactively instead of retrying.
 
 ## Technique
 
@@ -46,8 +46,6 @@ When converting keybinding commands to Steel functions:
 
 **Testing:**
 - Shell command output appears in popups (captured by `tmux capture-pane`), unlike `:echo %sh{...}` which outputs to the status line
-- Don't over-rely on tmux testing - trust the implementation if it loads without errors and let the user test interactively
-
 ## Troubleshooting
 
 **Config locations:**
@@ -70,5 +68,3 @@ tmux capture-pane -t helix-test -p  # See LSP errors
 tmux send-keys -t helix-test ':q!' C-m
 tmux kill-session -t helix-test
 ```
-
-Now complete the user's request using this technique.

@@ -20,8 +20,6 @@ OFFSET=$(LC_ALL=C grep -ob 'MDMP' <crashfile> | head -1 | cut -d: -f1)
 head -c $OFFSET <crashfile> | tail -1 | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin), indent=2))"
 ```
 
-This replaces the current "Read JSON metadata" section. The key change is adding `| tail -1` to grab only the last JSON line (the main Sentry event), avoiding the `Extra data` parse error from the multi-line format.
-
 Extract the minidump:
 ```bash
 tail -c +`LC_ALL=C grep -ob 'MDMP' <crashfile> | head -1 | cut -d: -f1 | xargs -I{} expr {} + 1` <crashfile> > /tmp/crash.dmp

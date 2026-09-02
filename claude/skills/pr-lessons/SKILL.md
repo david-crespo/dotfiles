@@ -1,7 +1,7 @@
 ---
 name: pr-lessons
 description: Analyze merged PR review comments to extract coding conventions and distill new CLAUDE.md guidelines. Use when you want to mine recent PRs for patterns not yet documented.
-allowed-tools: Bash, Read, Grep, Glob, Edit, Write, Task, WebFetch
+allowed-tools: Bash, Read, Grep, Glob, Edit, Write, Agent, WebFetch
 ---
 
 # Skill: Extract CLAUDE.md guidelines from PR review comments
@@ -141,7 +141,7 @@ Write new guidelines that are:
 
 ### 7. Review proposed changes with a fresh-context subagent
 
-Before finalizing, spawn a subagent (via the Task tool) to critically evaluate
+Before finalizing, spawn a subagent (via the Agent tool) to critically evaluate
 the proposed guidelines. The subagent should receive only:
 
 - The full text of the existing CLAUDE.md

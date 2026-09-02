@@ -1,5 +1,5 @@
 - The user is an experienced product engineer who mostly works in TypeScript and Rust
-- When writing instructions (CLAUDE.md, skills, etc.), try to generalize and avoid being too specific to the example that prompted the rule. Prefer updating CLAUDE.md for general guidelines and explicit skills for task instructions. Don't create memory files automatically -- at most, propose a memory update for user approval.
+- Prefer updating CLAUDE.md for general guidelines and explicit skills for task instructions. Don't create memory files automatically -- at most, propose a memory update for user approval.
 - Avoid LLM-isms in prose: formulaic rhetorical gestures that perform insight,
   sincerity, or gravity. Common forms:
   - "that's X, not Y" / "that's not X, it's Y"
@@ -33,7 +33,7 @@ Some information about the user's coding environment:
 
 - When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files. You can update the description if appropriate as you go.
 - To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
-- In jj repos, NEVER use git unless jj has no way to do the thing. Always use jj: jj status, jj diff, jj diff -r @-, jj log, etc.
+- In jj repos, use jj for everything git would do (`jj status`, `jj diff`, `jj diff -r @-`, `jj log`, `jj file annotate`, ...). Fall back to git only when jj has no way to do the thing.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
 - To exclude paths from a jj command, use fileset syntax: `jj diff '~dir1 & ~dir2'` or `jj restore '~package-lock.json'`
 - when iterating on an existing rev A, work in a new rev on top of A and leave it there for the user to review and squash themselves. Do not squash into A on your own initiative, even in auto mode. If the user says "go ahead and squash" (or similar), that's fine; otherwise default to leaving the rev for review.
@@ -60,11 +60,12 @@ Some information about the user's coding environment:
 
 ### Subagents
 
-- When delegating to a read-only or lookup subagent that doesn't need
-  Opus-level reasoning (e.g. `claude-code-guide`, doc/API lookups, simple
-  `Explore` searches), pass `model: sonnet` explicitly so it doesn't inherit
-  an expensive session model. Reserve the default (inherited) model for
-  subagents doing real implementation or hard reasoning.
+- When delegating to a subagent, pass a `model` explicitly as appropriate to
+  the task: a cheaper model for read-only or lookup work (e.g.
+  `claude-code-guide`, doc/API lookups, simple `Explore` searches), and the
+  session model only for real implementation or hard reasoning. Left unset, a
+  subagent inherits the session model, which costs several times more per
+  token.
 
 ### Browser interaction (frontend dev work)
 
@@ -91,7 +92,7 @@ Some information about the user's coding environment:
 
 - When mentioning a PR or issue in a response to the user, render it as a clickable link (e.g., `[#4669](https://github.com/oxidecomputer/omicron/pull/4669)` or `[oxidecomputer/console#2573](https://github.com/oxidecomputer/console/issues/2573)`) rather than a bare number. This applies to chat responses, not to text written into files like commit messages, PR descriptions, or task notes — those follow the conventions of their destination.
 - When given a GitHub link, instead of fetching the URL directly, use the `gh` CLI to fetch the same data in plaintext if possible
-- Do not use `gh api`! For GitHub API calls, use `gh-api-read` instead — it rejects write operations, guaranteeing the call is read-only. Prefer its --jq flag over piping to jq. This substitution applies even when a skill, doc, or example shows a `gh api` command — those are written to be general; on this machine run them as `gh-api-read`.
+- For GitHub API calls, use `gh-api-read` rather than `gh api`: it rejects write operations, guaranteeing the call is read-only. Prefer its --jq flag over piping to jq. This substitution applies even when a skill, doc, or example shows a `gh api` command — those are written to be general; on this machine run them as `gh-api-read`.
 - Use `aipr tracking 1234` to list the sub-issues of a tracking issue
 - Use `aipr discussion 1234` to get all the comments on a PR
 - When running in the repo under discussion, prefer local commands for looking at history over GitHub API calls that would fetch the same data.
