@@ -56,7 +56,8 @@ await Deno.writeTextFile(
 )
 
 const editorCmd = `hx --config ${shq(hxConfig)} ${shq(file)}\n`
-const previewCmd = `terminal-browser open localhost:${options.port} --no-toolbar\n`
+const previewCmd =
+  `terminal-browser open "localhost:${options.port}/?preview" --no-toolbar\n`
 
 const script = `
 tell application "Ghostty"

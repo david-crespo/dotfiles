@@ -6,13 +6,13 @@ description: "Review/edit a prose deliverable (PR body, issue body, doc) in a lo
 # Prose GUI
 
 Iterate on a markdown draft through a local browser page instead of chat
-round-trips. The `prose` server (dotfiles `bin/prose.ts`) serves
-a live GitHub-style preview of a file plus a collapsible raw-markdown editing
-pane; the user highlights text and comments, and each comment reaches this
-session as a Monitor event. The user can also edit the draft directly in the
-GUI — the server keeps the file on disk up to date with those edits, so the
-file remains the single source of truth. Keep editing it normally with Edit;
-the page picks up file changes live and flashes what changed.
+round-trips. The `prose` server (dotfiles `bin/prose.ts`) serves a live
+GitHub-style preview of a file plus a collapsible pane running real helix on
+that file (hx in a pty, rendered by xterm.js); the user highlights text and
+comments, and each comment reaches this session as a Monitor event. The file
+on disk is the single source of truth: helix auto-saves shortly after typing
+stops, and the page picks up every disk change live, flashing what changed.
+Keep editing the file normally with Edit.
 
 ## Setup
 
@@ -39,15 +39,16 @@ the page picks up file changes live and flashes what changed.
    })
    ```
 
-4. Tell the user the page is up and how the gestures work (see below), then
-   end the turn. Comments wake the session as Monitor notifications.
+4. Tell the user the page is up (one line, no walkthrough of the gestures;
+   they know the tool), then end the turn. Comments wake the session as
+   Monitor notifications.
 
 ## Handling events
 
 Each event is one JSON object:
 
 ```json
-{"kind": "comment" | "dellm" | "user-edit", "selection": "...", "prefix": "...",
+{"kind": "comment" | "dellm" | "file-edit", "selection": "...", "prefix": "...",
  "suffix": "...", "text": "...", "file": "...", "ts": "..."}
 ```
 
@@ -74,19 +75,22 @@ Each event is one JSON object:
   em-dash chains, fake gravity. Match the register of the surrounding text.
   Keep the meaning; don't pad. As with comments, if the identical tic
   recurs elsewhere in the document, fix it there too.
-- `kind: "user-edit"` — the user edited the draft in the GUI; the server has
-  already written their changes to the file. `old`/`new` (or a coarse `note`
-  when edits interleaved) describe the change. Absorb silently: update your
-  mental model, don't revert or "improve" their phrasing, don't reply. If an
-  Edit fails to match afterwards, re-read the file. Edit notices never wake
-  the session on their own — they arrive only right before a comment they
-  may be context for.
-- `kind: "file-edit"` — the file changed on disk: the user saving from an
-  external editor (the terminal workflow), or your own edits echoed back —
-  same delivery as user-edit, right before a comment. If `old`/`new` match
-  changes you just made, ignore the event. Otherwise treat it exactly like
-  a user edit: absorb silently. A `note` instead of `old`/`new` means the
-  window mixed sources — re-read the file before your next edit.
+- `kind: "file-edit"` — the file changed on disk since the last comment:
+  the user's helix saves, or your own edits echoed back. `old`/`new` give
+  one splice covering everything that changed in that window. If they match
+  changes you just made, ignore the event. Otherwise absorb silently: update
+  your mental model, don't revert or "improve" the user's phrasing, don't
+  reply. If an Edit fails to match afterwards, re-read the file. Edit notices
+  never wake the session on their own — they arrive only right before a
+  comment they may be context for.
+- Helix does not reload its buffer when the file changes underneath it. After
+  you edit the file, the user's helix pane shows stale text until they
+  `:reload` (or the buffer is otherwise refreshed), and a helix save in
+  that state fails with "file modified by an external process". When the
+  user says helix looks stale or can't save, that's why — tell them
+  `:reload` and carry on. Their unsaved keystrokes are never overwritten by
+  your edits, but a `:w!` on their side would overwrite yours; if a
+  `file-edit` event shows your change reverted, reapply it.
 - After editing the file, the page live-updates on its own and flashes the
   changed blocks. Reply in chat with at most one short line per comment (or
   nothing) — the user is looking at the page, not the transcript. If you
@@ -123,19 +127,22 @@ embed itself ("show lines 300-320", "link the whole function"), the prose
 around it, or the code it points at ("this is wrong, we should fix it in the
 PR" is a request to change the source, not the draft).
 
-## User-facing gestures (explain on setup)
+## User-facing gestures (for reference, not to recite)
 
 - Select text → popover → type comment → ⌘⏎ or Send
 - The popover's de-LLM button sends "make this passage sound human" — no
   typing needed; typed text rides along as extra guidance
-- ⌘E (or the ✎ button, top right) toggles a raw-markdown editing pane for
-  typo-grade fixes where typing beats describing; edits are saved to the
-  file automatically
-- When the editor is open, its mode selector switches between Standard and
-  Vim keybindings and remembers the choice in the browser. Vim mode moves
-  `j`/`k` by wrapped display lines
+- ⌘E (or the ✎ button, top right) toggles the helix pane: real `hx` with the
+  user's normal config and Steel setup, plus auto-save (650ms after typing
+  stops, and on focus lost). It starts on first show and keeps running while
+  hidden. Browser ⌘-chords don't reach helix (the browser owns them), so
+  Cmd-key helix bindings don't work there; everything else does.
 - The page live-updates whenever the file changes on disk, flashing what
   changed
+- `prose-tab <file>` is the all-terminal alternative: a Ghostty tab with
+  helix on the left and the preview (served with `?preview`, no embedded
+  editor) rendered by terminal-browser on the right. Same server, same
+  comment feed.
 
 ## Wrapping up
 

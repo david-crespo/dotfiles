@@ -2,39 +2,16 @@
 
 // Browser half of prose: bundled at server startup by
 // `deno bundle --platform browser` (see prose.ts) and served as
-// /bundle.js. Holds the Y.Doc that mirrors the draft file, a collapsible
-// CodeMirror pane bound to it, a rendered GFM preview, and the selection
-// comment popover.
+// /bundle.js. Renders the GFM preview of the file the server pushes over
+// /doc, hosts real helix in a collapsible xterm.js pane wired to /pty, and
+// runs the selection comment popover.
 
-import { basicSetup, EditorView } from "codemirror"
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown"
 import { languages } from "@codemirror/language-data"
-import {
-  defaultHighlightStyle,
-  HighlightStyle,
-  LanguageDescription,
-  syntaxHighlighting,
-} from "@codemirror/language"
-import { classHighlighter, highlightCode, tags } from "@lezer/highlight"
-import {
-  Decoration,
-  type DecorationSet,
-  ViewPlugin,
-  type ViewUpdate,
-} from "@codemirror/view"
-import {
-  Compartment,
-  type Extension,
-  Prec,
-  RangeSetBuilder,
-  StateEffect,
-  StateField,
-} from "@codemirror/state"
-import { oneDark } from "@codemirror/theme-one-dark"
-import { getCM, Vim, vim } from "@replit/codemirror-vim"
-import { helix } from "codemirror-helix"
-import * as Y from "yjs"
-import { yCollab, ySyncAnnotation } from "y-codemirror.next"
+import { LanguageDescription } from "@codemirror/language"
+import { classHighlighter, highlightCode } from "@lezer/highlight"
+import { Terminal } from "@xterm/xterm"
+import { FitAddon } from "@xterm/addon-fit"
+import { WebglAddon } from "@xterm/addon-webgl"
 import MarkdownExit from "markdown-exit"
 // @ts-expect-error no type declarations
 import taskLists from "markdown-it-task-lists"
@@ -43,63 +20,55 @@ const content = document.getElementById("content")!
 const popover = document.getElementById("popover")!
 const commentText = document.getElementById("comment-text") as HTMLTextAreaElement
 const toast = document.getElementById("toast")!
-const editorHost = document.getElementById("editor-host")!
-const editorToggle = document.getElementById("editor-toggle")!
-const editorModeButtons = [
-  ...document.querySelectorAll<HTMLButtonElement>("[data-editor-mode]"),
-]
+// Absent in ?preview mode (helix runs in a sibling terminal pane instead)
+const editorHost = document.getElementById("editor-host")
+const editorToggle = document.getElementById("editor-toggle")
 
-// ---------- shared document ----------
+// ---------- document ----------
 
-const ydoc = new Y.Doc()
-const ytext = ydoc.getText("content")
-const initialState = document.getElementById("initial-state")
-let ready = initialState !== null
-if (initialState?.textContent) {
-  Y.applyUpdate(ydoc, Uint8Array.fromBase64(initialState.textContent), "server")
-}
+// The file on disk is the document. The server sends its full text on
+// connect and after every change; the diff against the previous text drives
+// the change flashes.
+let docText: string | null = null
 
-let sock: WebSocket | null = null
-let session: string | null = null
-
-ydoc.on("update", (update: Uint8Array, origin: unknown) => {
-  if (origin !== "server" && sock?.readyState === WebSocket.OPEN) sock.send(update)
-})
-
-function connect() {
-  const ws = new WebSocket(`ws://${location.host}/sync`)
-  ws.binaryType = "arraybuffer"
-  // Nothing is sent until the server's hello confirms we're talking to the
-  // same process: pushing state first would merge our Y.Doc history into a
-  // restarted server's unrelated fresh one, duplicating the document.
+function connectDoc() {
+  const ws = new WebSocket(`ws://${location.host}/doc`)
   ws.onmessage = (e) => {
-    if (typeof e.data === "string") {
-      const msg = JSON.parse(e.data)
-      if (msg.type === "hello") {
-        if (session !== null && session !== msg.session) {
-          location.reload()
-          return
-        }
-        session = msg.session
-        ws.send(JSON.stringify({ type: "hello", session }))
-        sock = ws
-        // Push local state (no-op on first load; syncs offline edits on reconnect)
-        ws.send(Y.encodeStateAsUpdate(ydoc))
-      }
-      return
-    }
-    Y.applyUpdate(ydoc, new Uint8Array(e.data as ArrayBuffer), "server")
-    if (!ready) {
-      ready = true
-      renderPreview()
-    }
+    const msg = JSON.parse(e.data)
+    if (msg.type === "doc") applyDoc(msg.text)
   }
-  ws.onclose = () => {
-    if (sock === ws) sock = null
-    setTimeout(connect, 1000)
-  }
+  ws.onclose = () => setTimeout(connectDoc, 1000)
 }
-connect()
+connectDoc()
+
+// Single contiguous splice turning oldStr into newStr (common prefix/suffix)
+function splice(oldStr: string, newStr: string) {
+  let start = 0
+  const maxStart = Math.min(oldStr.length, newStr.length)
+  while (start < maxStart && oldStr[start] === newStr[start]) start++
+  let endOld = oldStr.length
+  let endNew = newStr.length
+  while (endOld > start && endNew > start && oldStr[endOld - 1] === newStr[endNew - 1]) {
+    endOld--
+    endNew--
+  }
+  return { start, delLen: endOld - start, insert: newStr.slice(start, endNew) }
+}
+
+function applyDoc(text: string) {
+  if (docText !== null && text !== docText) {
+    const { start, insert } = splice(docText, text)
+    const lineOf = (offset: number) => text.slice(0, offset).split("\n").length - 1
+    // pure deletions still flash the block they happened in
+    pendingFlash.push({
+      start: lineOf(start),
+      end: lineOf(start + insert.length) + 1,
+      inserted: insert,
+    })
+  }
+  docText = text
+  renderPreview()
+}
 
 // ---------- preview ----------
 
@@ -346,7 +315,7 @@ function flashInsertedText(el: HTMLElement, inserted: string): boolean {
 }
 
 function renderPreview() {
-  content.innerHTML = md.render(ytext.toString())
+  content.innerHTML = md.render(docText ?? "")
   highlightCodeBlocks()
   rewriteLocalMedia()
   hydrateEmbeds()
@@ -373,293 +342,131 @@ function renderPreview() {
   }
 }
 
-if (ready) renderPreview()
+// ---------- helix pane ----------
 
-let renderTimer: ReturnType<typeof setTimeout> | undefined
-ytext.observe(() => {
-  if (!ready) return
-  clearTimeout(renderTimer)
-  renderTimer = setTimeout(renderPreview, 120)
-})
-
-// ---------- editor pane ----------
-
-const flashEffect = StateEffect.define<{ from: number; to: number }>()
-const clearFlash = StateEffect.define<null>()
-const flashMark = Decoration.mark({ class: "cm-flash" })
-const flashField = StateField.define<DecorationSet>({
-  create: () => Decoration.none,
-  update(deco, tr) {
-    deco = deco.map(tr.changes)
-    for (const e of tr.effects) {
-      if (e.is(flashEffect)) {
-        deco = deco.update({ add: [flashMark.range(e.value.from, e.value.to)] })
-      }
-      if (e.is(clearFlash)) deco = Decoration.none
-    }
-    return deco
-  },
-  provide: (f) => EditorView.decorations.from(f),
-})
-
-let flashClearTimer: ReturnType<typeof setTimeout> | undefined
-function flashRemoteEdits(update: ViewUpdate) {
-  const effects: StateEffect<{ from: number; to: number }>[] = []
-  update.changes.iterChanges((_fromA, _toA, fromB, toB) => {
-    if (toB > fromB) effects.push(flashEffect.of({ from: fromB, to: toB }))
-    // preview flashes by source line, so pure deletions still flash the block
-    const start = update.state.doc.lineAt(fromB).number - 1
-    const end = update.state.doc.lineAt(toB).number // 1-based == exclusive 0-based
-    pendingFlash.push({ start, end, inserted: update.state.sliceDoc(fromB, toB) })
-  })
-  if (effects.length > 0) {
-    queueMicrotask(() => view.dispatch({ effects }))
-    clearTimeout(flashClearTimer)
-    flashClearTimer = setTimeout(
-      () => view.dispatch({ effects: clearFlash.of(null) }),
-      1900,
-    )
-  }
-}
-
-const remoteEditWatcher = EditorView.updateListener.of((update) => {
-  if (!update.docChanged || !ready) return
-  const remote = update.transactions.some((tr) =>
-    tr.annotation(ySyncAnnotation) !== undefined
-  )
-  if (remote) flashRemoteEdits(update)
-})
-
-const darkMode = matchMedia("(prefers-color-scheme: dark)").matches
-
-// Styling for the markdown constructs themselves (the code inside fenced
-// blocks is handled by each language's own parser + theme highlight style)
-const mdColors = darkMode
-  ? { accent: "#61afef", mark: "#5c6370", quote: "#98c379", code: "#e5c07b" }
-  : { accent: "#0969da", mark: "#8b949e", quote: "#1a7f37", code: "#953800" }
-const mdHighlight = HighlightStyle.define([
-  { tag: tags.heading, fontWeight: "bold" },
-  { tag: tags.strong, fontWeight: "bold" },
-  { tag: tags.emphasis, fontStyle: "italic" },
-  { tag: tags.strikethrough, textDecoration: "line-through" },
-  { tag: tags.link, color: mdColors.accent, textDecoration: "underline" },
-  { tag: tags.url, color: mdColors.accent },
-  { tag: tags.monospace, color: mdColors.code },
-  { tag: tags.quote, color: mdColors.quote },
-  // the #, *, -, > marks themselves
-  { tag: tags.processingInstruction, color: mdColors.mark },
-])
-
-type EditorMode = "regular" | "vim" | "helix"
-
-const EDITOR_MODE_PREF = "prose-editor-mode"
-const editorModeCompartment = new Compartment()
-
-// Follow screen lines by default. Keep operator-pending motions unchanged so
-// commands such as dj retain Vim's logical-line behavior.
-for (const context of ["normal", "visual"]) {
-  Vim.noremap("j", "gj", context)
-  Vim.noremap("k", "gk", context)
-}
-
-const vimExtension = vim()
-const helixExtension = helix()
-const helixModeClass = EditorView.editorAttributes.of({
-  class: "cm-prose-helix-mode",
-})
-
-const visualLineMark = Decoration.line({ class: "cm-vim-visual-line-selected" })
-
-function visualLineDecorations(view: EditorView): DecorationSet {
-  const vimState = getCM(view)?.state.vim
-  const visualMode = Boolean(vimState?.visualMode)
-  const active = Boolean(visualMode && vimState?.visualLine)
-  view.dom.classList.toggle("cm-vim-visual-mode", visualMode)
-  view.dom.classList.toggle("cm-vim-visual-line", active)
-  if (!active) return Decoration.none
-
-  const selection = view.state.selection.main
-  const firstLine = view.state.doc.lineAt(selection.from).number
-  const lastLine = view.state.doc.lineAt(selection.to).number
-  const decorations = new RangeSetBuilder<Decoration>()
-  for (let lineNumber = firstLine; lineNumber <= lastLine; lineNumber++) {
-    const line = view.state.doc.line(lineNumber)
-    decorations.add(line.from, line.from, visualLineMark)
-  }
-  return decorations.finish()
-}
-
-const vimVisualLinePlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet
-
-    constructor(view: EditorView) {
-      this.decorations = visualLineDecorations(view)
-    }
-
-    update(update: ViewUpdate) {
-      this.decorations = visualLineDecorations(update.view)
-    }
-  },
-  { decorations: (plugin) => plugin.decorations },
-)
-
-function storedEditorMode(): EditorMode {
-  try {
-    const stored = localStorage.getItem(EDITOR_MODE_PREF)
-    return stored === "vim" || stored === "helix" ? stored : "regular"
-  } catch {
-    return "regular"
-  }
-}
-
-function modeExtension(mode: EditorMode): Extension {
-  if (mode === "vim") return vimExtension
-  if (mode === "helix") return [helixExtension, helixModeClass]
-  return []
-}
-
-let currentEditorMode = storedEditorMode()
-
-const extensions: Extension[] = [
-  syntaxHighlighting(mdHighlight),
-  // Registering mdHighlight (a non-fallback highlighter) deactivates
-  // basicSetup's fallback defaultHighlightStyle, so re-add it explicitly for
-  // code-block tokens in light mode; oneDark brings its own in dark mode.
-  ...(darkMode ? [] : [syntaxHighlighting(defaultHighlightStyle)]),
-  // Modal keymaps must come before basicSetup's regular keymap.
-  editorModeCompartment.of(modeExtension(currentEditorMode)),
-  basicSetup,
-  // GFM base (tables, strikethrough, task lists) + per-language highlighting
-  // inside fenced code blocks
-  markdown({ base: markdownLanguage, codeLanguages: languages }),
-  EditorView.lineWrapping,
-  yCollab(ytext, null),
-  flashField,
-  remoteEditWatcher,
-  vimVisualLinePlugin,
-  EditorView.theme({
-    "&": { height: "100%", fontSize: "13px" },
-    ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" },
-  }),
-]
-if (darkMode) {
-  extensions.push(
-    oneDark,
-    // darker ground than oneDark's #282c34 for more text contrast; matches
-    // the page's dark background. Prec.high because earlier/higher-precedence
-    // extensions win style conflicts, so a plain theme would lose to oneDark.
-    Prec.high(
-      EditorView.theme(
-        {
-          "&": { backgroundColor: "#0d1117" },
-          ".cm-gutters": { backgroundColor: "#0d1117" },
-          // translucent: the active-line layer paints over the selection
-          // layer, so an opaque color would hide selection on that line
-          ".cm-activeLine": { backgroundColor: "rgba(110, 118, 129, 0.12)" },
-          ".cm-activeLineGutter": { backgroundColor: "#161b22" },
-          // mirror oneDark's exact selector — a simpler one loses on specificity
-          "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection":
-            { backgroundColor: "#2d4a6d" },
-        },
-        { dark: true },
-      ),
-    ),
-  )
-}
-
-const view = new EditorView({
-  doc: ytext.toString(),
-  extensions,
-  parent: editorHost,
-})
-
-// ---------- editor mode ----------
-
-function renderEditorMode() {
-  for (const button of editorModeButtons) {
-    button.setAttribute(
-      "aria-pressed",
-      String(button.dataset.editorMode === currentEditorMode),
-    )
-  }
-}
-
-renderEditorMode()
-for (const button of editorModeButtons) {
-  button.addEventListener("click", () => {
-    const requestedMode = button.dataset.editorMode
-    const mode: EditorMode = requestedMode === "vim" || requestedMode === "helix"
-      ? requestedMode
-      : "regular"
-    if (mode === currentEditorMode) {
-      view.focus()
-      return
-    }
-    currentEditorMode = mode
-    view.dispatch({ effects: editorModeCompartment.reconfigure(modeExtension(mode)) })
-    renderEditorMode()
-    try {
-      localStorage.setItem(EDITOR_MODE_PREF, mode)
-    } catch {
-      // storage unavailable; the selection still works for this page load
-    }
-    view.focus()
-  })
-}
-
-// Edits are already synced to disk continuously. Consume the reflexive macOS
-// save shortcut before Firefox or Chromium can open their Save Page UI.
-document.addEventListener(
-  "keydown",
-  (event) => {
-    if (
-      event.metaKey &&
-      !event.ctrlKey &&
-      !event.altKey &&
-      !event.shiftKey &&
-      event.key.toLowerCase() === "s" &&
-      event.target instanceof Node &&
-      editorHost.contains(event.target)
-    ) {
-      event.preventDefault()
-      event.stopPropagation()
-    }
-  },
-  { capture: true },
-)
-
-// ---------- editor visibility toggle ----------
-
+// Real helix runs server-side in a pty (see prose.ts servePty); this pane is
+// its terminal. It starts on first show and keeps running while hidden, so
+// toggling the pane doesn't lose editor state.
 const EDITOR_VISIBILITY_PREF = "prose-editor"
+let term: Terminal | null = null
+let ptySock: WebSocket | null = null
+
+function startHelix(host: HTMLElement) {
+  term = new Terminal({
+    fontSize: 13,
+    fontFamily: '"Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+    theme: { background: "#020202" },
+    cursorBlink: false,
+    macOptionIsMeta: true,
+  })
+  const fit = new FitAddon()
+  term.loadAddon(fit)
+  term.open(host)
+  // The default DOM renderer can't keep up with helix's full-viewport
+  // redraws (holding k scrolled several times slower than in a terminal).
+  // WebGL renders the same output at terminal speed; if the context is lost
+  // or unavailable, dispose the addon and xterm falls back to the DOM renderer.
+  try {
+    const webgl = new WebglAddon()
+    webgl.onContextLoss(() => webgl.dispose())
+    term.loadAddon(webgl)
+  } catch (err) {
+    console.warn("prose: WebGL renderer unavailable, using DOM renderer", err)
+  }
+  fit.fit()
+  // Let ⌘-chords through to the page (⌘E toggles this pane, ⌘S is swallowed
+  // below) instead of xterm eating them.
+  term.attachCustomKeyEventHandler((e) => !e.metaKey)
+
+  const ws = new WebSocket(
+    `ws://${location.host}/pty?${new URLSearchParams({
+      cols: String(term.cols),
+      rows: String(term.rows),
+    })}`,
+  )
+  ws.binaryType = "arraybuffer"
+  ptySock = ws
+  ws.onmessage = (e) => {
+    if (e.data instanceof ArrayBuffer) term?.write(new Uint8Array(e.data))
+  }
+  ws.onclose = () => {
+    ptySock = null
+    term?.write("\r\n\x1b[2m[helix exited — click here to restart]\x1b[0m")
+    host.addEventListener("click", () => restartHelix(host), { once: true })
+  }
+  term.onData((data) => {
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "input", data }))
+  })
+  term.onResize(({ cols, rows }) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "resize", cols, rows }))
+    }
+  })
+  new ResizeObserver(() => {
+    if (document.body.classList.contains("editor-shown")) fit.fit()
+  }).observe(host)
+  term.focus()
+}
+
+function restartHelix(host: HTMLElement) {
+  term?.dispose()
+  term = null
+  startHelix(host)
+}
 
 function setEditorShown(shown: boolean) {
+  if (!editorHost) return
   document.body.classList.toggle("editor-shown", shown)
   try {
     localStorage.setItem(EDITOR_VISIBILITY_PREF, shown ? "1" : "0")
   } catch {
     // storage unavailable; the toggle still works for this page load
   }
-  if (shown) view.focus()
+  if (!shown) return
+  if (!ptySock) startHelix(editorHost)
+  else term?.focus()
 }
 
-let storedPref: string | null = null
-try {
-  storedPref = localStorage.getItem(EDITOR_VISIBILITY_PREF)
-} catch {
-  // ignore
-}
-setEditorShown(storedPref === "1")
-
-editorToggle.addEventListener("click", () => {
-  setEditorShown(!document.body.classList.contains("editor-shown"))
-})
-document.addEventListener("keydown", (e) => {
-  if (e.key === "e" && (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
-    e.preventDefault()
-    setEditorShown(!document.body.classList.contains("editor-shown"))
+if (editorHost && editorToggle) {
+  let storedPref: string | null = null
+  try {
+    storedPref = localStorage.getItem(EDITOR_VISIBILITY_PREF)
+  } catch {
+    // ignore
   }
-})
+  setEditorShown(storedPref === "1")
+
+  editorToggle.addEventListener("click", () => {
+    setEditorShown(!document.body.classList.contains("editor-shown"))
+  })
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "e" && (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+      e.preventDefault()
+      setEditorShown(!document.body.classList.contains("editor-shown"))
+    }
+  })
+
+  // Helix auto-saves, so ⌘S has nothing to do; consume the reflexive macOS
+  // save shortcut before the browser opens its Save Page UI.
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (
+        event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "s" &&
+        event.target instanceof Node &&
+        editorHost.contains(event.target)
+      ) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    },
+    { capture: true },
+  )
+}
 
 // ---------- comment popover ----------
 

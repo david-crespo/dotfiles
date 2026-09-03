@@ -1,16 +1,17 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=127.0.0.1,localhost,github.com,raw.githubusercontent.com,private-user-images.githubusercontent.com --allow-run=open,deno,gh
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=127.0.0.1,localhost,github.com,raw.githubusercontent.com,private-user-images.githubusercontent.com --allow-run=open,deno,gh,python3,hx
 
-// Local review GUI for a markdown file: GitHub-style live preview, an
-// optional CodeMirror editing pane, and selection comments that flow back
-// into a running Claude Code session over a WebSocket (arm a Monitor with
-// ws://localhost:PORT/claude). The server holds a Y.Doc bridging the file on
-// disk (which Claude edits directly) and the browser (which edits over
-// ws://.../sync); browser code lives in prose-client.ts, bundled at
+// Local review GUI for a markdown file: GitHub-style live preview, a
+// collapsible pane running real helix on the file (hx in a pty, rendered by
+// xterm.js), and selection comments that flow back into a running Claude
+// Code session over a WebSocket (arm a Monitor with ws://localhost:PORT/claude).
+//
+// The file on disk is the only document. Helix auto-saves shortly after
+// typing stops; Claude edits the file directly; a watcher pushes every disk
+// change to the preview. Browser code lives in prose-client.ts, bundled at
 // startup. Orchestrated by the prose skill.
 
 import { Command } from "@cliffy/command"
 import { basename, dirname, fromFileUrl, join } from "@std/path"
-import * as Y from "yjs"
 
 type Comment = {
   kind: "comment" | "dellm"
@@ -21,7 +22,37 @@ type Comment = {
   embed?: string
 }
 
-function page(title: string, initialState: string) {
+// Helix gets a temp config: the user's config.toml (if any) plus auto-save, so
+// the preview updates shortly after typing stops. `hx --config` replaces
+// config.toml entirely, which is why we concatenate rather than override.
+// Steel config (init.scm) still loads from the normal location.
+const AUTO_SAVE = `
+[editor.auto-save]
+focus-lost = true
+
+[editor.auto-save.after-delay]
+enable = true
+timeout = 650
+`
+
+async function writeHelixConfig(): Promise<string> {
+  let userConfig = ""
+  try {
+    userConfig = await Deno.readTextFile(
+      join(Deno.env.get("HOME")!, ".config/helix/config.toml"),
+    )
+  } catch {
+    // no user config; auto-save section alone is fine
+  }
+  const path = await Deno.makeTempFile({ prefix: "prose-hx-", suffix: ".toml" })
+  await Deno.writeTextFile(
+    path,
+    userConfig.includes("[editor.auto-save") ? userConfig : userConfig + AUTO_SAVE,
+  )
+  return path
+}
+
+function page(title: string, previewOnly: boolean) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -30,6 +61,7 @@ function page(title: string, initialState: string) {
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:; media-src *; connect-src 'self' ws://localhost:* ws://127.0.0.1:*; frame-src 'none'; object-src 'none'">
 <title>${title}</title>
 <link rel="stylesheet" href="/github-markdown.css">
+<link rel="stylesheet" href="/xterm.css">
 <style>
   body { margin: 0; background-color: #ffffff; }
   @media (prefers-color-scheme: dark) { body { background-color: #0d1117; } }
@@ -40,37 +72,16 @@ function page(title: string, initialState: string) {
     position: sticky;
     top: 0;
     align-self: start;
+    box-sizing: border-box;
     height: 100vh;
     overflow: hidden;
+    padding: 6px 0 6px 6px;
+    background: #020202; /* ayu_evolve background, so the pane's padding matches helix */
     border-right: 1px solid #d1d9e0;
   }
-  body.editor-shown #editor-pane { display: flex; flex-direction: column; }
-  #editor-toolbar {
-    box-sizing: border-box;
-    display: flex;
-    flex: 0 0 44px;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 0 10px;
-    border-bottom: 1px solid #d1d9e0;
-    background: #f6f8fa;
-  }
-  #editor-host { min-height: 0; flex: 1; overflow: hidden; }
-  .cm-editor { height: 100%; }
-  .cm-vim-visual-line-selected { background: #c5d9f7 !important; }
-  .cm-vim-visual-mode:not(.cm-vim-visual-line) .cm-selectionBackground {
-    background: #c5d9f7 !important;
-  }
-  .cm-vim-visual-line .cm-selectionBackground { background: transparent !important; }
-  .cm-vim-visual-mode .cm-selectionMatch,
-  .cm-prose-helix-mode .cm-selectionMatch { background: transparent !important; }
-  .cm-prose-helix-mode .cm-hx-cursor {
-    background: #1f2328 !important;
-    color: #ffffff !important;
-  }
-  .cm-vimCursorLayer { animation: none !important; }
-  .cm-vim-panel, .cm-vim-panel input { color: inherit; }
-  .cm-vim-panel input { font-family: inherit; }
+  body.editor-shown #editor-pane { display: block; }
+  #editor-host { height: 100%; }
+  #editor-host .xterm { height: 100%; }
   .markdown-body {
     box-sizing: border-box;
     min-width: 200px;
@@ -83,35 +94,6 @@ function page(title: string, initialState: string) {
     top: 10px;
     right: 10px;
     z-index: 11;
-  }
-  #editor-mode {
-    box-sizing: border-box;
-    display: inline-flex;
-    gap: 2px;
-    height: 28px;
-    padding: 2px;
-    border: 1px solid #d1d9e0;
-    border-radius: 6px;
-    background: #f6f8fa;
-  }
-  #editor-mode button {
-    min-width: 38px;
-    padding: 0 8px;
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-    color: #59636e;
-    font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    cursor: pointer;
-  }
-  #editor-mode button[aria-pressed="true"] {
-    background: #ffffff;
-    color: #1f2328;
-    box-shadow: 0 1px 2px rgba(31, 35, 40, 0.12);
-  }
-  #editor-mode button:not([aria-pressed="true"]):hover { color: #1f2328; }
-  #editor-mode button:focus-visible { outline: 2px solid #0969da; outline-offset: 1px; }
-  #editor-toggle {
     width: 28px;
     height: 28px;
     padding: 0;
@@ -130,7 +112,6 @@ function page(title: string, initialState: string) {
   }
   #content .flash { animation: flash-fade 1.8s ease-out; }
   #content .flash-inline { animation: flash-fade 1.8s ease-out; border-radius: 2px; }
-  .cm-flash { animation: flash-fade 1.8s ease-out; }
   /* GitHub-style embeds (permalink snippets, assets) */
   .gh-embed img, .gh-embed video { max-width: 100%; }
   .gh-embed { margin-bottom: 16px; }
@@ -253,29 +234,12 @@ function page(title: string, initialState: string) {
   ::highlight(pending-comment) { background-color: rgba(84, 174, 255, 0.4); }
   @media (prefers-color-scheme: dark) {
     #editor-pane { border-right-color: #3d444d; }
-    #editor-toolbar { background: #151b23; border-bottom-color: #3d444d; }
-    .cm-vim-visual-line-selected { background: #3a4f6a !important; }
-    .cm-vim-visual-mode:not(.cm-vim-visual-line) .cm-selectionBackground {
-      background: #3a4f6a !important;
-    }
-    .cm-vim-panel, .cm-vim-panel input { color: #f0f6fc; }
-    .cm-prose-helix-mode .cm-hx-cursor {
-      background: #f0f6fc !important;
-      color: #0d1117 !important;
-    }
-    #editor-mode, #editor-toggle {
+    #editor-toggle {
       background: #151b23;
       border-color: #3d444d;
       color: #9198a1;
       color-scheme: dark;
     }
-    #editor-mode button { color: #9198a1; }
-    #editor-mode button[aria-pressed="true"] {
-      background: #2d333b;
-      color: #f0f6fc;
-      box-shadow: 0 1px 2px #010409;
-    }
-    #editor-mode button:not([aria-pressed="true"]):hover { color: #f0f6fc; }
     #editor-toggle:hover { color: #f0f6fc; background: #1c2330; }
     @keyframes flash-fade {
       from { background-color: rgba(187, 128, 9, 0.4); }
@@ -297,21 +261,16 @@ function page(title: string, initialState: string) {
   }
 </style>
 </head>
-<body>
+<body${previewOnly ? ' class="preview-only"' : ""}>
 <div id="layout">
-  <div id="editor-pane">
-    <div id="editor-toolbar">
-      <div id="editor-mode" role="group" aria-label="Editor mode">
-        <button type="button" data-editor-mode="regular" aria-pressed="false">Standard</button>
-        <button type="button" data-editor-mode="vim" aria-pressed="false">Vim</button>
-        <button type="button" data-editor-mode="helix" aria-pressed="false">Helix</button>
-      </div>
-    </div>
-    <div id="editor-host"></div>
-  </div>
+  ${previewOnly ? "" : '<div id="editor-pane"><div id="editor-host"></div></div>'}
   <div id="preview-pane"><article class="markdown-body" id="content"></article></div>
 </div>
-<button id="editor-toggle" aria-label="Toggle raw markdown editor" title="Toggle raw markdown editor (⌘E)">✎</button>
+${
+    previewOnly
+      ? ""
+      : '<button id="editor-toggle" aria-label="Toggle helix editor" title="Toggle helix editor (⌘E)">✎</button>'
+  }
 <div id="popover">
   <textarea id="comment-text" placeholder="Comment for Claude"></textarea>
   <div class="row">
@@ -321,15 +280,13 @@ function page(title: string, initialState: string) {
   </div>
 </div>
 <div id="toast"></div>
-<script id="initial-state" type="application/octet-stream">${initialState}</script>
 <script type="module" src="/bundle.js"></script>
 </body>
 </html>`
 }
 
 // Single contiguous splice turning oldStr into newStr (common prefix/suffix
-// diff) — how a file-level change gets applied to the Y.Text so it merges
-// with concurrent browser edits instead of replacing the document.
+// diff), for describing a disk change to the session compactly.
 function splice(oldStr: string, newStr: string) {
   let start = 0
   const maxStart = Math.min(oldStr.length, newStr.length)
@@ -345,9 +302,7 @@ function splice(oldStr: string, newStr: string) {
 
 // deno bundle doesn't fetch missing npm packages itself, so cache first
 // (a fast no-op once the packages are in deno's cache).
-async function buildClientBundle(): Promise<string> {
-  const self = await Deno.realPath(fromFileUrl(import.meta.url))
-  const binDir = dirname(self)
+async function buildClientBundle(binDir: string): Promise<string> {
   const clientPath = join(binDir, "prose-client.ts")
   const config = join(dirname(binDir), "deno.jsonc")
   const run = async (args: string[]) => {
@@ -462,9 +417,101 @@ const mimeTypes: Record<string, string> = {
   webm: "video/webm",
 }
 
+// ---------- helix in a pty ----------
+
+// stdin frame for prose-pty.py: type byte, u32 BE length, payload
+function frame(kind: "i" | "r", payload: Uint8Array): Uint8Array {
+  const buf = new Uint8Array(5 + payload.length)
+  buf[0] = kind.charCodeAt(0)
+  new DataView(buf.buffer).setUint32(1, payload.length)
+  buf.set(payload, 5)
+  return buf
+}
+
+type PtyMessage = { type: "input"; data: string } | {
+  type: "resize"
+  cols: number
+  rows: number
+}
+
+// One helix per WebSocket: spawned when the page opens its editor pane, hung
+// up when the socket closes (page reload or close). Output is relayed as
+// binary frames; input and resizes arrive as JSON text frames.
+function servePty(
+  req: Request,
+  opts: { binDir: string; hxConfig: string; file: string; port: number },
+): Response {
+  const q = new URL(req.url).searchParams
+  const cols = Math.max(20, Number(q.get("cols")) || 80)
+  const rows = Math.max(5, Number(q.get("rows")) || 24)
+  const { socket, response } = Deno.upgradeWebSocket(req)
+  const enc = new TextEncoder()
+  let proc: Deno.ChildProcess | null = null
+  let stdin: WritableStreamDefaultWriter<Uint8Array> | null = null
+  let sendQueue: Promise<void> = Promise.resolve()
+  const write = (buf: Uint8Array) => {
+    // Serialize writes: a resize during a burst of typing must not interleave
+    // with a partially written input frame.
+    sendQueue = sendQueue.then(() => stdin?.write(buf)).catch(() => {})
+  }
+
+  socket.onopen = () => {
+    proc = new Deno.Command("python3", {
+      args: [
+        join(opts.binDir, "prose-pty.py"),
+        `${cols}x${rows}`,
+        "hx",
+        "--config",
+        opts.hxConfig,
+        opts.file,
+      ],
+      cwd: dirname(opts.file),
+      env: {
+        TERM: "xterm-256color",
+        COLORTERM: "truecolor",
+        // for helix-side integrations (Steel) that want to talk to this server
+        PROSE_PORT: String(opts.port),
+        PROSE_FILE: opts.file,
+      },
+      stdin: "piped",
+      stdout: "piped",
+      stderr: "inherit",
+    }).spawn()
+    stdin = proc.stdin.getWriter()
+    console.log(`helix started (pid ${proc.pid}, ${cols}x${rows})`)
+    ;(async () => {
+      try {
+        for await (const chunk of proc.stdout) {
+          if (socket.readyState === WebSocket.OPEN) socket.send(chunk)
+        }
+      } catch {
+        // socket closed mid-stream
+      }
+      const status = await proc.status
+      console.log(`helix exited (${status.code})`)
+      if (socket.readyState === WebSocket.OPEN) socket.close(1000, "helix exited")
+    })()
+  }
+  socket.onmessage = (e) => {
+    if (typeof e.data !== "string") return
+    const msg = JSON.parse(e.data) as PtyMessage
+    if (msg.type === "input") write(frame("i", enc.encode(msg.data)))
+    else if (msg.type === "resize") write(frame("r", enc.encode(`${msg.cols}x${msg.rows}`)))
+  }
+  const hangup = () => {
+    // Closing stdin makes the helper SIGHUP helix
+    sendQueue = sendQueue.then(() => stdin?.close()).catch(() => {})
+  }
+  socket.onclose = hangup
+  socket.onerror = hangup
+  return response
+}
+
 await new Command()
   .name("prose")
-  .description("Serve a markdown file as a live GitHub-style preview with review comments")
+  .description(
+    "Serve a markdown file as a live GitHub-style preview with review comments and a helix pane",
+  )
   .arguments("<file:string>")
   .option("-p, --port <port:number>", "Port to listen on", { default: 4917 })
   .option("--no-open", "Don't open the browser")
@@ -472,10 +519,12 @@ await new Command()
     await Deno.stat(file) // fail fast on bad path
 
     const binDir = dirname(await Deno.realPath(fromFileUrl(import.meta.url)))
-    const markdownCss = await Deno.readTextFile(
-      join(binDir, "lib", "github-markdown.min.css"),
-    )
-    const bundleJs = await buildClientBundle()
+    const [markdownCss, xtermCss, bundleJs, hxConfig] = await Promise.all([
+      Deno.readTextFile(join(binDir, "lib", "github-markdown.min.css")),
+      Deno.readTextFile(join(binDir, "lib", "xterm.css")),
+      buildClientBundle(binDir),
+      writeHelixConfig(),
+    ])
 
     // Log comments under XDG state rather than next to the draft, so drafts
     // in versioned directories don't grow a stray .comments.jsonl. One file
@@ -492,15 +541,9 @@ await new Command()
       absFile.replaceAll("/", "-") + ".comments.jsonl",
     )
     const claudeClients = new Set<WebSocket>()
-    const syncClients = new Set<WebSocket>()
-    // Lets a page that survived a server restart know it must reload instead
-    // of merging its old Y.Doc with this process's fresh one.
-    const sessionId = crypto.randomUUID()
+    const docClients = new Set<WebSocket>()
 
-    const ydoc = new Y.Doc()
-    const ytext = ydoc.getText("content")
     let fileContent = await Deno.readTextFile(file)
-    ydoc.transact(() => ytext.insert(0, fileContent), "file")
 
     const sendToClaude = (line: string) => {
       for (const ws of claudeClients) {
@@ -518,19 +561,36 @@ await new Command()
       sendToClaude(line)
     }
 
-    // --- disk -> ydoc ---
+    // --- edit notices to the Claude session ---
 
-    const mergeDisk = (disk: string) => {
-      const current = ytext.toString()
-      if (disk !== current) {
-        const { start, delLen, insert } = splice(current, disk)
-        ydoc.transact(() => {
-          if (delLen > 0) ytext.delete(start, delLen)
-          if (insert.length > 0) ytext.insert(start, insert)
-        }, "file")
-      }
-      fileContent = disk
+    // Edit notices keep the session's mental model of the draft current
+    // without a re-read, but the session only needs them when it's about to
+    // act — so they never wake it on their own. Disk changes (helix saves,
+    // and Claude's own edits echoed back — the session filters those by
+    // recognizing its own text) accumulate in a window that flushes right
+    // before the next comment, as one splice from the window's base.
+    let windowBase: string | null = null
+
+    const flushFileEdit = () => {
+      if (windowBase === null) return
+      const base = windowBase
+      windowBase = null
+      // A window that nets out to nothing (typed then undone) isn't worth
+      // the session's attention.
+      if (base === fileContent) return
+      const { start, delLen, insert } = splice(base, fileContent)
+      logEvent({
+        kind: "file-edit",
+        file,
+        ts: new Date().toISOString(),
+        old: base.slice(start, start + delLen).slice(0, 2000),
+        new: insert.slice(0, 2000),
+      })
     }
+
+    // --- disk -> preview ---
+
+    const docMessage = () => JSON.stringify({ type: "doc", text: fileContent })
 
     const onDiskChange = async () => {
       let disk: string
@@ -539,11 +599,17 @@ await new Command()
       } catch {
         return // transiently missing (rename-replace save); next event catches up
       }
-      // Ignore the watcher seeing our own write: comparing against the live
-      // ytext instead would splice stale disk content over keystrokes typed
-      // since the write.
       if (disk === fileContent) return
-      mergeDisk(disk)
+      windowBase ??= fileContent
+      fileContent = disk
+      const msg = docMessage()
+      for (const ws of docClients) {
+        try {
+          ws.send(msg)
+        } catch {
+          docClients.delete(ws)
+        }
+      }
     }
 
     // Watch the parent dir rather than the file: most editors save by
@@ -558,106 +624,24 @@ await new Command()
       }
     })()
 
-    // --- ydoc -> disk (browser edits), debounced ---
-
-    let writeTimer: ReturnType<typeof setTimeout> | undefined
-    const writeNow = async () => {
-      // Merge any disk change the watcher hasn't delivered yet so a write
-      // can't clobber an edit Claude just made.
-      try {
-        const disk = await Deno.readTextFile(file)
-        if (disk !== fileContent) mergeDisk(disk)
-      } catch {
-        // keep going; write below recreates the file
-      }
-      const current = ytext.toString()
-      if (current === fileContent) return
-      fileContent = current
-      await Deno.writeTextFile(file, current)
-    }
-    const scheduleWrite = () => {
-      clearTimeout(writeTimer)
-      writeTimer = setTimeout(writeNow, 400)
-    }
-
-    // --- edit notices to the Claude session ---
-
-    // Edit notices keep the session's mental model of the draft current
-    // without a re-read, but the session only needs them when it's about to
-    // act — so they never wake it on their own. Changes accumulate in a
-    // window that flushes right before the next comment. GUI edits are the
-    // user's ("user-edit"); disk changes ("file-edit") are the user saving
-    // from an external editor OR Claude's own edits echoed back — the
-    // session filters the latter by recognizing its own text. When both
-    // sources land in one window the diff can't be attributed, so send a
-    // coarse notice instead.
-    let lastKnown = fileContent
-    let windowBase: string | null = null
-    const windowSources = new Set<"browser" | "file">()
-
-    const flushUserEdit = () => {
-      if (windowBase === null) return
-      const current = ytext.toString()
-      const base = windowBase
-      windowBase = null
-      const mixed = windowSources.size > 1
-      const kind = windowSources.has("browser") ? "user-edit" : "file-edit"
-      windowSources.clear()
-      const event: Record<string, unknown> = {
-        kind,
-        file,
-        ts: new Date().toISOString(),
-      }
-      if (mixed) {
-        event.note =
-          "user edited the draft in the GUI (interleaved with file edits); re-read the file before editing"
-      } else {
-        // A window that nets out to nothing (typed then undone) isn't worth
-        // waking the session for.
-        if (base === current) return
-        const { start, delLen, insert } = splice(base, current)
-        event.old = base.slice(start, start + delLen).slice(0, 2000)
-        event.new = insert.slice(0, 2000)
-      }
-      logEvent(event)
-    }
-
-    ytext.observe((_event, txn) => {
-      if (windowBase === null) windowBase = lastKnown
-      windowSources.add(txn.origin === "file" ? "file" : "browser")
-      lastKnown = ytext.toString()
-    })
-
-    ydoc.on("update", (update: Uint8Array, origin: unknown) => {
-      for (const ws of syncClients) {
-        if (ws !== origin && ws.readyState === WebSocket.OPEN) {
-          try {
-            ws.send(update)
-          } catch {
-            syncClients.delete(ws)
-          }
-        }
-      }
-      if (origin !== "file") scheduleWrite()
-    })
-
     // Only the page this server serves may talk to it. Browsers send Origin
     // on POSTs and WebSocket upgrades, so a cross-site page can't inject
-    // comments into the session or rewrite the draft; the Host check blocks
+    // comments into the session or type into helix; the Host check blocks
     // DNS rebinding. Non-browser clients (the session's Monitor) send neither.
     const selfOrigins = new Set([`http://localhost:${port}`, `http://127.0.0.1:${port}`])
     const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`])
 
     Deno.serve({ port, hostname: "127.0.0.1" }, async (req) => {
-      const { pathname } = new URL(req.url)
+      const { pathname, searchParams } = new URL(req.url)
       const origin = req.headers.get("origin")
       const host = req.headers.get("host")
       if ((origin && !selfOrigins.has(origin)) || (host && !allowedHosts.has(host))) {
         return new Response("forbidden", { status: 403 })
       }
       if (pathname === "/") {
-        const initialState = Y.encodeStateAsUpdate(ydoc).toBase64()
-        return new Response(page(basename(file), initialState), {
+        // ?preview renders only the markdown pane, for terminal-browser
+        // setups where helix runs in a sibling terminal pane (prose-tab)
+        return new Response(page(basename(file), searchParams.has("preview")), {
           headers: { "content-type": "text/html; charset=utf-8" },
         })
       }
@@ -666,16 +650,15 @@ await new Command()
           headers: { "content-type": "text/javascript; charset=utf-8" },
         })
       }
-      if (pathname === "/github-markdown.css") {
-        return new Response(markdownCss, {
+      if (pathname === "/github-markdown.css" || pathname === "/xterm.css") {
+        return new Response(pathname === "/xterm.css" ? xtermCss : markdownCss, {
           headers: { "content-type": "text/css; charset=utf-8" },
         })
       }
       // Embeds: GitHub permalink contents, resolved asset URLs, and local
       // images referenced from the draft (see prose-client.ts hydrateEmbeds).
       if (pathname === "/gh/blob") {
-        const q = new URL(req.url).searchParams
-        const args = ["owner", "repo", "ref", "path"].map((k) => q.get(k) ?? "")
+        const args = ["owner", "repo", "ref", "path"].map((k) => searchParams.get(k) ?? "")
         // Each becomes a cache path segment, so no traversal or separators
         const segment = /^(?!\.\.?$)[\w.-]+$/
         const valid = args.slice(0, 3).every((a) => segment.test(a)) &&
@@ -691,7 +674,7 @@ await new Command()
         }
       }
       if (pathname === "/gh/asset") {
-        const url = new URL(req.url).searchParams.get("url") ?? ""
+        const url = searchParams.get("url") ?? ""
         try {
           return Response.json(await resolveAsset(url))
         } catch (e) {
@@ -699,7 +682,7 @@ await new Command()
         }
       }
       if (pathname === "/local") {
-        const p = new URL(req.url).searchParams.get("path") ?? ""
+        const p = searchParams.get("path") ?? ""
         const resolved = p.startsWith("/") ? p : join(dirname(absFile), p)
         let real: string
         try {
@@ -719,33 +702,20 @@ await new Command()
           headers: { "content-type": mimeTypes[ext] ?? "application/octet-stream" },
         })
       }
-      // Browser editing pane syncs the Y.Doc here (binary yjs updates both ways).
-      if (pathname === "/sync") {
+      // The preview subscribes here: current file text on connect and after
+      // every change on disk.
+      if (pathname === "/doc") {
         const { socket, response } = Deno.upgradeWebSocket(req)
-        socket.binaryType = "arraybuffer"
-        // Updates are ignored until the client echoes this session's id back:
-        // a page from a previous server process holds an unrelated Y.Doc whose
-        // state must reload, not merge (it would duplicate the document).
-        let verified = false
         socket.onopen = () => {
-          socket.send(JSON.stringify({ type: "hello", session: sessionId }))
+          docClients.add(socket)
+          socket.send(docMessage())
         }
-        socket.onmessage = (e) => {
-          if (typeof e.data === "string") {
-            const msg = JSON.parse(e.data)
-            if (msg.type === "hello" && msg.session === sessionId && !verified) {
-              verified = true
-              syncClients.add(socket)
-              socket.send(Y.encodeStateAsUpdate(ydoc))
-            }
-            return
-          }
-          if (!verified) return
-          Y.applyUpdate(ydoc, new Uint8Array(e.data as ArrayBuffer), socket)
-        }
-        socket.onclose = () => syncClients.delete(socket)
-        socket.onerror = () => syncClients.delete(socket)
+        socket.onclose = () => docClients.delete(socket)
+        socket.onerror = () => docClients.delete(socket)
         return response
+      }
+      if (pathname === "/pty") {
+        return servePty(req, { binDir, hxConfig, file: absFile, port })
       }
       // The Claude Code session connects a Monitor here; each comment is
       // pushed as one JSON text frame.
@@ -761,9 +731,9 @@ await new Command()
         if (body.kind !== "comment" && body.kind !== "dellm") {
           return new Response("bad kind", { status: 400 })
         }
-        // A pending user-edit notice should reach the session before the
-        // comment that may refer to the edited text.
-        flushUserEdit()
+        // A pending edit notice should reach the session before the comment
+        // that may refer to the edited text.
+        flushFileEdit()
         await logEvent({ ...body, file, ts: new Date().toISOString() })
         return new Response("ok")
       }
