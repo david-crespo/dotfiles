@@ -115,6 +115,144 @@ md.core.ruler.push("data_line", (state) => {
   return true
 })
 
+// GitHub expands two kinds of bare URL on their own line into embeds: a blob
+// permalink with a line range becomes a code snippet, and a user-attachments
+// asset becomes an image or video. Swap such paragraphs for a placeholder
+// that hydrateEmbeds fills in after render.
+const permalinkRe =
+  /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/([^#?]+)(?:\?[^#]*)?#L(\d+)(?:-L(\d+))?$/
+const assetRe =
+  /^https:\/\/(?:github\.com\/user-attachments\/assets\/|private-user-images\.githubusercontent\.com\/)\S+$/
+
+md.core.ruler.push("gh_embed", (state) => {
+  const toks = state.tokens
+  for (let i = 0; i + 2 < toks.length; i++) {
+    const [open, inline, close] = [toks[i], toks[i + 1], toks[i + 2]]
+    if (open.type !== "paragraph_open" || close.type !== "paragraph_close") continue
+    const kids = inline.children ?? []
+    if (
+      kids.length !== 3 || kids[0].type !== "link_open" || kids[2].type !== "link_close"
+    ) {
+      continue
+    }
+    const href = kids[0].attrGet("href") ?? ""
+    if (kids[1].content !== href) continue
+    if (!permalinkRe.test(href) && !assetRe.test(href)) continue
+    const tok = new state.Token("gh_embed", "div", 0)
+    tok.attrSet("class", "gh-embed")
+    tok.attrSet("data-src", href)
+    tok.map = open.map
+    tok.block = true
+    toks.splice(i, 3, tok)
+  }
+  return true
+})
+md.renderer.rules.gh_embed = (tokens, idx, _opts, _env, self) => {
+  const t = tokens[idx]
+  const href = t.attrGet("data-src") ?? ""
+  // Placeholder degrades to the plain link until hydrated
+  return `<div${self.renderAttrs(t)}><a href="${md.utils.escapeHtml(href)}">${
+    md.utils.escapeHtml(href)
+  }</a></div>\n`
+}
+
+// Resolved embed contents, keyed by URL. Permalinks are immutable and asset
+// redirects stay valid long enough for a session, so nothing expires.
+const embedCache = new Map<string, Promise<HTMLElement>>()
+
+function buildEmbed(href: string): Promise<HTMLElement> {
+  let p = embedCache.get(href)
+  if (!p) {
+    p = (permalinkRe.test(href) ? buildBlobEmbed(href) : buildAssetEmbed(href)).catch(
+      (e) => {
+        embedCache.delete(href) // retry on next render
+        const el = document.createElement("div")
+        el.className = "gh-embed-error"
+        el.textContent = `couldn't load embed: ${e instanceof Error ? e.message : e}`
+        return el
+      },
+    )
+    embedCache.set(href, p)
+  }
+  return p
+}
+
+async function buildBlobEmbed(href: string): Promise<HTMLElement> {
+  const [, owner, repo, ref, path, startStr, endStr] = permalinkRe.exec(href)!
+  const start = Number(startStr)
+  const end = endStr ? Number(endStr) : start
+  const q = new URLSearchParams({ owner, repo, ref, path })
+  const res = await fetch(`/gh/blob?${q}`)
+  if (!res.ok) throw new Error(await res.text())
+  const lines = (await res.text()).split("\n").slice(start - 1, end)
+  const code = lines.join("\n")
+
+  const root = document.createElement("div")
+  root.className = "gh-blob"
+  const header = document.createElement("div")
+  header.className = "gh-blob-header"
+  const shortRef = /^[0-9a-f]{40}$/.test(ref) ? ref.slice(0, 7) : ref
+  header.innerHTML = `<a href="${md.utils.escapeHtml(href)}" target="_blank">${
+    md.utils.escapeHtml(repo + "/" + path)
+  }</a> <span>${start === end ? `Line ${start}` : `Lines ${start} to ${end}`} in <code>${
+    md.utils.escapeHtml(shortRef)
+  }</code></span>`
+  const body = document.createElement("div")
+  body.className = "gh-blob-body"
+  const gutter = document.createElement("pre")
+  gutter.className = "gh-blob-gutter"
+  gutter.textContent = lines.map((_, i) => start + i).join("\n")
+  const pre = document.createElement("pre")
+  const codeEl = document.createElement("code")
+  codeEl.textContent = code
+  pre.append(codeEl)
+  body.append(gutter, pre)
+  root.append(header, body)
+  const desc = LanguageDescription.matchFilename(languages, path)
+  if (desc) await highlightElement(codeEl, desc, { detached: true })
+  return root
+}
+
+async function buildAssetEmbed(href: string): Promise<HTMLElement> {
+  const res = await fetch(`/gh/asset?${new URLSearchParams({ url: href })}`)
+  if (!res.ok) throw new Error(await res.text())
+  const { src, type } = (await res.json()) as { src: string; type: string }
+  const video = () => {
+    const v = document.createElement("video")
+    v.src = src
+    v.controls = true
+    v.muted = true
+    return v
+  }
+  if (type.startsWith("video/")) return video()
+  const img = document.createElement("img")
+  img.src = src
+  img.alt = href
+  // The type is inferred from the URL and may be missing; a failed image
+  // load most likely means it was a video.
+  if (!type) img.onerror = () => img.replaceWith(video())
+  return img
+}
+
+async function hydrateEmbeds() {
+  for (const el of content.querySelectorAll<HTMLElement>(".gh-embed[data-src]")) {
+    const built = await buildEmbed(el.dataset.src!)
+    if (!el.isConnected) continue // a re-render replaced this block mid-load
+    el.replaceChildren(built.cloneNode(true))
+    el.classList.add("hydrated")
+  }
+}
+
+// Images and videos the draft references by local path (screenshots not yet
+// uploaded to GitHub) are served by the prose server, relative to the draft.
+function rewriteLocalMedia() {
+  for (const el of content.querySelectorAll<HTMLElement>("img, video, source")) {
+    const src = el.getAttribute("src")
+    if (!src || /^(https?:|data:|blob:|\/local\?)/.test(src)) continue
+    el.setAttribute("src", `/local?${new URLSearchParams({ path: src })}`)
+  }
+}
+
 // 0-based [start, end) source line ranges to flash on the next render, with
 // the inserted source text so small edits can flash just the changed words
 let pendingFlash: { start: number; end: number; inserted: string }[] = []
@@ -129,29 +267,36 @@ async function highlightCodeBlocks() {
     const lang = /language-(\S+)/.exec(el.className)?.[1]
     if (!lang) continue
     const desc = LanguageDescription.matchLanguageName(languages, lang, true)
-    if (!desc) continue
-    const support = await desc.load()
-    if (!el.isConnected) continue // a re-render replaced this block mid-load
-    const code = el.textContent ?? ""
-    const frag = document.createDocumentFragment()
-    highlightCode(
-      code,
-      support.language.parser.parse(code),
-      classHighlighter,
-      (text, classes) => {
-        if (classes) {
-          const span = document.createElement("span")
-          span.className = classes
-          span.textContent = text
-          frag.append(span)
-        } else {
-          frag.append(text)
-        }
-      },
-      () => frag.append("\n"),
-    )
-    el.replaceChildren(frag)
+    if (desc) await highlightElement(el, desc)
   }
+}
+
+async function highlightElement(
+  el: HTMLElement,
+  desc: LanguageDescription,
+  { detached = false } = {},
+) {
+  const support = await desc.load()
+  if (!detached && !el.isConnected) return // a re-render replaced this block mid-load
+  const code = el.textContent ?? ""
+  const frag = document.createDocumentFragment()
+  highlightCode(
+    code,
+    support.language.parser.parse(code),
+    classHighlighter,
+    (text, classes) => {
+      if (classes) {
+        const span = document.createElement("span")
+        span.className = classes
+        span.textContent = text
+        frag.append(span)
+      } else {
+        frag.append(text)
+      }
+    },
+    () => frag.append("\n"),
+  )
+  el.replaceChildren(frag)
 }
 
 // Find the inserted source text within a rendered block and wrap it in an
@@ -203,6 +348,8 @@ function flashInsertedText(el: HTMLElement, inserted: string): boolean {
 function renderPreview() {
   content.innerHTML = md.render(ytext.toString())
   highlightCodeBlocks()
+  rewriteLocalMedia()
+  hydrateEmbeds()
   CSS.highlights.delete("pending-comment") // ranges are stale after re-render
   if (pendingFlash.length > 0) {
     const els = [...content.querySelectorAll<HTMLElement>("[data-line]")]
@@ -526,6 +673,7 @@ type Captured = {
   selection: string
   prefix: string
   suffix: string
+  embed?: string
   rect: DOMRect
   range: Range
 }
@@ -543,8 +691,15 @@ function captureSelection(): Captured | null {
   const after = range.cloneRange()
   after.setEnd(content, content.childNodes.length)
   after.setStart(range.endContainer, range.endOffset)
+  // Embedded content has no counterpart in the markdown source; a selection
+  // inside one also carries the URL that produced it.
+  const anchorEl = range.commonAncestorContainer instanceof Element
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement
+  const embed = anchorEl?.closest<HTMLElement>(".gh-embed")?.dataset.src
   return {
     selection: range.toString(),
+    embed,
     prefix: before.toString().slice(-60),
     suffix: after.toString().slice(0, 60),
     rect: range.getBoundingClientRect(),
@@ -553,11 +708,11 @@ function captureSelection(): Captured | null {
 }
 
 async function send(kind: "comment" | "dellm", captured: Captured, text?: string) {
-  const { selection, prefix, suffix } = captured
+  const { selection, prefix, suffix, embed } = captured
   await fetch("/comment", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ kind, selection, prefix, suffix, text }),
+    body: JSON.stringify({ kind, selection, embed, prefix, suffix, text }),
   })
   showToast(kind === "dellm" ? "de-LLM request sent" : "comment sent")
 }

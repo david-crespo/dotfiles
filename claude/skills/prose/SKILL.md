@@ -97,6 +97,32 @@ Each event is one JSON object:
   prints the exact path on startup). If the Monitor was armed late or the
   session restarted, check that file for unhandled comments.
 
+## Embeds
+
+The preview expands the same bare URLs GitHub does in issue and PR bodies:
+
+- A blob permalink with a line range on its own line
+  (`https://github.com/o/r/blob/<sha>/path#L10-L20`) renders as a code
+  snippet with line numbers and highlighting. Use full commit shas: contents
+  are cached forever under `~/.cache/prose/blobs/` since a sha is immutable.
+  Branch refs work but are refetched on every render.
+- A `github.com/user-attachments/assets/<id>` URL on its own line renders as
+  an image or video. Only public-repo assets load; private ones are gated on
+  a browser session, so the preview shows the error and the bare link.
+- Images and videos referenced by local path (`![](shot.png)`,
+  `<img src="shot.png" width="600">`) are served from disk, relative to the
+  draft's directory or absolute, for checking layout before uploading.
+  GitHub has no API for issue attachments, so at filing time the user drags
+  each file into the GitHub editor in place of its path. When wrapping up,
+  point out any local paths still in the body.
+
+A selection inside an embed carries an extra `embed` field with the URL that
+produced it, alongside the selected rendered text in `selection`. That text
+isn't in the markdown, so use judgment about what the comment is about: the
+embed itself ("show lines 300-320", "link the whole function"), the prose
+around it, or the code it points at ("this is wrong, we should fix it in the
+PR" is a request to change the source, not the draft).
+
 ## User-facing gestures (explain on setup)
 
 - Select text → popover → type comment → ⌘⏎ or Send

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=127.0.0.1,localhost --allow-run=open,deno
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=127.0.0.1,localhost,github.com,raw.githubusercontent.com,private-user-images.githubusercontent.com --allow-run=open,deno,gh
 
 // Local review GUI for a markdown file: GitHub-style live preview, an
 // optional CodeMirror editing pane, and selection comments that flow back
@@ -18,6 +18,7 @@ type Comment = {
   prefix: string
   suffix: string
   text?: string
+  embed?: string
 }
 
 function page(title: string, initialState: string) {
@@ -26,6 +27,7 @@ function page(title: string, initialState: string) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:; media-src *; connect-src 'self' ws://localhost:* ws://127.0.0.1:*; frame-src 'none'; object-src 'none'">
 <title>${title}</title>
 <link rel="stylesheet" href="/github-markdown.css">
 <style>
@@ -129,6 +131,35 @@ function page(title: string, initialState: string) {
   #content .flash { animation: flash-fade 1.8s ease-out; }
   #content .flash-inline { animation: flash-fade 1.8s ease-out; border-radius: 2px; }
   .cm-flash { animation: flash-fade 1.8s ease-out; }
+  /* GitHub-style embeds (permalink snippets, assets) */
+  .gh-embed img, .gh-embed video { max-width: 100%; }
+  .gh-embed { margin-bottom: 16px; }
+  .gh-embed-error { color: #d1242f; font-size: 13px; }
+  .gh-blob { border: 1px solid #d1d9e0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+  .gh-blob-header {
+    padding: 8px 16px;
+    background: #f6f8fa;
+    border-bottom: 1px solid #d1d9e0;
+    font-size: 12px;
+    color: #59636e;
+  }
+  .gh-blob-header a { font-weight: 600; }
+  .gh-blob-body { display: flex; }
+  .gh-blob-body pre {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    font-size: 12px !important;
+    line-height: 20px;
+  }
+  .gh-blob-body > pre:last-child { flex: 1; min-width: 0; overflow-x: auto; }
+  .gh-blob-gutter { color: #59636e; text-align: right; user-select: none; padding-right: 0 !important; }
+  @media (prefers-color-scheme: dark) {
+    .gh-embed-error { color: #f85149; }
+    .gh-blob { border-color: #3d444d; }
+    .gh-blob-header { background: #151b23; border-color: #3d444d; color: #9198a1; }
+    .gh-blob-gutter { color: #9198a1; }
+  }
   /* lezer classHighlighter tokens in preview code blocks (GitHub palette) */
   .tok-keyword, .tok-operator, .tok-modifier { color: #cf222e; }
   .tok-string, .tok-string2, .tok-regexp { color: #0a3069; }
@@ -345,6 +376,92 @@ async function buildClientBundle(): Promise<string> {
   }
 }
 
+// ---------- GitHub embeds ----------
+
+let ghTokenPromise: Promise<string | null> | undefined
+function ghToken(): Promise<string | null> {
+  ghTokenPromise ??= new Deno.Command("gh", { args: ["auth", "token"], stderr: "null" })
+    .output()
+    .then((o) => (o.success ? new TextDecoder().decode(o.stdout).trim() || null : null))
+    .catch(() => null)
+  return ghTokenPromise
+}
+
+async function ghHeaders(): Promise<HeadersInit> {
+  const token = await ghToken()
+  return token ? { authorization: `Bearer ${token}` } : {}
+}
+
+const cacheDir = join(
+  Deno.env.get("XDG_CACHE_HOME") ?? join(Deno.env.get("HOME")!, ".cache"),
+  "prose",
+)
+
+// File contents at a ref. A full commit sha is immutable, so those are cached
+// on disk forever; branch names and short shas are fetched every time.
+async function fetchBlob(owner: string, repo: string, ref: string, path: string) {
+  const immutable = /^[0-9a-f]{40}$/.test(ref)
+  const cachePath = join(cacheDir, "blobs", owner, repo, ref, path)
+  if (immutable) {
+    try {
+      return await Deno.readTextFile(cachePath)
+    } catch {
+      // not cached
+    }
+  }
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`
+  const res = await fetch(url, { headers: await ghHeaders() })
+  if (!res.ok) throw new Error(`${res.status} fetching ${url}`)
+  const text = await res.text()
+  if (immutable) {
+    await Deno.mkdir(dirname(cachePath), { recursive: true })
+    await Deno.writeTextFile(cachePath, text)
+  }
+  return text
+}
+
+// github.com/user-attachments/assets/<id> redirects to a signed S3 URL that
+// works for a few minutes. Resolve it server-side and hand the browser that
+// URL, so the bytes never pass through here. Redirects are followed only
+// within the allowlisted hosts (the shebang's --allow-net); the final S3
+// hostname varies, so the type comes from the redirect URL rather than a
+// response header. No auth: public-repo assets need none, and private ones
+// are gated on a browser session (a JWT-signed private-user-images URL)
+// that a token can't replace.
+const assetHosts = ["github.com", "private-user-images.githubusercontent.com"]
+async function resolveAsset(url: string) {
+  for (let hops = 0; hops < 5; hops++) {
+    const u = new URL(url)
+    if (!assetHosts.includes(u.hostname)) {
+      const type = u.searchParams.get("response-content-type") ??
+        mimeTypes[u.pathname.split(".").pop()?.toLowerCase() ?? ""] ?? ""
+      return { src: url, type }
+    }
+    const res = await fetch(url, { redirect: "manual" })
+    await res.body?.cancel()
+    const location = res.headers.get("location")
+    if (res.status >= 300 && res.status < 400 && location) {
+      url = new URL(location, url).href
+      continue
+    }
+    if (!res.ok) throw new Error(`${res.status} fetching ${url}`)
+    throw new Error(`asset not accessible: ${url}`)
+  }
+  throw new Error(`too many redirects: ${url}`)
+}
+
+const mimeTypes: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  svg: "image/svg+xml",
+  mp4: "video/mp4",
+  mov: "video/quicktime",
+  webm: "video/webm",
+}
+
 await new Command()
   .name("prose")
   .description("Serve a markdown file as a live GitHub-style preview with review comments")
@@ -524,8 +641,20 @@ await new Command()
       if (origin !== "file") scheduleWrite()
     })
 
+    // Only the page this server serves may talk to it. Browsers send Origin
+    // on POSTs and WebSocket upgrades, so a cross-site page can't inject
+    // comments into the session or rewrite the draft; the Host check blocks
+    // DNS rebinding. Non-browser clients (the session's Monitor) send neither.
+    const selfOrigins = new Set([`http://localhost:${port}`, `http://127.0.0.1:${port}`])
+    const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`])
+
     Deno.serve({ port, hostname: "127.0.0.1" }, async (req) => {
       const { pathname } = new URL(req.url)
+      const origin = req.headers.get("origin")
+      const host = req.headers.get("host")
+      if ((origin && !selfOrigins.has(origin)) || (host && !allowedHosts.has(host))) {
+        return new Response("forbidden", { status: 403 })
+      }
       if (pathname === "/") {
         const initialState = Y.encodeStateAsUpdate(ydoc).toBase64()
         return new Response(page(basename(file), initialState), {
@@ -540,6 +669,54 @@ await new Command()
       if (pathname === "/github-markdown.css") {
         return new Response(markdownCss, {
           headers: { "content-type": "text/css; charset=utf-8" },
+        })
+      }
+      // Embeds: GitHub permalink contents, resolved asset URLs, and local
+      // images referenced from the draft (see prose-client.ts hydrateEmbeds).
+      if (pathname === "/gh/blob") {
+        const q = new URL(req.url).searchParams
+        const args = ["owner", "repo", "ref", "path"].map((k) => q.get(k) ?? "")
+        // Each becomes a cache path segment, so no traversal or separators
+        const segment = /^(?!\.\.?$)[\w.-]+$/
+        const valid = args.slice(0, 3).every((a) => segment.test(a)) &&
+          args[3].split("/").every((a) => segment.test(a))
+        if (!valid) return new Response("bad request", { status: 400 })
+        try {
+          const [owner, repo, ref, path] = args
+          return new Response(await fetchBlob(owner, repo, ref, path), {
+            headers: { "content-type": "text/plain; charset=utf-8" },
+          })
+        } catch (e) {
+          return new Response(e instanceof Error ? e.message : String(e), { status: 502 })
+        }
+      }
+      if (pathname === "/gh/asset") {
+        const url = new URL(req.url).searchParams.get("url") ?? ""
+        try {
+          return Response.json(await resolveAsset(url))
+        } catch (e) {
+          return new Response(e instanceof Error ? e.message : String(e), { status: 502 })
+        }
+      }
+      if (pathname === "/local") {
+        const p = new URL(req.url).searchParams.get("path") ?? ""
+        const resolved = p.startsWith("/") ? p : join(dirname(absFile), p)
+        let real: string
+        try {
+          real = await Deno.realPath(resolved)
+        } catch {
+          return new Response("not found", { status: 404 })
+        }
+        // Anything under $HOME or next to the draft; nothing else is a
+        // plausible screenshot location.
+        const allowed = [Deno.env.get("HOME")!, dirname(absFile)]
+        if (!allowed.some((dir) => real.startsWith(dir + "/"))) {
+          return new Response("forbidden", { status: 403 })
+        }
+        const ext = real.split(".").pop()?.toLowerCase() ?? ""
+        const f = await Deno.open(real)
+        return new Response(f.readable, {
+          headers: { "content-type": mimeTypes[ext] ?? "application/octet-stream" },
         })
       }
       // Browser editing pane syncs the Y.Doc here (binary yjs updates both ways).
