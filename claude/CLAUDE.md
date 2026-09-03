@@ -129,3 +129,27 @@ it with a YYYY-MM-DD date. Because these files are unversioned, never reference
 them from checked-in files (skills, docs, code, commit messages) — the path is
 meaningless to anyone else and will eventually dangle even locally. Links to
 notes files belong only in other notes files or in chat.
+
+When asked to write down something from the conversation in `.claude/notes`
+(e.g. "write that down", "save that as a note"), the note should be very close
+to verbatim what was said. If the explanation in chat was good, copy it nearly
+verbatim. Do not rewrite, reorganize, or summarize something that was already
+well-written — the conversation is the primary source and the note preserves
+it, lightly edited at most.
+
+- Use the conversation's Q&A structure directly. The user's questions become
+  blockquotes (`>`), the answers follow. Follow-up questions that drove the
+  conversation forward become blockquote transitions between sections rather
+  than invented headings.
+- Blockquotes must use the user's actual words. Paraphrasing the user is fine,
+  but not inside a blockquote.
+- Light editing for flow is fine (dropping "Let me look at..." transitions),
+  but preserve structure, tone, and level of detail. Prose stays prose; don't
+  break it into bullets or add headings that weren't there.
+- Keep concrete details: links, file paths with line numbers, code snippets,
+  commands — the things that are hard to reconstruct later.
+- Omit filler: no preamble, no "here's what we discussed," no meta-commentary
+  about the note.
+
+This applies to capturing conversation. Analysis reports written from scratch
+(above) follow their own structure.
