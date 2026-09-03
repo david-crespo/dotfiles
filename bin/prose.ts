@@ -23,9 +23,16 @@ type Comment = {
 }
 
 // Helix gets a temp config: the user's config.toml (if any) plus auto-save, so
-// the preview updates shortly after typing stops. `hx --config` replaces
-// config.toml entirely, which is why we concatenate rather than override.
-// Steel config (init.scm) still loads from the normal location.
+// the preview updates shortly after typing stops, and auto-reload, so the pane
+// picks up Claude's edits to the file instead of going stale. `hx --config`
+// replaces config.toml entirely, which is why we concatenate rather than
+// override. Steel config (init.scm) still loads from the normal location.
+//
+// auto-reload is not upstream helix: it's the `auto-reload` branch of the
+// local fork (a port of helix-editor/helix#13963 that reloads unmodified
+// buffers silently). With `merge`, buffers with unsaved edits get a three-way
+// merge of disk into the buffer; overlapping edits are left as conflict
+// markers to resolve in place.
 const AUTO_SAVE = `
 [editor.auto-save]
 focus-lost = true
@@ -33,6 +40,16 @@ focus-lost = true
 [editor.auto-save.after-delay]
 enable = true
 timeout = 650
+`
+
+const AUTO_RELOAD = `
+[editor.auto-reload]
+focus-gained = true
+merge = true
+
+[editor.auto-reload.periodic]
+enable = true
+interval = 300
 `
 
 async function writeHelixConfig(): Promise<string> {
@@ -45,10 +62,10 @@ async function writeHelixConfig(): Promise<string> {
     // no user config; auto-save section alone is fine
   }
   const path = await Deno.makeTempFile({ prefix: "prose-hx-", suffix: ".toml" })
-  await Deno.writeTextFile(
-    path,
-    userConfig.includes("[editor.auto-save") ? userConfig : userConfig + AUTO_SAVE,
-  )
+  let config = userConfig
+  if (!config.includes("[editor.auto-save")) config += AUTO_SAVE
+  if (!config.includes("[editor.auto-reload")) config += AUTO_RELOAD
+  await Deno.writeTextFile(path, config)
   return path
 }
 
