@@ -148,5 +148,5 @@ PR" is a request to change the source, not the draft).
 
 When the user says they're done, read the final file and use it for whatever
 comes next (e.g. `gh pr edit --body-file`). Stop the server task (TaskStop)
-and the Monitor when the review is over. This skill composes with `write-pr`
-and `write-issue`: draft with those, review with this.
+and the Monitor when the review is over. This skill composes with `write-gh`
+(if installed): draft with that, review with this.
