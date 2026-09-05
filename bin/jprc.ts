@@ -5,8 +5,12 @@ import { Command, ValidationError } from "@cliffy/command"
 import { getGitHubRepoSlug } from "./lib/github.ts"
 import { bookmarksInLogOrder } from "./lib/jj.ts"
 
-const prompt =
-  "you will receive the commit log for a PR. generate a branch name for it, ideally under 20 chars. use hyphens. no feat/ or similar prefix. just the branch name, no markdown"
+const prompt = `Generate a short branch name from these PR commit descriptions.
+Pick the main topic and omit secondary details and follow-up work.
+Use 1-3 short words. Aim for 8-15 characters; maximum 19, including hyphens.
+Drop filler like add, improve, support, and implementation. Use familiar words.
+For upgrades, use package-version, e.g. vitest-5.
+Return only the name in lowercase with hyphens. No prefixes, quotes, or markdown.`
 
 /** If there are bookmarks between trunk() and r, let user pick. Otherwise use trunk(). */
 async function pickBase(r: string) {
@@ -61,7 +65,7 @@ await new Command()
     // Capture both streams instead of using .text(): ai prints its error output
     // to stdout, which .text() throws away, leaving only "Exited with code: 1".
     const aiResult = await $`jj log -r ${range} --no-graph -T ${logTmpl}`
-      .pipe($`ai --system "${prompt}" --model luna --quick --raw --ephemeral`)
+      .pipe($`ai --system "${prompt}" --model luna --raw --ephemeral`)
       .stdout("piped")
       .stderr("piped")
       .noThrow()
