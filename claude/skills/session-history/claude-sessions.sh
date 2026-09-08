@@ -41,8 +41,9 @@ Commands:
                                       this when downstream code needs to reparse the input).
                                     --truncate N trims the TSV input column for readability.
 
-With --all, commands include both Claude Code and Codex sessions.
-Session source is shown in summary output (codex: prefix for Codex sessions).
+With --all, commands include Claude Code, Codex, and opencode sessions.
+Session source is shown in summary output (codex: / opencode: prefixes).
+Codex guardian (approval-judge) sub-sessions are excluded from listings.
 EOF
   exit 1
 }
@@ -51,6 +52,48 @@ EOF
 is_codex() {
   [[ "$1" == "$CODEX_ROOT"* ]]
 }
+
+# Codex writes a sibling rollout file for its approval-judge model ("guardian")
+# next to each real session. Its session_meta.payload.source is an object
+# ({"subagent": ...}) instead of the string "cli". Filter those out of listings.
+filter_codex_subagents() {
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    if is_codex "$f"; then
+      local src
+      src=$(head -1 "$f" | jq -r 'select(.type == "session_meta") | .payload.source | type' 2>/dev/null)
+      [[ "$src" == "object" ]] && continue
+    fi
+    echo "$f"
+  done
+}
+
+# jq filter: user-authored text from a Codex transcript. Codex stopped emitting
+# event_msg/user_message entries around 2026-08-10; user turns now exist only
+# as response_item messages with role=user (which older files also have). The
+# same role carries injected context (AGENTS.md, <environment_context>,
+# <user_shell_command>), which is dropped by prefix.
+CODEX_USER_TEXT='
+  select(.type == "response_item") | .payload |
+  select(.type == "message" and .role == "user") |
+  [.content[]? | select(.type == "input_text") | .text] | join("\n") |
+  sub("^\\s+"; "") |
+  select(startswith("<") or startswith("# AGENTS.md") | not)
+'
+
+# jq filter: shell commands from a Codex transcript. Old format: function_call
+# exec_command with JSON arguments. New format: custom_tool_call "exec" whose
+# input is JavaScript calling tools.exec_command({cmd: "..."}); pull the cmd
+# string literals out (handles escaped quotes inside the literal).
+CODEX_CMDS='
+  select(.type == "response_item") | .payload |
+  if .type == "function_call" and .name == "exec_command" then
+    (.arguments | fromjson? | .cmd) // empty
+  elif .type == "custom_tool_call" and .name == "exec" then
+    .input | [match("exec_command\\(\\{\\s*\"?cmd\"?\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\""; "g") | .captures[0].string]
+    | .[] | gsub("\\\\\""; "\"") | gsub("\\\\n"; "\n") | gsub("\\\\\\\\"; "\\")
+  else empty end
+'
 
 # opencode sessions live in a SQLite DB, referenced by a synthetic
 # "opencode:<id>" identifier that flows through the pipeline like a file path.
@@ -172,7 +215,7 @@ cmd_list() {
       fi
       oc_list_rows 30
     } | sort -rn | awk '{print $2}' \
-      | maybe_filter_days
+      | filter_codex_subagents | maybe_filter_days
     return
   fi
   dir=$(session_dir "${1:-$PWD}")
@@ -197,7 +240,7 @@ cmd_search() {
         rg --files-with-matches --glob '*.jsonl' "$term" "$CODEX_ROOT" 2>/dev/null || true
       fi
       oc_search_rows "$term"
-    } | maybe_filter_days
+    } | filter_codex_subagents | maybe_filter_days
   else
     local dir
     dir=$(session_dir "${1:-$PWD}")
@@ -221,18 +264,9 @@ cmd_bash() {
   fi
   if is_codex "$session"; then
     if [[ -n "$filter" ]]; then
-      jq -r --arg f "$filter" '
-        select(.type == "response_item") | .payload |
-        select(.type == "function_call" and .name == "exec_command") |
-        (.arguments | fromjson? | .cmd) // empty |
-        select(contains($f))
-      ' "$session" 2>/dev/null || true
+      jq -r --arg f "$filter" "$CODEX_CMDS | select(contains(\$f))" "$session" 2>/dev/null || true
     else
-      jq -r '
-        select(.type == "response_item") | .payload |
-        select(.type == "function_call" and .name == "exec_command") |
-        (.arguments | fromjson? | .cmd) // empty
-      ' "$session" 2>/dev/null || true
+      jq -r "$CODEX_CMDS" "$session" 2>/dev/null || true
     fi
   else
     if [[ -n "$filter" ]]; then
@@ -295,7 +329,7 @@ _extract_codex() {
   local session="$1" type="$2"
   case "$type" in
     user)
-      jq -r 'select(.type == "event_msg") | .payload | select(.type == "user_message") | .message' "$session"
+      jq -r "$CODEX_USER_TEXT" "$session"
       ;;
     assistant)
       jq -r 'select(.type == "response_item") | .payload | select(.type == "message" and .role == "assistant") | .content[]? | select(.type == "output_text") | .text' "$session"
@@ -304,7 +338,10 @@ _extract_codex() {
       cmd_bash "$session"
       ;;
     tools)
-      jq -r 'select(.type == "response_item") | .payload | select(.type == "function_call") | "\(.name): \(.arguments[:120])"' "$session"
+      jq -r 'select(.type == "response_item") | .payload |
+        if .type == "function_call" then "\(.name): \(.arguments[:120])"
+        elif .type == "custom_tool_call" then "\(.name): \(.input[:120])"
+        else empty end' "$session"
       ;;
     *)
       echo "Unknown type: $type (expected: user, assistant, bash, tools)" >&2
@@ -371,9 +408,9 @@ count_session_activity() {
   fi
   if is_codex "$session"; then
     local turns
-    turns=$(jq -s '[.[] | select(.type == "event_msg") | .payload | select(.type == "user_message")] | length' "$session" 2>/dev/null)
+    turns=$(jq -r "$CODEX_USER_TEXT" "$session" 2>/dev/null | grep -c . || true)
     local tools
-    tools=$(jq -s '[.[] | select(.type == "response_item") | .payload | select(.type == "function_call")] | length' "$session" 2>/dev/null)
+    tools=$(jq -s '[.[] | select(.type == "response_item") | .payload | select(.type == "function_call" or .type == "custom_tool_call")] | length' "$session" 2>/dev/null)
     echo "(U ${turns}, T ${tools})"
   else
     jq -rs '
@@ -408,12 +445,7 @@ cmd_summary() {
     elif is_codex "$session"; then
       project=$(jq -r 'select(.type == "turn_context") | .payload.cwd' "$session" 2>/dev/null | head -1 | sed "s|$HOME/||")
       project="codex: ${project:-unknown}"
-      first_msg=$(jq -rn '
-        first(inputs | select(.type == "event_msg") | .payload |
-          select(.type == "user_message") | .message |
-          select(startswith("<") | not)
-        ) | gsub("\\s+"; " ") | .[:120]
-      ' "$session" 2>/dev/null || true)
+      first_msg=$(jq -r "$CODEX_USER_TEXT" "$session" 2>/dev/null | head -1 | tr -s '[:space:]' ' ' | cut -c1-120 || true)
     else
       project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
       first_msg=$(jq -rn '
@@ -517,12 +549,7 @@ cmd_recap() {
     return
   fi
   if is_codex "$session"; then
-    jq -r '
-      select(.type == "event_msg") | .payload |
-      select(.type == "user_message") | .message |
-      select(startswith("<") | not) |
-      .[0:150]
-    ' "$session" 2>/dev/null | nl -ba
+    jq -r "$CODEX_USER_TEXT | .[0:150]" "$session" 2>/dev/null | nl -ba
   else
     jq -r '
       select(.type == "user") | .message.content |

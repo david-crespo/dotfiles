@@ -50,6 +50,14 @@ The directory name is the absolute project path with all `/` replaced by `-`
 
     ~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl
 
+Codex also writes a sibling rollout for its approval-judge model ("guardian",
+`session_meta.payload.source` is an object rather than `"cli"`) next to each
+real session; the script drops those from `list`/`search`/`summary`. Since
+about 2026-08-10, user turns exist only as `response_item` messages with
+`role: user` (no `user_message` events), and shell commands are embedded as
+`tools.exec_command({cmd: "..."})` calls inside `custom_tool_call` JavaScript.
+The script handles both the old and new shapes.
+
 **opencode** sessions are rows in a SQLite DB (not per-session files):
 
     ~/.local/share/opencode/opencode.db   (tables: session, message, part)
