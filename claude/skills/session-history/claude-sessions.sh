@@ -31,6 +31,8 @@ Commands:
                                     Search sessions and extract content by type
   summary [--all | path] [--days N] List sessions with date, project, activity (U/T = user msgs/tools), first user message
   recap <session>                   Compact digest: all user messages (truncated) showing work progression
+  tail <session> <type> [N] [MAX]   Last N (default 3) user|assistant messages, each capped at MAX chars,
+                                    separated by "--- <type>" lines (Claude Code sessions only)
   tools-audit <session> [--mode M] [--summary|--json|--truncate N]
                                     Audit tool_use events. Default output is TSV columns:
                                     timestamp, permissionMode, outcome, tool, input (compact JSON).
@@ -79,6 +81,30 @@ CODEX_USER_TEXT='
   [.content[]? | select(.type == "input_text") | .text] | join("\n") |
   sub("^\\s+"; "") |
   select(startswith("<") or startswith("# AGENTS.md") | not)
+'
+
+# jq filter: user-authored text from a Claude Code transcript. Drops injected
+# content (meta/command output/tool results start with '<'; skill bodies start
+# with "Base directory for this skill"). Slash-command invocations are kept,
+# rendered as "/name args"; a bare /clear is dropped.
+CC_USER_TEXT='
+  def real:
+    if test("<command-name>") then
+      (capture("<command-name>(?<n>[^<]*)</command-name>").n | ltrimstr("/")) as $n |
+      ((capture("<command-args>(?<a>[^<]*)</command-args>")? .a) // "") as $a |
+      select($n != "clear") | "/" + $n + (if $a == "" then "" else " " + $a end)
+    else select((startswith("<") or startswith("Base directory for this skill")) | not) end;
+  select(.type == "user") | .message.content |
+  if type == "string" then real
+  elif type == "array" then [.[] | select(.type == "text") | .text | real] | join("\n") | select(length > 0)
+  else empty end
+'
+
+# jq filter: assistant text from a Claude Code transcript, one string per turn.
+CC_ASSISTANT_TEXT='
+  select(.type == "assistant") | .message.content |
+  if type == "array" then [.[] | select(.type == "text") | .text] | join("\n") else . end |
+  select(type == "string" and length > 0)
 '
 
 # jq filter: shell commands from a Codex transcript. Old format: function_call
@@ -306,12 +332,8 @@ _extract_opencode() {
 _extract_cc() {
   local session="$1" type="$2"
   case "$type" in
-    user)
-      jq -r 'select(.type == "user") | .message.content | if type == "string" then . elif type == "array" then map(select(.type == "text") | .text) | join("\n") else empty end' "$session"
-      ;;
-    assistant)
-      jq -r 'select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text' "$session"
-      ;;
+    user)      jq -r "$CC_USER_TEXT" "$session" ;;
+    assistant) jq -r "$CC_ASSISTANT_TEXT" "$session" ;;
     bash)
       cmd_bash "$session"
       ;;
@@ -551,14 +573,23 @@ cmd_recap() {
   if is_codex "$session"; then
     jq -r "$CODEX_USER_TEXT | .[0:150]" "$session" 2>/dev/null | nl -ba
   else
-    jq -r '
-      select(.type == "user") | .message.content |
-      if type == "string" then select(startswith("<") | not)
-      elif type == "array" then [.[] | select(.type == "text") | .text | select(startswith("<") | not)] | first // empty
-      else empty end |
-      .[0:150]
-    ' "$session" 2>/dev/null | nl -ba
+    jq -r "$CC_USER_TEXT"' | split("\n")[0] | .[0:150]' "$session" 2>/dev/null | nl -ba
   fi
+}
+
+# Last N user or assistant messages of a Claude Code session, each prefixed
+# with a "--- <type>" line and capped at MAX chars, so message boundaries survive.
+cmd_tail() {
+  local session="${1:?session file required}" type="${2:?type required: user, assistant}"
+  local n="${3:-3}" max="${4:-3000}" filter
+  case "$type" in
+    user)      filter="$CC_USER_TEXT" ;;
+    assistant) filter="$CC_ASSISTANT_TEXT" ;;
+    *) echo "Unknown type: $type (expected: user, assistant)" >&2; exit 1 ;;
+  esac
+  jq -rs --arg t "$type" --argjson n "$n" --argjson max "$max" \
+    "[.[] | $filter] | .[-\$n:] | .[] | \"--- \" + \$t + \"\n\" + .[0:\$max] + (if length > \$max then \"\n[…truncated]\" else \"\" end)" \
+    "$session"
 }
 
 [[ $# -eq 0 ]] && usage
@@ -576,6 +607,7 @@ case "$command" in
   search-extract) cmd_search_extract "$@" ;;
   summary)        cmd_summary "$@" ;;
   recap)          cmd_recap "$@" ;;
+  tail)           cmd_tail "$@" ;;
   tools-audit)    cmd_tools_audit "$@" ;;
   *)              usage ;;
 esac
