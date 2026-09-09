@@ -21,6 +21,25 @@ const costFmt = new Intl.NumberFormat("en-US", {
   currency: "USD",
 })
 
-console.log(
-  `${model} | ${kFmt.format(tokens / 1000)}k (${pct}%) | ${costFmt.format(cost)}`,
-)
+// When the prompt cache goes cold, the next message pays the full uncached
+// input price for the whole context. prompt_cache.expires_at comes from Claude
+// Code (>= 2.1.251): https://code.claude.com/docs/en/statusline#prompt-cache-fields
+// Absolute time rather than an age, since the status line only re-renders on
+// activity.
+function cacheColdSegment(): string | undefined {
+  const pc = input.prompt_cache
+  if (!pc) return undefined
+  if (pc.warm === false) return "cache cold"
+  if (typeof pc.expires_at !== "number") return undefined
+  const at = new Date(pc.expires_at * 1000)
+  return `cache cold ${at.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+}
+
+const segments = [
+  model,
+  `${kFmt.format(tokens / 1000)}k (${pct}%)`,
+  costFmt.format(cost),
+  cacheColdSegment(),
+].filter(Boolean)
+
+console.log(segments.join(" | "))
