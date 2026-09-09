@@ -183,7 +183,9 @@ function page(title: string, previewOnly: boolean) {
     display: none;
     flex-direction: column;
     gap: 8px;
-    width: 340px;
+    box-sizing: border-box;
+    width: 366px;
+    max-width: calc(100vw - 16px);
     padding: 12px;
     border: 1px solid #d1d9e0;
     border-radius: 12px;

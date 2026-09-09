@@ -557,7 +557,10 @@ document.addEventListener("mouseup", (e) => {
   // Keep the selection visible while the textarea has focus.
   CSS.highlights.set("pending-comment", new Highlight(cap.range))
   popover.style.display = "flex"
-  popover.style.left = window.scrollX + cap.rect.left + "px"
+  // Shift left when the selection is too close to the viewport's right edge.
+  const maxLeft = document.documentElement.clientWidth - popover.offsetWidth - 8
+  const left = Math.max(8, Math.min(cap.rect.left, maxLeft))
+  popover.style.left = window.scrollX + left + "px"
   popover.style.top = window.scrollY + cap.rect.bottom + 8 + "px"
   commentText.focus()
 })
