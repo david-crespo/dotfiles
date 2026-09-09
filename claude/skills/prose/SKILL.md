@@ -18,8 +18,11 @@ Keep editing the file normally with Edit.
 
 1. Write the draft to a markdown file if it isn't in one already. Default
    location: `.claude/notes/<YYYY-MM-DD>-<slug>.md` in the repo being worked
-   on. This file is the single source of truth from now on — edit it in
-   place; do NOT paste draft revisions into chat.
+   on. For a PR description, end the slug with `-pr` and put the title on
+   line 1 as a `#` heading: `jprc --body` finds the newest `*-pr*.md` there
+   and uses that line as the PR title. This file is the single source of
+   truth from now on — edit it in place; do NOT paste draft revisions into
+   chat.
 2. Start the server (background). It must run OUTSIDE the Bash sandbox — the
    sandbox blocks binding ports:
 
