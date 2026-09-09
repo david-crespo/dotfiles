@@ -13,6 +13,8 @@ import { Terminal } from "@xterm/xterm"
 import { FitAddon } from "@xterm/addon-fit"
 import { WebglAddon } from "@xterm/addon-webgl"
 import MarkdownExit from "markdown-exit"
+import { Conversation } from "./lib/prose/conversation.ts"
+import { findConflictEnd, parseConflict } from "./lib/prose/conflict.ts"
 // @ts-expect-error no type declarations
 import taskLists from "markdown-it-task-lists"
 
@@ -23,6 +25,7 @@ const toast = document.getElementById("toast")!
 // Absent in ?preview mode (helix runs in a sibling terminal pane instead)
 const editorHost = document.getElementById("editor-host")
 const editorToggle = document.getElementById("editor-toggle")
+const conversation = new Conversation(() => hidePopover())
 
 // ---------- document ----------
 
@@ -36,8 +39,12 @@ function connectDoc() {
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data)
     if (msg.type === "doc") applyDoc(msg.text)
+    if (msg.type === "conversation") conversation.receive(msg, msg.replay)
   }
-  ws.onclose = () => setTimeout(connectDoc, 1000)
+  ws.onclose = () => {
+    conversation.setConnected(false)
+    setTimeout(connectDoc, 1000)
+  }
 }
 connectDoc()
 
@@ -76,6 +83,7 @@ const md = MarkdownExit({ html: true, linkify: true }).use(taskLists)
 // Stamp block elements with their source line range so remote-edit flashes
 // can find the right blocks after a re-render.
 md.core.ruler.push("data_line", (state) => {
+  if (state.env.nested) return true // conflict panels: lines are meaningless
   for (const token of state.tokens) {
     if (token.map && token.nesting !== -1) {
       token.attrSet("data-line", `${token.map[0]}:${token.map[1]}`)
@@ -83,6 +91,59 @@ md.core.ruler.push("data_line", (state) => {
   }
   return true
 })
+
+// jj/git conflict markers left in the file: render each side (and the base)
+// as markdown in a labelled box instead of a wall of marker lines. Top level
+// only, matching where jj writes them. `alt` lets a marker line interrupt a
+// paragraph, since jj puts no blank line before it.
+md.block.ruler.before("table", "conflict", (state, startLine, endLine, silent) => {
+  // Column 0 only. Inside a list item this runs as a terminator (silent), so
+  // an unindented marker ends the item and the top-level pass renders it.
+  if (state.tShift[startLine] > 0) return false
+  const raw = (i: number) => state.src.slice(state.bMarks[i], state.eMarks[i])
+  if (!raw(startLine).startsWith("<<<<<<<")) return false
+  const lines: string[] = []
+  for (let i = startLine; i < endLine; i++) lines.push(raw(i))
+  const end = findConflictEnd(lines, 0)
+  if (end < 0) return false
+  if (silent) return true
+  const token = state.push("conflict", "div", 0)
+  token.block = true
+  token.map = [startLine, startLine + end + 1]
+  token.meta = parseConflict(lines, 0, end)
+  state.line = startLine + end + 1
+  return true
+}, { alt: ["paragraph", "reference", "blockquote", "list"] })
+md.renderer.rules.conflict = (tokens, idx, _opts, _env, self) => {
+  const t = tokens[idx]
+  const conflict = t.meta as ReturnType<typeof parseConflict>
+  const esc = md.utils.escapeHtml
+  const panels = conflict.panels.map((p) => {
+    const changed = p.changed?.length
+      ? ` data-changed="${esc(JSON.stringify(p.changed))}"`
+      : ""
+    return `<section class="conflict-panel" data-kind="${p.kind}"${changed}>` +
+      `<div class="conflict-label">${esc(p.label)}</div>` +
+      `<div class="conflict-body">${md.render(p.text, { nested: true })}</div></section>`
+  })
+  return `<div${self.renderAttrs(t)} class="conflict"><div class="conflict-title">${
+    esc(conflict.title)
+  }</div>${panels.join("")}</div>\n`
+}
+
+// In jj's diff-style markers the changed lines are known exactly; mark them
+// in the rendered panels so a one-word difference doesn't hide in a paragraph.
+function markConflictChanges() {
+  for (
+    const panel of content.querySelectorAll<HTMLElement>(".conflict-panel[data-changed]")
+  ) {
+    const body = panel.querySelector<HTMLElement>(".conflict-body")!
+    const cls = panel.dataset.kind === "base" ? "conflict-removed" : "conflict-added"
+    const lines = JSON.parse(panel.dataset.changed!) as string[]
+    if (wrapText(body, lines.join("\n"), cls)) continue
+    for (const line of lines) wrapText(body, line, cls)
+  }
+}
 
 // GitHub expands two kinds of bare URL on their own line into embeds: a blob
 // permalink with a line range becomes a code snippet, and a user-attachments
@@ -268,12 +329,13 @@ async function highlightElement(
   el.replaceChildren(frag)
 }
 
-// Find the inserted source text within a rendered block and wrap it in an
-// inline flash span. Whitespace is stripped from both sides before matching
-// (hard-wrapped source vs reflowed rendered text); a second attempt strips
-// inline markdown markers. Returns false when the text can't be located or
-// the edit rewrote most of the block — callers fall back to a block flash.
-function flashInsertedText(el: HTMLElement, inserted: string): boolean {
+// Find a piece of source text within a rendered block and wrap it in an
+// inline span of the given class. Whitespace is stripped from both sides
+// before matching (hard-wrapped source vs reflowed rendered text); a second
+// attempt strips inline markdown markers. Returns false when the text can't
+// be located or covers most of the block — callers fall back to marking the
+// whole block.
+function wrapText(el: HTMLElement, inserted: string, className: string): boolean {
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
   const positions: { node: Text; offset: number }[] = []
   let haystack = ""
@@ -301,7 +363,7 @@ function flashInsertedText(el: HTMLElement, inserted: string): boolean {
     range.setStart(start.node, start.offset)
     range.setEnd(end.node, end.offset + 1)
     const span = document.createElement("span")
-    span.className = "flash-inline"
+    span.className = className
     try {
       range.surroundContents(span)
     } catch {
@@ -316,6 +378,7 @@ function flashInsertedText(el: HTMLElement, inserted: string): boolean {
 
 function renderPreview() {
   content.innerHTML = md.render(docText ?? "")
+  markConflictChanges()
   highlightCodeBlocks()
   rewriteLocalMedia()
   hydrateEmbeds()
@@ -334,7 +397,7 @@ function renderPreview() {
       const ranges = pendingFlash.filter((r) => s < r.end && e > r.start)
       let scoped = ranges.length > 0
       for (const r of ranges) {
-        scoped = flashInsertedText(el, r.inserted) && scoped
+        scoped = wrapText(el, r.inserted, "flash-inline") && scoped
       }
       if (!scoped) el.classList.add("flash")
     }
@@ -374,18 +437,30 @@ function startHelix(host: HTMLElement) {
     console.warn("prose: WebGL renderer unavailable, using DOM renderer", err)
   }
   fit.fit()
+  // Reachable from the devtools console for debugging rendering issues
+  Object.assign(globalThis, { proseTerm: term })
   // Let ⌘-chords through to the page (⌘E toggles this pane, ⌘S is swallowed
   // below) instead of xterm eating them.
   term.attachCustomKeyEventHandler((e) => !e.metaKey)
 
+  const spawnSize = { cols: term.cols, rows: term.rows }
   const ws = new WebSocket(
     `ws://${location.host}/pty?${new URLSearchParams({
-      cols: String(term.cols),
-      rows: String(term.rows),
+      cols: String(spawnSize.cols),
+      rows: String(spawnSize.rows),
     })}`,
   )
   ws.binaryType = "arraybuffer"
   ptySock = ws
+  const send = (msg: Record<string, unknown>) => {
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg))
+  }
+  const sendSize = () => send({ type: "resize", cols: term!.cols, rows: term!.rows })
+  ws.onopen = () => {
+    // A fit that ran while the socket was still connecting had nowhere to
+    // go; if the size moved on since spawn, tell helix now.
+    if (term!.cols !== spawnSize.cols || term!.rows !== spawnSize.rows) sendSize()
+  }
   ws.onmessage = (e) => {
     if (e.data instanceof ArrayBuffer) term?.write(new Uint8Array(e.data))
   }
@@ -394,13 +469,43 @@ function startHelix(host: HTMLElement) {
     term?.write("\r\n\x1b[2m[helix exited — click here to restart]\x1b[0m")
     host.addEventListener("click", () => restartHelix(host), { once: true })
   }
-  term.onData((data) => {
-    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "input", data }))
+  term.onData((data) => send({ type: "input", data }))
+  // Spawn counts as a resize: switching to the alternate screen, which helix
+  // does at startup, also fires xterm's scroll event.
+  let lastResizeAt = Date.now()
+  term.onResize(() => {
+    lastResizeAt = Date.now()
+    sendSize()
   })
-  term.onResize(({ cols, rows }) => {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "resize", cols, rows }))
-    }
+  // Helix positions the cursor before every write and never wraps or line
+  // feeds, so the alternate screen should never scroll. When it does, helix
+  // and xterm disagree about the size (or a glyph width) and every row is
+  // off by one until helix happens to rewrite it. Ask helix for a full
+  // redraw, which it does on any resize event. Around a resize this is
+  // expected and self-correcting: frames drawn for the old size land after
+  // xterm shrank, and helix's redraw for the new size repairs them. Outside
+  // that window it is an anomaly, so leave a trace in the console. Capped so
+  // a persistent disagreement can't turn into a redraw loop.
+  const redraws: number[] = []
+  let redrawTimer: ReturnType<typeof setTimeout> | undefined
+  term.onScroll(() => {
+    if (!term || term.buffer.active.type !== "alternate") return
+    // xterm fires this before the resize event of the same resize() call, so
+    // judge a moment later.
+    setTimeout(() => {
+      const now = Date.now()
+      if (!term || now - lastResizeAt < 1000) return
+      while (redraws.length && now - redraws[0] > 10_000) redraws.shift()
+      if (redraws.length >= 3) return
+      console.warn(
+        `prose: helix pane scrolled unexpectedly at ${term.cols}x${term.rows}; requesting redraw`,
+      )
+      clearTimeout(redrawTimer)
+      redrawTimer = setTimeout(() => {
+        redraws.push(Date.now())
+        send({ type: "redraw" })
+      }, 300)
+    }, 50)
   })
   new ResizeObserver(() => {
     if (document.body.classList.contains("editor-shown")) fit.fit()
@@ -514,23 +619,15 @@ function captureSelection(): Captured | null {
   }
 }
 
-async function send(kind: "comment" | "dellm", captured: Captured, text?: string) {
-  const { selection, prefix, suffix, embed } = captured
-  await fetch("/comment", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ kind, selection, embed, prefix, suffix, text }),
-  })
-  showToast(kind === "dellm" ? "de-LLM request sent" : "comment sent")
-}
-
 let captured: Captured | null = null
+let selectionSending = false
 
 function hidePopover() {
   popover.style.display = "none"
   commentText.value = ""
   captured = null
   CSS.highlights.delete("pending-comment")
+  conversation.suspendToasts(false)
 }
 
 // Focusing the comment box clears the browser's native Selection, though the
@@ -548,6 +645,8 @@ document.addEventListener("mouseup", (e) => {
   // to the comment box then clears the selection before Copy can use it.
   if (e.button !== 0) return
   if (popover.contains(e.target as Node)) return
+  if (conversation.element.contains(e.target as Node)) return
+  if (selectionSending) return
   const cap = captureSelection()
   if (!cap) {
     hidePopover()
@@ -557,6 +656,7 @@ document.addEventListener("mouseup", (e) => {
   // Keep the selection visible while the textarea has focus.
   CSS.highlights.set("pending-comment", new Highlight(cap.range))
   popover.style.display = "flex"
+  conversation.suspendToasts(true)
   // Shift left when the selection is too close to the viewport's right edge.
   const maxLeft = document.documentElement.clientWidth - popover.offsetWidth - 8
   const left = Math.max(8, Math.min(cap.rect.left, maxLeft))
@@ -565,13 +665,22 @@ document.addEventListener("mouseup", (e) => {
   commentText.focus()
 })
 
-function submit(kind: "comment" | "dellm") {
-  if (!captured) return
+async function submit(kind: "comment" | "dellm") {
+  if (!captured || selectionSending) return
   const text = commentText.value.trim() || undefined
   if (kind === "comment" && !text) return
-  send(kind, captured, text)
-  hidePopover()
-  window.getSelection()?.removeAllRanges()
+  const { selection, prefix, suffix, embed } = captured
+  selectionSending = true
+  try {
+    const result = await conversation.send({ kind, text, selection, prefix, suffix, embed })
+    hidePopover()
+    window.getSelection()?.removeAllRanges()
+    showToast(result.agentConnected ? "Comment sent" : "Comment saved · no agent connected")
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "Could not send comment. Try again.")
+  } finally {
+    selectionSending = false
+  }
 }
 document.getElementById("send")!.addEventListener("click", () => submit("comment"))
 document.getElementById("dellm")!.addEventListener("click", () => submit("dellm"))

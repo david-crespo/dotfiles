@@ -12,15 +12,7 @@
 
 import { Command } from "@cliffy/command"
 import { basename, dirname, fromFileUrl, join } from "@std/path"
-
-type Comment = {
-  kind: "comment" | "dellm"
-  selection: string
-  prefix: string
-  suffix: string
-  text?: string
-  embed?: string
-}
+import { ActivityLog, InputError, parseActivity, parseUser } from "./lib/prose/events.ts"
 
 // Helix gets a temp config: the user's config.toml (if any) plus auto-save, so
 // the preview updates shortly after typing stops, and auto-reload, so the pane
@@ -79,6 +71,7 @@ function page(title: string, previewOnly: boolean) {
 <title>${title}</title>
 <link rel="stylesheet" href="/github-markdown.css">
 <link rel="stylesheet" href="/xterm.css">
+<link rel="stylesheet" href="/conversation.css">
 <style>
   body { margin: 0; background-color: #ffffff; }
   @media (prefers-color-scheme: dark) { body { background-color: #0d1117; } }
@@ -129,6 +122,24 @@ function page(title: string, previewOnly: boolean) {
   }
   #content .flash { animation: flash-fade 1.8s ease-out; }
   #content .flash-inline { animation: flash-fade 1.8s ease-out; border-radius: 2px; }
+  /* jj/git conflict regions: each side rendered as markdown in a labelled box */
+  .conflict { border: 1px solid #d1d9e0; border-left: 3px solid #bf8700; border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+  .conflict-title {
+    padding: 6px 16px;
+    background: #f6f8fa;
+    border-bottom: 1px solid #d1d9e0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #9a6700;
+  }
+  .conflict-panel { padding: 12px 16px; }
+  .conflict-panel + .conflict-panel { border-top: 1px dashed #d1d9e0; }
+  .conflict-panel[data-kind="base"] { background: #f6f8fa; color: #59636e; }
+  .conflict-label { font-size: 12px; font-weight: 600; color: #59636e; margin-bottom: 6px; }
+  .conflict-panel[data-kind="side"] .conflict-label { color: #0969da; }
+  .conflict-body > :last-child { margin-bottom: 0 !important; }
+  .conflict-added { background: #dafbe1; border-radius: 2px; }
+  .conflict-removed { background: #ffebe9; border-radius: 2px; }
   /* GitHub-style embeds (permalink snippets, assets) */
   .gh-embed img, .gh-embed video { max-width: 100%; }
   .gh-embed { margin-bottom: 16px; }
@@ -154,6 +165,14 @@ function page(title: string, previewOnly: boolean) {
   .gh-blob-gutter { color: #59636e; text-align: right; user-select: none; padding-right: 0 !important; }
   @media (prefers-color-scheme: dark) {
     .gh-embed-error { color: #f85149; }
+    .conflict { border-color: #3d444d; border-left-color: #9e6a03; }
+    .conflict-title { background: #151b23; border-color: #3d444d; color: #d29922; }
+    .conflict-panel + .conflict-panel { border-color: #3d444d; }
+    .conflict-panel[data-kind="base"] { background: #151b23; color: #9198a1; }
+    .conflict-label { color: #9198a1; }
+    .conflict-panel[data-kind="side"] .conflict-label { color: #58a6ff; }
+    .conflict-added { background: #2ea04333; }
+    .conflict-removed { background: #f8514933; }
     .gh-blob { border-color: #3d444d; }
     .gh-blob-header { background: #151b23; border-color: #3d444d; color: #9198a1; }
     .gh-blob-gutter { color: #9198a1; }
@@ -251,6 +270,7 @@ function page(title: string, previewOnly: boolean) {
     pointer-events: none;
   }
   ::highlight(pending-comment) { background-color: rgba(84, 174, 255, 0.4); }
+  ::highlight(conversation-anchor) { background-color: rgba(84, 174, 255, 0.4); }
   @media (prefers-color-scheme: dark) {
     #editor-pane { border-right-color: #3d444d; }
     #editor-toggle {
@@ -447,7 +467,7 @@ function frame(kind: "i" | "r", payload: Uint8Array): Uint8Array {
   return buf
 }
 
-type PtyMessage = { type: "input"; data: string } | {
+type PtyMessage = { type: "input"; data: string } | { type: "redraw" } | {
   type: "resize"
   cols: number
   rows: number
@@ -461,8 +481,8 @@ function servePty(
   opts: { binDir: string; hxConfig: string; file: string; port: number },
 ): Response {
   const q = new URL(req.url).searchParams
-  const cols = Math.max(20, Number(q.get("cols")) || 80)
-  const rows = Math.max(5, Number(q.get("rows")) || 24)
+  let cols = Math.max(20, Number(q.get("cols")) || 80)
+  let rows = Math.max(5, Number(q.get("rows")) || 24)
   const { socket, response } = Deno.upgradeWebSocket(req)
   const enc = new TextEncoder()
   let proc: Deno.ChildProcess | null = null
@@ -515,7 +535,15 @@ function servePty(
     if (typeof e.data !== "string") return
     const msg = JSON.parse(e.data) as PtyMessage
     if (msg.type === "input") write(frame("i", enc.encode(msg.data)))
-    else if (msg.type === "resize") write(frame("r", enc.encode(`${msg.cols}x${msg.rows}`)))
+    else if (msg.type === "resize") {
+      ;({ cols, rows } = msg)
+      write(frame("r", enc.encode(`${cols}x${rows}`)))
+    } else if (msg.type === "redraw") {
+      // Same-size resize: the helper still raises SIGWINCH, and helix clears
+      // and repaints everything on any resize event.
+      console.log(`redraw requested by the page (${cols}x${rows})`)
+      write(frame("r", enc.encode(`${cols}x${rows}`)))
+    }
   }
   const hangup = () => {
     // Closing stdin makes the helper SIGHUP helix
@@ -538,12 +566,19 @@ await new Command()
     await Deno.stat(file) // fail fast on bad path
 
     const binDir = dirname(await Deno.realPath(fromFileUrl(import.meta.url)))
-    const [markdownCss, xtermCss, bundleJs, hxConfig] = await Promise.all([
+    const [markdownCss, xtermCss, conversationCss, hxConfig] = await Promise.all([
       Deno.readTextFile(join(binDir, "lib", "github-markdown.min.css")),
       Deno.readTextFile(join(binDir, "lib", "xterm.css")),
-      buildClientBundle(binDir),
+      Deno.readTextFile(join(binDir, "lib", "prose", "conversation.css")),
       writeHelixConfig(),
     ])
+    // Bundling takes a couple of seconds. Bind the port first so the session's
+    // Monitor can connect right away; /bundle.js awaits the build.
+    const bundleJs = buildClientBundle(binDir)
+    bundleJs.catch((error) => {
+      console.error("prose: client bundle failed", error)
+      Deno.exit(1)
+    })
 
     // Log comments under XDG state rather than next to the draft, so drafts
     // in versioned directories don't grow a stray .comments.jsonl. One file
@@ -561,6 +596,28 @@ await new Command()
     )
     const claudeClients = new Set<WebSocket>()
     const docClients = new Set<WebSocket>()
+    const activity = await ActivityLog.open(commentLog, absFile)
+    const broadcastConversation = () => {
+      const message = JSON.stringify({
+        ...activity.snapshot(claudeClients.size > 0),
+        replay: false,
+      })
+      for (const ws of docClients) {
+        try {
+          ws.send(message)
+        } catch {
+          docClients.delete(ws)
+        }
+      }
+    }
+    // Keep file context, the request log, and Monitor delivery in that order,
+    // including when several comments arrive at once.
+    let mutations: Promise<unknown> = Promise.resolve()
+    const mutate = <T>(fn: () => Promise<T>): Promise<T> => {
+      const next = mutations.then(fn)
+      mutations = next.catch(() => {})
+      return next
+    }
 
     let fileContent = await Deno.readTextFile(file)
 
@@ -572,12 +629,6 @@ await new Command()
           claudeClients.delete(ws)
         }
       }
-    }
-
-    const logEvent = async (event: Record<string, unknown>) => {
-      const line = JSON.stringify(event)
-      await Deno.writeTextFile(commentLog, line + "\n", { append: true })
-      sendToClaude(line)
     }
 
     // --- edit notices to the Claude session ---
@@ -598,13 +649,13 @@ await new Command()
       // the session's attention.
       if (base === fileContent) return
       const { start, delLen, insert } = splice(base, fileContent)
-      logEvent({
+      sendToClaude(JSON.stringify({
         kind: "file-edit",
-        file,
+        file: absFile,
         ts: new Date().toISOString(),
         old: base.slice(start, start + delLen).slice(0, 2000),
         new: insert.slice(0, 2000),
-      })
+      }))
     }
 
     // --- disk -> preview ---
@@ -665,8 +716,13 @@ await new Command()
         })
       }
       if (pathname === "/bundle.js") {
-        return new Response(bundleJs, {
+        return new Response(await bundleJs, {
           headers: { "content-type": "text/javascript; charset=utf-8" },
+        })
+      }
+      if (pathname === "/conversation.css") {
+        return new Response(conversationCss, {
+          headers: { "content-type": "text/css; charset=utf-8" },
         })
       }
       if (pathname === "/github-markdown.css" || pathname === "/xterm.css") {
@@ -728,6 +784,9 @@ await new Command()
         socket.onopen = () => {
           docClients.add(socket)
           socket.send(docMessage())
+          socket.send(
+            JSON.stringify({ ...activity.snapshot(claudeClients.size > 0), replay: true }),
+          )
         }
         socket.onclose = () => docClients.delete(socket)
         socket.onerror = () => docClients.delete(socket)
@@ -740,21 +799,55 @@ await new Command()
       // pushed as one JSON text frame.
       if (pathname === "/claude") {
         const { socket, response } = Deno.upgradeWebSocket(req)
-        socket.onopen = () => claudeClients.add(socket)
-        socket.onclose = () => claudeClients.delete(socket)
-        socket.onerror = () => claudeClients.delete(socket)
+        socket.onopen = () => {
+          claudeClients.add(socket)
+          broadcastConversation()
+          // Requests that arrived while no agent was connected (or before the
+          // Monitor was armed) are replayed. The agent ignores replays for
+          // requests it has already started.
+          for (const state of activity.requests.values()) {
+            if (state.status !== "waiting") continue
+            const event = activity.events.find((event) => event.id === state.id)
+            if (event) socket.send(JSON.stringify(event))
+          }
+        }
+        socket.onclose = socket.onerror = () => {
+          claudeClients.delete(socket)
+          broadcastConversation()
+        }
         return response
       }
-      if (pathname === "/comment" && req.method === "POST") {
-        const body = (await req.json()) as Comment
-        if (body.kind !== "comment" && body.kind !== "dellm") {
-          return new Response("bad kind", { status: 400 })
+      if (pathname === "/activity" && req.method === "GET") {
+        return Response.json(activity.snapshot(claudeClients.size > 0))
+      }
+      if ((pathname === "/comment" || pathname === "/activity") && req.method === "POST") {
+        try {
+          const body = await req.json()
+          const input = pathname === "/comment" ? parseUser(body) : parseActivity(body)
+          const event = await mutate(async () => {
+            if (input.kind !== "activity") {
+              await onDiskChange()
+              flushFileEdit()
+            }
+            const event = await activity.append(input)
+            if (input.kind !== "activity") sendToClaude(JSON.stringify(event))
+            broadcastConversation()
+            return event
+          })
+          return Response.json({ event, agentConnected: claudeClients.size > 0 })
+        } catch (error) {
+          if (error instanceof InputError) {
+            return new Response(error.message, { status: error.status })
+          }
+          if (error instanceof SyntaxError) {
+            return new Response("Invalid JSON", { status: 400 })
+          }
+          console.error("prose: could not save conversation event", error)
+          return new Response(
+            "Could not save message. Retry when the server is available.",
+            { status: 500 },
+          )
         }
-        // A pending edit notice should reach the session before the comment
-        // that may refer to the edited text.
-        flushFileEdit()
-        await logEvent({ ...body, file, ts: new Date().toISOString() })
-        return new Response("ok")
       }
       return new Response("not found", { status: 404 })
     })
@@ -763,6 +856,7 @@ await new Command()
     console.log(`reviewing ${file} at ${url}`)
     console.log(`comment feed: ws://localhost:${port}/claude (logged to ${commentLog})`)
     if (open) {
+      await bundleJs
       await new Deno.Command("open", { args: [url] }).output()
     }
   })
