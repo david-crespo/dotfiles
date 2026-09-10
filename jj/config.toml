@@ -44,7 +44,7 @@ diff-formatter = ":git"
 # people's divergences. So we scope it to mine() (changes I authored, on any
 # branch) | ::@ (ancestors of my checkout, so someone else's divergent commit
 # on a branch I'm contributing to still shows).
-log = "builtin_log() | ancestors(immutable_heads().., 4) | (divergent() & (mine() | ::@))"
+log = "builtin_log() | ancestors(immutable_heads().., 4) | (divergent() & (mine() | ::@)) | ancestors(bookmarks(), 3)"
 
 [revset-aliases]
 # Treat commits not authored by me as immutable. The `trunk().. &` bit is an
