@@ -26,6 +26,11 @@
           {
             "type": "command",
             "command": "ghostty-tab-title hook"
+          },
+          {
+            "type": "command",
+            "command": "bun \"$HOME/repos/dotfiles/codex/cost.ts\"",
+            "timeout": 10
           }
         ]
       }
