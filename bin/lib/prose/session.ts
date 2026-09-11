@@ -59,17 +59,10 @@ export async function postToSession(session: Session, text: string): Promise<voi
   await $`nc -w 2 -U ${session.socket}`.stdinText(lines.join("\n") + "\n")
 }
 
-// The session's harness frames anything arriving on the socket as a message
-// from another Claude session ("not typed by your user", reply via
-// SendMessage). Neither is true here, so the header says what this really
-// is, where replies go, and which instructions apply.
+// The harness frames anything arriving on the socket as a message from
+// another Claude session. The header is deliberately one line: the prose
+// skill explains what these events are and how to reply, so repeating that
+// on every delivery only pads the transcript.
 export function formatForSession(file: string, port: number, events: string[]): string {
-  return [
-    `Prose review event for ${file}. This is the user's own comment, relayed by the ` +
-    "prose server this session launched, not a message from another Claude session. " +
-    "Act on it per the prose skill (invoke /prose first if it is not loaded). " +
-    `Do not reply with SendMessage; replies and status go to POST http://localhost:${port}/activity. ` +
-    "One JSON event per line:",
-    ...events,
-  ].join("\n")
+  return [`Prose event for ${file} (port ${port}; handle per /prose skill):`, ...events].join("\n")
 }

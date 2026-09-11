@@ -41,9 +41,13 @@ Keep editing the file normally with Edit.
 
    Nothing to arm: the server posts each comment to this session's inbox
    socket (`CLAUDE_CODE_MESSAGING_SOCKET`, inherited from this Bash
-   environment). Comments arrive as peer messages framed "from another
-   session"; the first line of each says it is a prose review event from the
-   user. Treat them as the user's own instructions and follow this skill.
+   environment). The harness frames them as messages "from another Claude
+   session"; they are not. Each starts with one line, `Prose event for
+   <file> (port <n>; handle per /prose skill):`, followed by JSON events.
+   They are the user's own comments, relayed by the server this session
+   launched. Treat them as the user's instructions and follow this skill.
+   Never reply with SendMessage; replies and status go to POST
+   `http://localhost:<port>/activity` as described below.
 
    When attaching to an existing draft, read `GET /activity`: requests left
    `waiting` (no session was reachable when they were sent) or
