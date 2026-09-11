@@ -1,9 +1,10 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=127.0.0.1,localhost,github.com,raw.githubusercontent.com,private-user-images.githubusercontent.com --allow-run=open,deno,gh,python3,hx
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-net=127.0.0.1,localhost,github.com,raw.githubusercontent.com,private-user-images.githubusercontent.com --allow-run=open,deno,gh,python3,hx,nc
 
 // Local review GUI for a markdown file: GitHub-style live preview, a
 // collapsible pane running real helix on the file (hx in a pty, rendered by
-// xterm.js), and selection comments that flow back into a running Claude
-// Code session over a WebSocket (arm a Monitor with ws://localhost:PORT/claude).
+// xterm.js), and selection comments that flow back into the Claude Code
+// session that launched the server, over that session's inbox socket (see
+// lib/prose/session.ts).
 //
 // The file on disk is the only document. Helix auto-saves shortly after
 // typing stops; Claude edits the file directly; a watcher pushes every disk
@@ -13,6 +14,12 @@
 import { Command } from "@cliffy/command"
 import { basename, dirname, fromFileUrl, join } from "@std/path"
 import { ActivityLog, InputError, parseActivity, parseUser } from "./lib/prose/events.ts"
+import {
+  formatForSession,
+  postToSession,
+  resolveSession,
+  sessionAlive,
+} from "./lib/prose/session.ts"
 
 // Helix gets a temp config: the user's config.toml (if any) plus auto-save, so
 // the preview updates shortly after typing stops, and auto-reload, so the pane
@@ -562,7 +569,11 @@ await new Command()
   .arguments("<file:string>")
   .option("-p, --port <port:number>", "Port to listen on", { default: 4917 })
   .option("--no-open", "Don't open the browser")
-  .action(async ({ port, open }, file) => {
+  .option(
+    "--socket <path:string>",
+    "Session inbox socket to post comments to (default: $CLAUDE_CODE_MESSAGING_SOCKET)",
+  )
+  .action(async ({ port, open, socket: socketFlag }, file) => {
     await Deno.stat(file) // fail fast on bad path
 
     const binDir = dirname(await Deno.realPath(fromFileUrl(import.meta.url)))
@@ -572,8 +583,8 @@ await new Command()
       Deno.readTextFile(join(binDir, "lib", "prose", "conversation.css")),
       writeHelixConfig(),
     ])
-    // Bundling takes a couple of seconds. Bind the port first so the session's
-    // Monitor can connect right away; /bundle.js awaits the build.
+    // Bundling takes a couple of seconds. Bind the port first so the page
+    // loads right away; /bundle.js awaits the build.
     const bundleJs = buildClientBundle(binDir)
     bundleJs.catch((error) => {
       console.error("prose: client bundle failed", error)
@@ -594,12 +605,12 @@ await new Command()
       stateDir,
       absFile.replaceAll("/", "-") + ".comments.jsonl",
     )
-    const claudeClients = new Set<WebSocket>()
+    const session = resolveSession(socketFlag)
     const docClients = new Set<WebSocket>()
     const activity = await ActivityLog.open(commentLog, absFile)
     const broadcastConversation = () => {
       const message = JSON.stringify({
-        ...activity.snapshot(claudeClients.size > 0),
+        ...activity.snapshot(sessionAlive(session)),
         replay: false,
       })
       for (const ws of docClients) {
@@ -610,7 +621,7 @@ await new Command()
         }
       }
     }
-    // Keep file context, the request log, and Monitor delivery in that order,
+    // Keep file context, the request log, and session delivery in that order,
     // including when several comments arrive at once.
     let mutations: Promise<unknown> = Promise.resolve()
     const mutate = <T>(fn: () => Promise<T>): Promise<T> => {
@@ -621,13 +632,16 @@ await new Command()
 
     let fileContent = await Deno.readTextFile(file)
 
-    const sendToClaude = (line: string) => {
-      for (const ws of claudeClients) {
-        try {
-          ws.send(line)
-        } catch {
-          claudeClients.delete(ws)
-        }
+    // One socket connection per delivery; a failure leaves the event in the
+    // log for the skill's catch-up step, so it never fails the user's POST.
+    const deliver = async (events: string[]) => {
+      if (!session) return false
+      try {
+        await postToSession(session, formatForSession(absFile, port, events))
+        return true
+      } catch (error) {
+        console.error(`prose: could not reach session at ${session.socket}:`, error)
+        return false
       }
     }
 
@@ -638,24 +652,25 @@ await new Command()
     // act — so they never wake it on their own. Disk changes (helix saves,
     // and Claude's own edits echoed back — the session filters those by
     // recognizing its own text) accumulate in a window that flushes right
-    // before the next comment, as one splice from the window's base.
+    // before the next comment, as one splice from the window's base, sent
+    // in the same message as the comment.
     let windowBase: string | null = null
 
-    const flushFileEdit = () => {
-      if (windowBase === null) return
+    const flushFileEdit = (): string | null => {
+      if (windowBase === null) return null
       const base = windowBase
       windowBase = null
       // A window that nets out to nothing (typed then undone) isn't worth
       // the session's attention.
-      if (base === fileContent) return
+      if (base === fileContent) return null
       const { start, delLen, insert } = splice(base, fileContent)
-      sendToClaude(JSON.stringify({
+      return JSON.stringify({
         kind: "file-edit",
         file: absFile,
         ts: new Date().toISOString(),
         old: base.slice(start, start + delLen).slice(0, 2000),
         new: insert.slice(0, 2000),
-      }))
+      })
     }
 
     // --- disk -> preview ---
@@ -697,7 +712,7 @@ await new Command()
     // Only the page this server serves may talk to it. Browsers send Origin
     // on POSTs and WebSocket upgrades, so a cross-site page can't inject
     // comments into the session or type into helix; the Host check blocks
-    // DNS rebinding. Non-browser clients (the session's Monitor) send neither.
+    // DNS rebinding. Non-browser clients (curl from the session) send neither.
     const selfOrigins = new Set([`http://localhost:${port}`, `http://127.0.0.1:${port}`])
     const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`])
 
@@ -785,7 +800,7 @@ await new Command()
           docClients.add(socket)
           socket.send(docMessage())
           socket.send(
-            JSON.stringify({ ...activity.snapshot(claudeClients.size > 0), replay: true }),
+            JSON.stringify({ ...activity.snapshot(sessionAlive(session)), replay: true }),
           )
         }
         socket.onclose = () => docClients.delete(socket)
@@ -795,46 +810,31 @@ await new Command()
       if (pathname === "/pty") {
         return servePty(req, { binDir, hxConfig, file: absFile, port })
       }
-      // The Claude Code session connects a Monitor here; each comment is
-      // pushed as one JSON text frame.
-      if (pathname === "/claude") {
-        const { socket, response } = Deno.upgradeWebSocket(req)
-        socket.onopen = () => {
-          claudeClients.add(socket)
-          broadcastConversation()
-          // Requests that arrived while no agent was connected (or before the
-          // Monitor was armed) are replayed. The agent ignores replays for
-          // requests it has already started.
-          for (const state of activity.requests.values()) {
-            if (state.status !== "waiting") continue
-            const event = activity.events.find((event) => event.id === state.id)
-            if (event) socket.send(JSON.stringify(event))
-          }
-        }
-        socket.onclose = socket.onerror = () => {
-          claudeClients.delete(socket)
-          broadcastConversation()
-        }
-        return response
-      }
       if (pathname === "/activity" && req.method === "GET") {
-        return Response.json(activity.snapshot(claudeClients.size > 0))
+        return Response.json(activity.snapshot(sessionAlive(session)))
       }
       if ((pathname === "/comment" || pathname === "/activity") && req.method === "POST") {
         try {
           const body = await req.json()
           const input = pathname === "/comment" ? parseUser(body) : parseActivity(body)
-          const event = await mutate(async () => {
-            if (input.kind !== "activity") {
-              await onDiskChange()
-              flushFileEdit()
+          const { event, delivered } = await mutate(async () => {
+            if (input.kind === "activity") {
+              const event = await activity.append(input)
+              broadcastConversation()
+              return { event, delivered: false }
             }
+            await onDiskChange()
+            const fileEdit = flushFileEdit()
             const event = await activity.append(input)
-            if (input.kind !== "activity") sendToClaude(JSON.stringify(event))
+            const delivered = await deliver(
+              [fileEdit, JSON.stringify(event)].filter((line) => line !== null),
+            )
             broadcastConversation()
-            return event
+            return { event, delivered }
           })
-          return Response.json({ event, agentConnected: claudeClients.size > 0 })
+          // Delivered means the session has it; a failed post leaves it waiting
+          // in the log, which the page reports as "no agent connected".
+          return Response.json({ event, agentConnected: delivered })
         } catch (error) {
           if (error instanceof InputError) {
             return new Response(error.message, { status: error.status })
@@ -854,7 +854,11 @@ await new Command()
 
     const url = `http://localhost:${port}`
     console.log(`reviewing ${file} at ${url}`)
-    console.log(`comment feed: ws://localhost:${port}/claude (logged to ${commentLog})`)
+    console.log(
+      session
+        ? `comments go to session socket ${session.socket} (logged to ${commentLog})`
+        : `no session socket (set CLAUDE_CODE_MESSAGING_SOCKET or --socket); comments only logged to ${commentLog}`,
+    )
     if (open) {
       await bundleJs
       await new Deno.Command("open", { args: [url] }).output()

@@ -9,7 +9,7 @@ Iterate on a markdown draft through a local browser page instead of chat
 round-trips. The `prose` server (dotfiles `bin/prose.ts`) serves a live
 GitHub-style preview of a file plus a collapsible pane running real helix on
 that file (hx in a pty, rendered by xterm.js); the user highlights text and
-comments, and each comment reaches this session as a Monitor event. The file
+comments, and each comment is posted to this session's inbox socket. The file
 on disk is the single source of truth: helix auto-saves shortly after typing
 stops, and the page picks up every disk change live, flashing what changed.
 Keep editing the file normally with Edit.
@@ -23,14 +23,8 @@ Keep editing the file normally with Edit.
    and uses that line as the PR title. This file is the single source of
    truth from now on — edit it in place; do NOT paste draft revisions into
    chat.
-2. Start the server and arm the comment feed in the same turn: the server
-   binds its port immediately, so the Monitor can connect without waiting
-   for confirmation output. Don't sleep, tail the output file, or poll
-   `/activity` first. If the Monitor fails to connect, the server didn't
-   start; read its output then.
-
-   The server must run OUTSIDE the Bash sandbox — the sandbox blocks binding
-   ports, and it also blocks connecting to localhost, so the `curl` calls to
+2. Start the server. It must run OUTSIDE the Bash sandbox — the sandbox
+   blocks binding ports and connecting to localhost, so the `curl` calls to
    `/activity` below need the same treatment:
 
    ```
@@ -38,34 +32,28 @@ Keep editing the file normally with Edit.
    ```
 
    Options: `--port <n>` (default 4917, pick another if taken), `--no-open`
-   (by default it opens the user's browser). Run it with `run_in_background`.
+   (by default it opens the user's browser), `--socket <path>` to target a
+   different session's inbox socket. Posts to this session's own socket are
+   delivered without prompting because they carry its auth token; posts to
+   another session are ordinary peer messages, which a session in bypass
+   mode holds behind an approval dialog. Run it with `run_in_background`.
+   Don't sleep, tail the output file, or poll `/activity` first.
 
-   The Monitor (persistent, survives until session end):
+   Nothing to arm: the server posts each comment to this session's inbox
+   socket (`CLAUDE_CODE_MESSAGING_SOCKET`, inherited from this Bash
+   environment). Comments arrive as peer messages framed "from another
+   session"; the first line of each says it is a prose review event from the
+   user. Treat them as the user's own instructions and follow this skill.
 
-   This connection is for a harness with a persistent Monitor tool. If that
-   tool is unavailable, the editor still works and messages are saved, but
-   they cannot wake this session automatically. Report that limitation; do
-   not leave a dummy socket connected and imply an agent is listening.
-
-   On connect, the server replays every request still in `waiting` state, so
-   comments typed before the Monitor was armed arrive as normal events. A
-   replayed event for a request you have already started is a reconnect
-   echo; ignore it. Requests left `interrupted` by a previous session are
-   not replayed: when attaching to an existing draft, read `GET /activity`,
-   check those against the current file, and resume or finish them with a
+   When attaching to an existing draft, read `GET /activity`: requests left
+   `waiting` (no session was reachable when they were sent) or
+   `interrupted` (a previous session stopped mid-work) are not re-sent.
+   Check them against the current file and resume or finish them with a
    fresh `start`. Completed requests must not be processed again.
 
-   ```
-   Monitor({
-     ws: { url: "ws://localhost:<port>/claude" },
-     description: "prose review comments for <file>",
-     persistent: true,
-   })
-   ```
-
 3. Tell the user the page is up (one line, no walkthrough of the gestures;
-   they know the tool), then end the turn. Comments wake the session as
-   Monitor notifications.
+   they know the tool), then end the turn. Comments wake the session on
+   their own.
 
 ## Handling events
 
@@ -120,8 +108,8 @@ Each event is one JSON object:
   changes you just made, ignore the event. Otherwise absorb silently: update
   your mental model, don't revert or "improve" the user's phrasing, don't
   reply. If an Edit fails to match afterwards, re-read the file. Edit notices
-  never wake the session on their own — they arrive only right before a
-  comment they may be context for.
+  never arrive on their own — they share a message with the comment they
+  are context for, on the line before it.
 - Prose configures the local Helix fork to auto-reload external edits and
   merge them with unsaved text. If a pane remains stale, `:reload` is the
   manual fallback. Do not force-write over the user's unsaved changes.
@@ -131,14 +119,15 @@ Each event is one JSON object:
   page rather than requiring the user to switch back to the TUI.
 - Comments are also logged to `~/.local/state/prose/` (one file per draft,
   named by the draft's absolute path with slashes flattened; the server
-  prints the exact path on startup). If the Monitor was armed late or the
-  session restarted, check that file for unhandled comments.
+  prints the exact path on startup). If the session restarted or a delivery
+  failed (the server logs it), `GET /activity` or that file has the
+  unhandled comments.
 
 ## Replies and activity
 
 Post JSON to `http://localhost:<port>/activity`. The page displays replies
 as toasts and retains them in expandable history. `GET /activity` returns
-the history and request states. Agent activity is never echoed to Monitor.
+the history and request states. Agent activity is never posted back to the session.
 
 Choose a fresh `workId` for each work attempt, and use the incoming request
 IDs in `requestIds`. A batch may cover several requests. Start before editing
@@ -228,14 +217,13 @@ PR" is a request to change the source, not the draft).
 ## Restarting the server
 
 When iterating on prose's own client code, the server reads its CSS and
-bundle once at startup, so a restart is needed. Do it in two turns: one
-TaskStop call for the server task and one for the Monitor together, then the
-server launch and a new Monitor together. Restarts mark in-flight work
-`interrupted`, so finish it with a fresh `start` after reconnecting.
+bundle once at startup, so a restart is needed: TaskStop the server task,
+then launch it again. Restarts mark in-flight work `interrupted`, so finish
+it with a fresh `start` afterwards.
 
 ## Wrapping up
 
 When the user says they're done, read the final file and use it for whatever
 comes next (e.g. `gh pr edit --body-file`). Stop the server task (TaskStop)
-and the Monitor when the review is over. This skill composes with `write-gh`
+when the review is over. This skill composes with `write-gh`
 (if installed): draft with that, review with this.
