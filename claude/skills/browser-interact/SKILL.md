@@ -102,3 +102,32 @@ per-request DNS/connect/TLS/TTFB/download breakdowns, plus route
 interception/mocking and HAR record/replay. The chrome-devtools network tools
 are inspection-only, with no per-request timing. (Playwright's
 `context.newCDPSession(page)` also reaches any raw CDP domain if needed.)
+
+## React re-render questions (does this `memo` do anything?)
+
+Three different questions, three tools. All verified by driving a React 19 +
+Vite app from Playwright; none needs a browser extension.
+
+- **Who rendered, how often?** `react-render-hook.js` (next to this file), a
+  ~60-line stand-in for React DevTools installed via
+  `page.addInitScript({ path })`. Zero deps, no app edits. Usage and gotchas
+  are in its header comment. react-scan's programmatic API returns the same
+  names and counts plus self time, but costs an install and an entry-point
+  import, and its change/unnecessary reporting is dead in the `onRender`
+  callback (0.5.7). Not worth it over the hook.
+- **Does it matter?** Wrap the root in `<Profiler id="x" onRender={...}>` and
+  push `{ actualDuration, baseDuration }` to a window array. `baseDuration`
+  is the cost if nothing bailed out, `actualDuration` is what actually ran,
+  so the gap is exactly what memoization saved for that commit. One edit at
+  the app entry; the only tool here that yields a number worth deciding on.
+- **Why did a memo'd component re-render?** why-did-you-render, with a
+  `notifier` that pushes `reason.propsDifferences` to a window array. It
+  names the prop (e.g. `onSelect: function`) or reports an owner-only
+  re-render (memo missing). On React 19 it must be the JSX import source:
+  `react({ jsxImportSource: '@welldone-software/why-did-you-render' })` in
+  the Vite config, gated on an env var, plus a first import that calls
+  `whyDidYouRender(React, { trackAllPureComponents: true, notifier })`.
+  Silent when nothing was avoidable, which is the right answer.
+
+Long-animation-frame / long-task entries are too coarse for this (50ms
+threshold); a 20ms wasted re-render never shows up.
