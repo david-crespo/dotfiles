@@ -162,7 +162,32 @@ export async function estimateTranscript(path: string, turnId?: string): Promise
   return tracker.message(turnId ?? rootTurn)
 }
 
+// Find the rollout for a thread id (from `codex exec --json`'s thread.started
+// event). Filenames are rollout-<timestamp>-<thread_id>.jsonl under
+// ~/.codex/sessions/YYYY/MM/DD.
+export async function findRollout(threadId: string): Promise<string | undefined> {
+  if (!/^[0-9a-f-]{36}$/.test(threadId)) return undefined
+  const sessions = `${process.env.CODEX_HOME ?? `${process.env.HOME}/.codex`}/sessions`
+  const found: string[] = []
+  for await (const rel of new Bun.Glob(`*/*/*/rollout-*-${threadId}.jsonl`).scan(sessions)) {
+    found.push(`${sessions}/${rel}`)
+  }
+  return found.sort().at(-1)
+}
+
 if (import.meta.main) {
+  // `bun cost.ts <thread_id>` prices a thread outside the hook, e.g. after each
+  // `codex exec` / `codex exec resume` call. "This turn" is the latest turn.
+  const threadId = process.argv[2]
+  if (threadId) {
+    const path = await findRollout(threadId)
+    if (!path) {
+      console.error(`No rollout found for thread ${threadId}`)
+      process.exit(1)
+    }
+    console.log(await estimateTranscript(path))
+    process.exit(0)
+  }
   try {
     const input = await Bun.stdin.json()
     if (input.hook_event_name === "Stop" && input.transcript_path) {

@@ -126,7 +126,7 @@ for skill in "$PWD/claude/skills"/*/; do
   done
 done
 
-# opencode subagent tiers (see claude/skills/opencode)
+# opencode subagent tiers (see claude/skills/shellout)
 find ~/.config/opencode/agent -maxdepth 1 -type l ! -exec test -e {} \; -delete
 for agent in "$PWD/opencode/agent"/*.md; do
   ln -sf "$agent" ~/.config/opencode/agent/
