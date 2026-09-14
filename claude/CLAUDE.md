@@ -5,7 +5,7 @@
   - "that's X, not Y" / "that's not X, it's Y"
   - "That's the spine", "Fair hit", "A real observation", "That's the whole
     thing", "That's doing real work", "the part that matters most", "say the word", "the moment earned it"
-  - "load-bearing" 
+  - "load-bearing"
   - "Genuinely.", "Quietly.", "Honestly."
   - "One honest caveat:", "Uncertainty flag:", "Worth naming:", "worth stating
     clearly", "worth holding onto"
@@ -31,7 +31,7 @@ Some information about the user's coding environment:
 
 ### jj (Jujutsu)
 
-- When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme.
+- When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files: one imperative line, under about 50 chars, saying what changed. A few words of why are fine if they fit ("Drop file count, index too large"); a sentence of rationale is not. Longer reasoning goes in a body after a blank line, or in the PR. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme.
 - To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
 - In jj repos, use jj for everything git would do (`jj status`, `jj diff`, `jj diff -r @-`, `jj log`, `jj file annotate`, ...). Fall back to git only when jj has no way to do the thing.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
