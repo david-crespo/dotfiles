@@ -26,6 +26,7 @@ The key principle: **the note should be very close to verbatim what was said in 
 - **When quoting, quote.** Blockquotes (`>`) must use the user's actual words. It's fine to paraphrase or summarize the user, but not inside a blockquote — that's a quote.
 - **Copy your responses nearly verbatim.** Light editing for flow is fine (removing "Let me look at..." transitions), but preserve the structure, tone, and level of detail. If the response used prose paragraphs, keep prose paragraphs. Don't break flowing text into bullet points or add headings that weren't there.
 - **Include concrete details.** Links, file paths with line numbers, code snippets, command examples — the kind of thing that's hard to reconstruct later.
+- **Never hard-wrap.** Each paragraph, list item, or table row is one long line. Obsidian joins single newlines, but a wrap inside a `code span` or a link breaks its rendering. If the source material is a hard-wrapped markdown file (e.g. a `.claude/notes` report), unwrap it before writing the note.
 - **Omit filler.** No preamble, no "here's what we discussed," no meta-commentary about the note itself.
 
 ## Before writing

@@ -31,7 +31,7 @@ Some information about the user's coding environment:
 
 ### jj (Jujutsu)
 
-- When asked to start work on something and you're on an empty commit with no description, set a short description before you start editing files: one imperative line, under about 50 chars, saying what changed. A few words of why are fine if they fit ("Drop file count, index too large"); a sentence of rationale is not. Longer reasoning goes in a body after a blank line, or in the PR. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme.
+- When asked to start work on something that affects versioned files and you're on an empty commit with no description, set a short description before you start editing: one imperative line, under about 50 chars, saying what changed. A few words of why are fine if they fit ("Drop file count, index too large"); a sentence of rationale is not. Longer reasoning goes in a body after a blank line, or in the PR. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme. Setting a description is not necessary if you're only working in .claude/notes directories other than the CWD.
 - To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
 - In jj repos, use jj for everything git would do (`jj status`, `jj diff`, `jj diff -r @-`, `jj log`, `jj file annotate`, ...). Fall back to git only when jj has no way to do the thing.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
@@ -89,6 +89,7 @@ Some information about the user's coding environment:
 - in scripts, prefer full length flags instead of abbreviations for readability
 - Don't browse other oxide repos under ~/oxide speculatively. Only read from another oxide repo when the task explicitly requires it (the user named the repo, or a cross-repo reference can't be resolved otherwise). In that case, prefer the local clone over GitHub; if it's not cloned, ask before cloning.
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
+- When giving a list of problems or suggestions in, e.g., a code review, number the suggestions so the user can refer to them easily.
 
 ### Working with GitHub
 
