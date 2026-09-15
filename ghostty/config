@@ -1,3 +1,5 @@
+auto-update-channel = stable
+
 theme = ayu
 # lighten error red a bit (prob too similar to 9, though)
 palette = 1=#ff5555
@@ -50,8 +52,6 @@ window-padding-y = 4
 # no-title leaves dir in place as tab/window title. shell integration overall is
 # worth leaving on for prompt marking and other features not covered by flags
 shell-integration-features = cursor,no-sudo,no-title
-
-auto-update-channel = stable
 
 # quick terminal
 keybind = global:cmd+\=toggle_quick_terminal

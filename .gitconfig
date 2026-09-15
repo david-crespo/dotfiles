@@ -2,7 +2,6 @@
 name = David Crespo
 email = crespo.dm@gmail.com
 
-[includeIf "gitdir:~/oxide"]
 path = "~/.gitconfig-oxide"
 
 [checkout]
@@ -23,6 +22,10 @@ light = false   # set to true if you're in a terminal w/ a light background colo
 # finite cap bounds the blast radius of pathological one-liners (minified JS,
 # base64 blobs).
 wrap-max-lines = 50
+# Ghostty erases the last cell when a line exactly fills the width and is
+# followed by clear-to-EOL. Pad with spaces instead.
+# https://github.com/dandavison/delta/issues/1021
+line-fill-method = spaces
 
 [color "diff-highlight"]
 oldNormal = red bold
