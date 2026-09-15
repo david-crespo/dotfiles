@@ -20,6 +20,9 @@ Helix requires a PTY which isn't available through direct bash commands. Use tmu
 5. Clean up: `tmux send-keys -t helix-test ':q!' C-m && tmux kill-session -t helix-test`
 
 **Key points:**
+- tmux cannot create its socket directory inside the Bash sandbox; run the tmux commands with the sandbox disabled.
+- To restart Helix after a config or Steel change, `tmux kill-session` and create a new session. Do not rely on `:q!` then `hx`: with two views open the first `:q!` only closes one, and the `hx` keystrokes land in the still-running editor, so the "retest" runs the old code.
+- Give the session a real size (`-x 160 -y 45`) and start it in the repo you want as Helix's cwd (`-c <dir>`).
 - Use `C-m` for Enter, `Escape` for Escape
 - Add `sleep 0.2-0.5` before capturing to allow LSP analysis (slower LSPs may need 1-2 seconds)
 - Use `:config-reload` and `:lsp-restart` when testing config changes
@@ -46,6 +49,15 @@ When converting keybinding commands to Steel functions:
 
 **Testing:**
 - Shell command output appears in popups (captured by `tmux capture-pane`), unlike `:echo %sh{...}` which outputs to the status line
+- The statusline in a capture (`NOR  name [+]  12:1  440`) gives the cursor line and buffer length; that is the cheapest way to assert where a command left the cursor. `tmux capture-pane -p | grep -vE '^\s*$' | tail -2` shows the statusline plus any error message under it.
+- `tmux capture-pane -e` keeps color codes, but checking them is fiddly; for coloring questions, ask the user for a screenshot.
+
+**Steel plugins (cogs in `~/.config/helix/cogs`, from `helix/cogs/` in dotfiles):**
+- Cogs and `init.scm` are read at startup only; restart Helix after each edit.
+- Pure functions (parsing, string handling, running a subprocess) can be checked without Helix: `steel file.scm` with `(require-builtin steel/process)`. `wait->stdout` returns an `Ok` wrapper; unwrap with `Ok->value`. `steel/process` is undocumented in `steel-docs.md`; oil.hx (github.com/Ra77a3l3-jar/oil.hx) is the reference for the idiom.
+- Per-buffer keymaps built with `deep-copy-global-keybindings` must come after every global keymap edit in `init.scm`, or later global definitions win.
+- Steel load errors show on the scratch buffer's status line at startup and in `~/.cache/helix/helix.log`. Filter the log with `grep -iE 'error|steel' | grep -v steel-language-server`; the language server's stderr is logged at ERROR level and is noise.
+- Worked example: to test a cog that opens a scratch buffer, start Helix in a repo with a diff, run the command, then drive its keys and read cursor positions off the statusline after each one, e.g. `s ':multidiff' C-m; sleep 2; s ']f'; sleep 0.5; cap` with `s`/`cap` as small `tmux send-keys` / `capture-pane` wrappers.
 ## Troubleshooting
 
 **Config locations:**
