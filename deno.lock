@@ -17,6 +17,7 @@
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/bytes@^1.0.6": "1.0.6",
     "jsr:@std/cli@1": "1.0.30",
+    "jsr:@std/encoding@1": "1.0.11",
     "jsr:@std/encoding@^1.0.10": "1.0.11",
     "jsr:@std/fmt@1": "1.0.10",
     "jsr:@std/fmt@^1.0.10": "1.0.10",
@@ -26,13 +27,14 @@
     "jsr:@std/io@0.225": "0.225.3",
     "jsr:@std/io@~0.225.2": "0.225.3",
     "jsr:@std/io@~0.225.3": "0.225.3",
-    "jsr:@std/path@1": "1.1.5",
-    "jsr:@std/path@^1.0.8": "1.1.5",
+    "jsr:@std/path@1": "1.1.6",
+    "jsr:@std/path@^1.0.8": "1.1.6",
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/text@^1.0.19": "1.0.19",
     "npm:@codemirror/language-data@^6.5.2": "6.5.2",
     "npm:@codemirror/language@^6.12.4": "6.12.4",
     "npm:@lezer/highlight@^1.2.3": "1.2.3",
+    "npm:@typesafe-ai/sdk@0.6": "0.6.0",
     "npm:@xterm/addon-fit@0.11": "0.11.0",
     "npm:@xterm/addon-webgl@0.19": "0.19.0",
     "npm:@xterm/xterm@6": "6.0.0",
@@ -45,7 +47,7 @@
       "integrity": "b8702def9c0110b6eeb2b3b71e0b26cbe0a427facbb4f9c0189da0ba19feb549",
       "dependencies": [
         "jsr:@cliffy/internal",
-        "jsr:@std/encoding",
+        "jsr:@std/encoding@^1.0.10",
         "jsr:@std/io@~0.225.3"
       ]
     },
@@ -598,6 +600,9 @@
     "@types/mdurl@2.0.0": {
       "integrity": "sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg=="
     },
+    "@typesafe-ai/sdk@0.6.0": {
+      "integrity": "sha512-IddX+Q0XM+VagOUZFeP7wZjaO4SHMdvnh2zEBdrZZnXedWI3BNK1lKhMx3ayrkFWvVLbVcUHJy6AVZlY+e6Jaw=="
+    },
     "@xterm/addon-fit@0.11.0": {
       "integrity": "sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g=="
     },
@@ -660,6 +665,7 @@
       "jsr:@cliffy/table@1.2.1",
       "jsr:@david/dax@~0.48.3",
       "jsr:@std/cli@1",
+      "jsr:@std/encoding@1",
       "jsr:@std/fmt@1",
       "jsr:@std/fs@^1.0.24",
       "jsr:@std/io@~0.225.2",
@@ -667,6 +673,7 @@
       "npm:@codemirror/language-data@^6.5.2",
       "npm:@codemirror/language@^6.12.4",
       "npm:@lezer/highlight@^1.2.3",
+      "npm:@typesafe-ai/sdk@0.6",
       "npm:@xterm/addon-fit@0.11",
       "npm:@xterm/addon-webgl@0.19",
       "npm:@xterm/xterm@6",
