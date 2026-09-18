@@ -70,7 +70,17 @@ tviz update <uuid> --append-notes "Additional context"
 tviz update <uuid> --add-tags "urgent,blocked"
 tviz update <uuid> --append-checklist "one more thing"   # also --prepend-checklist
 tviz update <uuid> --checklist "a" --checklist "b"       # REPLACES all checklist items
+
+# Delete an item (moves it to the Things trash)
+tviz delete <uuid>
 ```
+
+Delete vs cancel: cancel is for items that we want a record of having had on the
+list and the decided not to do or realized don't need to be done. Usually this
+means they were on the list for more than a few minutes. If you're rearranging
+items you just created (e.g., splitting a todo into multiple), you can use
+delete because there's no value in treating the initial version as a todo we
+canceled.
 
 Notes for create commands can be piped via stdin. The `--project` flag on
 `add todo` selects by project name; if the project doesn't exist, Things

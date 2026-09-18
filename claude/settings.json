@@ -161,6 +161,7 @@
     ],
     "ask": [
       "Bash(tviz update:*)",
+      "Bash(tviz delete:*)",
       "Bash(turnstile triage add:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr edit:*)",
@@ -290,6 +291,11 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": false,
+    "network": {
+      "allowUnixSockets": [
+        "~/.obsidian-cli.sock"
+      ]
+    },
     "excludedCommands": [
       "bun add *",
       "bun install *",
@@ -304,10 +310,7 @@
       "git fetch *",
       "git pull *",
       "jj git *"
-    ],
-    "network": {
-      "allowUnixSockets": ["~/.obsidian-cli.sock"]
-    }
+    ]
   },
   "effortLevel": "high",
   "modelSettings": {
@@ -319,6 +322,7 @@
   "skipWorkflowUsageWarning": true,
   "editorMode": "vim",
   "preferredNotifChannel": "terminal_bell",
+  "switchModelsOnFlag": false,
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,

@@ -5,7 +5,7 @@
   - "that's X, not Y" / "that's not X, it's Y"
   - "That's the spine", "Fair hit", "A real observation", "That's the whole
     thing", "That's doing real work", "the part that matters most", "say the word", "the moment earned it"
-  - "load-bearing"
+  - "load-bearing", "round-trip" as a verb
   - "Genuinely.", "Quietly.", "Honestly."
   - "One honest caveat:", "Uncertainty flag:", "Worth naming:", "worth stating
     clearly", "worth holding onto"
