@@ -1,0 +1,61 @@
+# Oxide-styled D2 diagrams. Import at the top of a diagram with
+#   ...@/Users/david/repos/dotfiles/d2/oxide.d2
+# (D2 import paths cannot pass through a directory with a dot in its name,
+# so this file is not reachable via ~/.config or .claude.)
+#
+# Colors are the dark theme tokens from oxide/design-system (styles/dark.css
+# and styles/main.css), converted from oklch to hex. Token names in comments.
+# Modeled on the hand-styled state diagrams on docs.oxide.computer.
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 200
+    pad: 48
+  }
+}
+
+style.fill: "#0b0e12" # --surface-default (neutral-0)
+
+classes: {
+  # A thing: artifact, state, component. Green-tinted box, green text.
+  thing: {
+    style: {
+      fill: "#002923" # --surface-accent (green-200)
+      stroke: "#005441" # --stroke-accent-tertiary (green-400)
+      font-color: "#00d892" # --content-accent (green-800)
+      border-radius: 4
+      bold: false
+      font-size: 18
+    }
+  }
+  # A verb or grouping: plain gray box, gray text. Use for containers too.
+  group: {
+    style: {
+      fill: "#181a1d" # --surface-secondary (neutral-100)
+      stroke: "#181a1d"
+      font-color: "#a3a4a5" # --content-secondary (neutral-700)
+      border-radius: 4
+      bold: false
+      font-size: 16
+    }
+  }
+  # Solid edge: the default relationship (produces, transitions to, ...).
+  edge: {
+    style: {
+      stroke: "#5d5e61" # --content-quaternary (neutral-500)
+      stroke-width: 2
+    }
+  }
+  # Dashed edge: a secondary relationship (uses, depends on, ...).
+  dashed: {
+    style: {
+      stroke: "#5d5e61" # --content-quaternary (neutral-500)
+      stroke-width: 2
+      stroke-dash: 4
+      font-color: "#818284" # --content-tertiary (neutral-600)
+      italic: false
+      font-size: 15
+    }
+  }
+}

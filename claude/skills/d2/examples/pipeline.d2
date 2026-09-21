@@ -1,0 +1,33 @@
+# Oxide API pipeline: what gets generated from the OpenAPI schema and what
+# uses what. Render: d2 pipeline.d2 pipeline.png
+...@/Users/david/repos/dotfiles/d2/oxide.d2
+
+direction: right
+
+impl: "API implementation\n(Rust)" { class: thing }
+spec: OpenAPI schema { class: thing; height: 70 }
+go: Go client { class: thing }
+tf: Terraform provider { class: thing }
+ts: "TypeScript client\n+ mock API server" { class: thing }
+console: Web console { class: thing }
+rust: Rust client { class: thing }
+cli: CLI { class: thing }
+docs: Docs site {
+  class: group
+  apidocs: API docs { class: thing }
+  clidocs: CLI docs { class: thing }
+}
+
+# Edge declaration order sets port order on `spec`: the apidocs edge is
+# declared before rust/cli so it leaves above them and does not cross.
+impl -> spec { class: edge }
+spec -> go { class: edge }
+spec -> ts { class: edge }
+spec -> docs.apidocs { class: edge }
+spec -> rust { class: edge }
+spec -> cli { class: edge }
+cli -> docs.clidocs { class: edge }
+
+go -> tf: used by { class: dashed }
+ts -> console: used by { class: dashed }
+rust -> cli: used by { class: dashed }
