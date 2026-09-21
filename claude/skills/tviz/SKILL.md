@@ -5,8 +5,6 @@ description: How to use the tviz CLI to read and write Things 3 tasks
 
 # tviz
 
-Reference for using `tviz` to read and write Things 3 tasks.
-
 ## Things 3 concepts
 
 **Areas** are ongoing life domains (Career, Health, Home). They never complete.
@@ -24,23 +22,22 @@ Run `tviz --help` for full reference. Key commands:
 ```bash
 tviz today                    # primary working view
 tviz inbox                    # process daily
+tviz someday                  # deferred items (also tagged "(someday)" in short/pretty output)
 tviz todos -a <area>          # filter by area
 tviz todos -p <project>       # filter by project
-tviz todos -f tsv             # uuid + created date + stop_date, token-efficient
+tviz todos -f tsv             # compact: uuid, dates, project, heading, title
 tviz todos -f pretty          # full notes and checklists
 tviz logbook                  # recently completed items (default 50)
 tviz logbook -a Oxide -n 100  # filter by area, increase limit
 tviz item <uuid> -f pretty    # details on one item
-tviz link <uuid>              # clickable Things link (use this!)
+tviz link <uuid>              # OSC 8 terminal hyperlink, for the user's terminal only
 ```
 
 Tips:
 
-- Always use `-f tsv` first to get uuids and dates; only fetch `-f pretty` when you need notes
-- When referring to specific tasks, link them with `[title](things:///show?id=<uuid>)`. Use the full original title so the user can search Things for it.
+- Use `-f tsv` first to get uuids and dates; only fetch `-f pretty` when you need notes
+- When referring to specific tasks in a response, link them with `[title](things:///show?id=<uuid>)`. Use the full original title so the user can search Things for it. `tviz link` prints terminal escape codes, which don't render in chat.
 - Find oldest items: `tviz todos -f json | jq -r 'sort_by(.created) | .[0:20] | .[] | "\(.created[0:10]) \(.title)"'`
-- Check GitHub status with `gh issue view` / `gh pr view` or `aipr tracking` / `aipr discussion`
-- For large outputs, spawn a subagent to process and summarize
 
 ## Write commands
 
@@ -76,28 +73,21 @@ tviz delete <uuid>
 ```
 
 Delete vs cancel: cancel is for items that we want a record of having had on the
-list and the decided not to do or realized don't need to be done. Usually this
+list and then decided not to do or realized don't need to be done. Usually this
 means they were on the list for more than a few minutes. If you're rearranging
 items you just created (e.g., splitting a todo into multiple), you can use
 delete because there's no value in treating the initial version as a todo we
 canceled.
 
-Notes for create commands can be piped via stdin. The `--project` flag on
-`add todo` selects by project name; if the project doesn't exist, Things
-silently puts the item in the inbox. Update works on both todos and projects
-— it just needs the UUID.
+If the `--project` name doesn't match an existing project, Things silently
+puts the item in the inbox.
 
 `--append-notes` and `--prepend-notes` automatically add a blank line of
 separation, so just write the new content without leading/trailing newlines.
 
-Use plain URLs in Things item notes, not markdown links — Things 3 doesn't
-render markdown, so `[text](url)` shows as raw bracket syntax. A bare URL
-like `https://github.com/oxidecomputer/omicron/pull/4669` becomes a
-clickable link automatically.
-
-Checklists are a native Things feature with their own UI, distinct from
-markdown checkboxes in notes (which don't render). Use the `--checklist`
-flags above, never `- [ ]` in notes.
+Things doesn't render markdown in notes. Use bare URLs, which become
+clickable automatically, not `[text](url)`. For checklists use the
+`--checklist` flags above, never `- [ ]` in notes.
 
 To seed a new project from a past one (e.g. copying items from an old
 trip's project), always create fresh todos with `tviz add todo`. Copy/paste
