@@ -187,7 +187,6 @@
       "~/oxide/console"
     ]
   },
-  "model": "claude-fable-5-1",
   "hooks": {
     "PreToolUse": [
       {
@@ -316,6 +315,9 @@
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "high"
     }
   },
   "tui": "fullscreen",
