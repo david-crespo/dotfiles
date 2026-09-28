@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string></string>
+	<key>connections</key>
+	<dict>
+		<key>67E7A322-8DEA-4330-BD72-6FC8B72E7686</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>0C89366D-6B7F-4BE0-877A-774F31132119</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>CA294958-6828-4E48-B431-3126EDE74DEF</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>67E7A322-8DEA-4330-BD72-6FC8B72E7686</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string></string>
+	<key>description</key>
+	<string>Rewrite clipboard text with an LLM according to instructions, then paste</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Transform text</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>export PATH="$HOME/.deno/bin:$HOME/.local/bin:$PATH"
+
+ai --raw -m haiku --system "you are part of a text processing system. transform the given text according to the instructions. output ONLY the raw transformed text" "&lt;text&gt;$(pbpaste)&lt;/text&gt; &lt;instructions&gt;$1&lt;/instructions&gt;"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>5</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>67E7A322-8DEA-4330-BD72-6FC8B72E7686</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>keyword</key>
+				<string>transform||transform text</string>
+				<key>subtext</key>
+				<string>Rewrite clipboard text per instructions and paste</string>
+				<key>text</key>
+				<string>Transform text</string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>CA294958-6828-4E48-B431-3126EDE74DEF</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<true/>
+				<key>clipboardtext</key>
+				<string>{query}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>0C89366D-6B7F-4BE0-877A-774F31132119</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>0C89366D-6B7F-4BE0-877A-774F31132119</key>
+		<dict>
+			<key>xpos</key>
+			<real>530.0</real>
+			<key>ypos</key>
+			<real>120.0</real>
+		</dict>
+		<key>67E7A322-8DEA-4330-BD72-6FC8B72E7686</key>
+		<dict>
+			<key>xpos</key>
+			<real>300.0</real>
+			<key>ypos</key>
+			<real>120.0</real>
+		</dict>
+		<key>CA294958-6828-4E48-B431-3126EDE74DEF</key>
+		<dict>
+			<key>xpos</key>
+			<real>70.0</real>
+			<key>ypos</key>
+			<real>120.0</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

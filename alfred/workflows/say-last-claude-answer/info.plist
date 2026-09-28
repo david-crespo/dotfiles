@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.davidcrespo.say-last</string>
+	<key>connections</key>
+	<dict>
+		<key>5B0C1E6A-3F2D-4C8B-9E71-2A4D6F8B0C35</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>1F48C479-2174-4FF3-8A6A-7DC4DFDE1269</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>david</string>
+	<key>description</key>
+	<string>Read the most recent Claude Code answer aloud; press again to stop.</string>
+	<key>name</key>
+	<string>Say last Claude answer</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>keyword</key>
+				<string>say last</string>
+				<key>subtext</key>
+				<string>Read the newest Claude Code answer aloud; run again to stop</string>
+				<key>text</key>
+				<string>Say last Claude answer</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>5B0C1E6A-3F2D-4C8B-9E71-2A4D6F8B0C35</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<true/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>export PATH="$HOME/.deno/bin:$HOME/.local/bin:$PATH"
+
+# Detached so Alfred's script action returns immediately: playback can run
+# for a minute, and the hotkey has to stay pressable to stop it.
+nohup say-last &gt;/dev/null 2&gt;&amp;1 &amp;
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>5</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>1F48C479-2174-4FF3-8A6A-7DC4DFDE1269</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>`say last` reads the newest Claude Code answer aloud. Run it again to stop.
+
+Backed by `say-last` in the dotfiles repo (bin/say-last.ts).</string>
+	<key>uidata</key>
+	<dict>
+		<key>1F48C479-2174-4FF3-8A6A-7DC4DFDE1269</key>
+		<dict>
+			<key>xpos</key>
+			<integer>270</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+		<key>5B0C1E6A-3F2D-4C8B-9E71-2A4D6F8B0C35</key>
+		<dict>
+			<key>xpos</key>
+			<integer>40</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+	</dict>
+	<key>version</key>
+	<string>1.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.david.ghl</string>
+	<key>connections</key>
+	<dict>
+		<key>07001CEE-73B4-4182-BEA9-3C39308F0E37</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>319B486F-8AB8-4D6C-86E0-59F8B807C5BE</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>319B486F-8AB8-4D6C-86E0-59F8B807C5BE</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>CEB8B7AE-4979-479D-887F-0FE20D52025C</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string></string>
+	<key>description</key>
+	<string>Paste GitHub issue/PR URL from clipboard as a markdown link labeled owner/repo#123</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>GitHub Link</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>keyword</key>
+				<string>ghl||github link</string>
+				<key>subtext</key>
+				<string>Paste clipboard GitHub URL as [owner/repo#123](url)</string>
+				<key>text</key>
+				<string>GitHub Link</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>07001CEE-73B4-4182-BEA9-3C39308F0E37</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>url="$(pbpaste | tr -d '[:space:]')"
+re='^https://github\.com/([^/]+)/([^/]+)/(pull|issues|discussions)/([0-9]+)'
+if [[ $url =~ $re ]]; then
+  owner="${BASH_REMATCH[1]}" repo="${BASH_REMATCH[2]}" num="${BASH_REMATCH[4]}"
+  case "$owner" in
+    oxidecomputer|david-crespo) label="$repo#$num" ;;
+    *) label="$owner/$repo#$num" ;;
+  esac
+  printf '[%s](%s)' "$label" "$url"
+else
+  printf '%s' "$(pbpaste)"
+fi</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>319B486F-8AB8-4D6C-86E0-59F8B807C5BE</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<true/>
+				<key>clipboardtext</key>
+				<string>{query}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>CEB8B7AE-4979-479D-887F-0FE20D52025C</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>07001CEE-73B4-4182-BEA9-3C39308F0E37</key>
+		<dict>
+			<key>xpos</key>
+			<real>70</real>
+			<key>ypos</key>
+			<real>120</real>
+		</dict>
+		<key>319B486F-8AB8-4D6C-86E0-59F8B807C5BE</key>
+		<dict>
+			<key>xpos</key>
+			<real>300</real>
+			<key>ypos</key>
+			<real>120</real>
+		</dict>
+		<key>CEB8B7AE-4979-479D-887F-0FE20D52025C</key>
+		<dict>
+			<key>xpos</key>
+			<real>530</real>
+			<key>ypos</key>
+			<real>120</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

@@ -141,6 +141,26 @@ for ext in "$PWD/pi/extensions"/*.ts; do
   ln -sf "$ext" ~/.pi/agent/extensions/
 done
 
+# Alfred workflows (see alfred/README.md). Each repo dir is linked into Alfred's
+# workflows folder under the user.workflow.<UUID> name Alfred originally gave it.
+# prefs.json records where the preferences folder lives (it moves if sync is on).
+alfred_prefs=$(plutil -extract current raw "$HOME/Library/Application Support/Alfred/prefs.json" 2>/dev/null)
+if [ -d "$alfred_prefs/workflows" ]; then
+  link_alfred_workflow() {
+    local dest="$alfred_prefs/workflows/user.workflow.$2"
+    if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+      echo "alfred: skipping $1, $dest is a real directory (move it aside first)" >&2
+      return
+    fi
+    ln -sfn "$PWD/alfred/workflows/$1" "$dest"
+  }
+  link_alfred_workflow details-wrap FE496108-4453-4225-87DD-C457FD27420C
+  link_alfred_workflow github-link 5A9D3432-44D4-4426-9F07-F1E110B822B8
+  link_alfred_workflow google-meet CF67E427-2764-4E80-8A14-50E9E23CAC2A
+  link_alfred_workflow say-last-claude-answer FEDCB77F-51D1-4A24-A872-D4F308A615A3
+  link_alfred_workflow transform-text A0DC9B64-8694-4A42-B13B-15D6EEDD9691
+fi
+
 # private dotfiles (separate private repo, not required)
 if [ -d "$HOME/repos/dotfiles-private" ]; then
   "$HOME/repos/dotfiles-private/install.sh"
