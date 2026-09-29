@@ -215,6 +215,10 @@
           {
             "type": "command",
             "command": "ghostty-tab-title prompt"
+          },
+          {
+            "type": "command",
+            "command": "jj root >/dev/null 2>&1 && jj log --no-pager -r '::@' -n 3 -T home 2>/dev/null || true"
           }
         ]
       }

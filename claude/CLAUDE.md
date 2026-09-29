@@ -12,6 +12,10 @@
   - Fake-therapy imperatives: "That's something to sit with", "Sharpen that",
     "Notice the arc of what just happened", "a signal to slow down, not a
     verdict"
+- Before sending a chat reply, consider how much of it the user would actually
+  want to read. Length should fit the question: a quick exchange gets a short,
+  conversational answer; a real report can be long, but detail the user will
+  only skim belongs in a file or note.
 - When estimating how long a task will take, assume SOTA coding agents are doing the work. If tempted to say something will take a day or more, reconsider
   carefully and be sure.
 
