@@ -26,12 +26,8 @@ auto-track-created-bookmarks = "*"
 # https://github.com/gwsw/less/issues/36#issuecomment-913200056
 
 [ui]
-# side by side diff if screen is wide enough
-pager = [
-  "zsh",
-  "-c",
-  '[ "${COLUMNS}" -ge 165 ] && delta --side-by-side || delta',
-]
+# Share width-aware Delta rendering with jjui.
+pager = ["jj", "delta"]
 default-command = ["log", "--template", "home"]
 diff-editor = ":builtin"
 merge-editor = "vscode"
@@ -64,6 +60,31 @@ log = "builtin_log() | ancestors(immutable_heads().., 4) | (divergent() & (mine(
 'lockfiles' = 'glob:"**/package-lock.json" | glob:"**/Cargo.lock" | glob:"**/deno.lock" | glob:"**/bun.lock"'
 
 [aliases]
+# A stdin filter, also used as ui.pager. --ignore-working-copy avoids taking
+# another snapshot just to format output. The final string sets bash's $0 so
+# supplied Delta options start at $1 and are all included in "$@".
+delta = ["--ignore-working-copy", "util", "exec", "--", "bash", "-c", '''
+  # jjui supplies the preview pane width in COLUMNS. With terminal output,
+  # use the actual terminal width instead, including after a resize.
+  width=${COLUMNS:-80}
+  if [ -t 1 ]; then read -r _ width < <(stty size </dev/tty); fi
+
+  # --width keeps Delta from formatting a preview for the outer terminal.
+  args=(--width="$width")
+  # --side-by-side needs enough room for two columns; match the 165-column
+  # threshold previously used by the ordinary jj pager.
+  if [ "$width" -ge 165 ]; then args+=(--side-by-side); fi
+
+  # Forward pager options: jjui previews use --paging=never because jjui
+  # handles scrolling; the full-screen diff uses --pager 'less -R' to keep
+  # even a short diff open until quit, displaying ANSI colors correctly.
+  exec delta "${args[@]}" "$@"
+  ''', "jj delta"]
+# Run a jj command through the filter. --no-pager avoids formatting twice;
+# --paging=never leaves scrolling to jjui's preview pane.
+delta-preview = ["--ignore-working-copy", "util", "exec", "--", "bash", "-c", '''
+  jj --no-pager "$@" | jj delta --paging=never
+  ''', "jj delta-preview"]
 d = ["diff"]
 dm = ["describe", "-m"]
 dp = ["describe", "-r", "@-"]

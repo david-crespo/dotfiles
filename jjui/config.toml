@@ -5,19 +5,16 @@ template = "home"
 "selected" = { bg = "#292929" }
 
 [preview]
-revision_command = ["util", "exec", "--", "bash", "-c",
-  "jj show --color always --git -r $change_id | delta"]
-oplog_command = ["util", "exec", "--", "bash", "-c",
-  "jj op show $operation_id --git --color always | delta"]
-file_command = ["util", "exec", "--", "bash", "-c",
-  "jj diff --color always --git -r $change_id $file | delta"]
+# jj delta uses jjui's pane-sized COLUMNS; jjui handles preview scrolling.
+revision_command = ["delta-preview", "show", "--color", "always", "--git", "-r", "$change_id"]
+oplog_command = ["delta-preview", "op", "show", "$operation_id", "--git", "--color", "always"]
+file_command = ["delta-preview", "diff", "--color", "always", "--git", "-r", "$change_id", "$file"]
 
 [[actions]]
 name = "delta-diff"
-lua = '''jj_interactive("util", "exec", "--",
-  "bash", "-c",
-  "jj show --summary --git --color=always -r " .. context.change_id() ..
-  " | delta --pager 'less -R'")'''
+lua = '''jj_interactive("util", "exec", "--", "bash", "-c",
+  "jj --no-pager show --summary --git --color=always -r " .. context.change_id() ..
+  " | jj delta --pager 'less -R'")'''
 
 [[bindings]]
 action = "delta-diff"
