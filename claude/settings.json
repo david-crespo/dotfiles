@@ -313,7 +313,8 @@
       "git fetch *",
       "git pull *",
       "jj git *",
-      "tracker *"
+      "tracker *",
+      "gpane *"
     ]
   },
   "effortLevel": "high",

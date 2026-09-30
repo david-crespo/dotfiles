@@ -85,6 +85,22 @@ Some information about the user's coding environment:
   vs ~5 seconds as a script. MCP tools are fine for one-off inspection of a
   page that's already up.
 
+### Ghostty panes
+
+- To open something next to yourself (a tracker, a preview, a dev server), run
+  `gpane ls` to see your tab's panes (id, position and size, command, which one
+  is `self`), then `gpane split <id|self> <up|down|left|right> [--size N%] --
+  <cmd…>`. `--size` is a share of the split pane; `--width`/`--height` N% is a
+  share of the tab, taken from beyond the split pane so it keeps its size. The
+  command runs in your cwd, the pane closes when it exits, and focus stays put.
+  `gpane resize <id|self> <edge> N%` moves that edge of a pane to N% of the tab
+  from the left or top. Run each `gpane` call as its own command so its sandbox
+  exclusion applies.
+- The user's usual layout: agent in a full-height left third, editor over a
+  terminal on the right. Prefer splitting your own pane. For something long
+  like a tracker, a full-height middle column works well: `split self right
+  --width 25%`. With two agents side by side, split up at `--size 35%`.
+
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
@@ -169,9 +185,10 @@ one, offer to start it. Its purpose is to keep the user in control and
 aware of what's happening. When picking up work, check for an existing
 tracker first. A review with more than a couple of numbered findings gets a
 tracker too, reusing the review's numbers as IDs. After creating a tracker
-file, run `tracker --split <file>` once, as its own command: it opens a live
-view in a Ghostty split above your pane. If it fails (not in Ghostty,
-sandbox), mention it in a line and move on.
+file, open a live view of it once: `tracker --split <file>` puts it 35% above
+your pane, or pick a better spot with `gpane split … -- tracker <file>` (see
+Ghostty panes). If it fails (not in Ghostty, sandbox), mention it in a line and
+move on.
 
 - Put the goal at the top and group items by how they relate to it:
   needed, cleanup that doesn't affect it, or unrelated. When starting
