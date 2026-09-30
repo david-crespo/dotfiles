@@ -158,3 +158,23 @@ it, lightly edited at most.
 
 This applies to capturing conversation. Analysis reports written from scratch
 (above) follow their own structure.
+
+### Task trackers
+
+When the user asks for a tracker, keep one in
+`.claude/notes/YYYY-MM-DD-<topic>-tracker.md` (or as a section of the
+analysis report, if there is one). If open threads start piling up without
+one, offer to start it. Its purpose is to keep the user in control and
+aware of what's happening. When picking up work, check for an existing
+tracker first.
+
+- Put the goal at the top and group items by how they relate to it:
+  needed, cleanup that doesn't affect it, or unrelated. When starting
+  mid-work, record existing revs as done items.
+- Update it as the conversation goes, in the same turn something is
+  decided, finished, or added, and say so in a line. Mark items done or
+  dropped in place, with the change ID, rather than deleting them. In chat,
+  refer to items by a stable ID plus a short label.
+- Work one item at a time and stop for review after each, unless the user
+  has said to run through several. Keep items in separate revs where
+  practical, and keep tracker IDs out of rev descriptions.
