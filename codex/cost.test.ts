@@ -11,6 +11,20 @@ test("prices cache reads, cache writes, and output including reasoning", () => {
   })).toBeCloseTo(0.01035)
 })
 
+test("prices GPT-6.1 Sol cache reads, writes, tiers, and long context", () => {
+  const usage = {
+    input_tokens: 1000, cached_input_tokens: 600, cache_write_input_tokens: 300, output_tokens: 100,
+  }
+  expect(requestCost("gpt-6.1-sol", "default", usage)).toBeCloseTo(0.00201, 8)
+  expect(requestCost("gpt-6.1-sol", "priority", usage)).toBeCloseTo(0.00402, 8)
+  expect(requestCost("gpt-6.1-sol", "flex", usage)).toBeCloseTo(0.001005, 8)
+  expect(requestCost("gpt-6.1-sol-2026-09-29", null, usage)).toBeCloseTo(0.00201, 8)
+  expect(requestCost("gpt-6.1-sol", null, { ...usage, input_tokens: 272_000 }))
+    .toBeCloseTo(0.54401, 8)
+  expect(requestCost("gpt-6.1-sol", "fast", { ...usage, input_tokens: 272_001 }))
+    .toBeCloseTo(2.175048, 8)
+})
+
 test("prices Fast, Flex, dated models, and the long-context boundary", () => {
   const usage = { input_tokens: 272_000, cached_input_tokens: 0, output_tokens: 1000 }
   expect(requestCost("gpt-6-astra", "priority", usage)).toBeCloseTo(5.54)
@@ -30,6 +44,13 @@ function request(tracker: CostTracker, turn: string, input: number, root = turn)
   const usage = { input_tokens: input, cached_input_tokens: 0, output_tokens: 0 }
   tracker.add({ type: "token_usage_record", payload: { turn_id: turn, root_turn_id: root, usage } })
 }
+
+test("reports GPT-6.1 Sol turn and session costs without marking them partial", () => {
+  const tracker = new CostTracker()
+  context(tracker, "a", "gpt-6.1-sol", "default")
+  request(tracker, "a", 1000)
+  expect(tracker.message()).toBe("Token cost ≈ $0.0020 this turn · $0.0020 session")
+})
 
 test("sums requests per turn and per session using each turn's model", () => {
   const tracker = new CostTracker()
@@ -87,6 +108,14 @@ test("finds subagent rollouts by session id and parent link, ignoring forks and 
   }
 })
 
+test("tells users to update the hook's price table for new models", () => {
+  const tracker = new CostTracker()
+  context(tracker, "a", "gpt-new-model")
+  request(tracker, "a", 1000)
+  expect(tracker.message()).toBe("Token cost ≈ unavailable this turn · $0.00 session · partial: " +
+    "missing pricing for gpt-new-model; add it to the prices table in codex/cost.ts")
+})
+
 test("marks unknown models and invalid usage as partial without dropping priced requests", () => {
   const tracker = new CostTracker()
   context(tracker, "a")
@@ -96,7 +125,8 @@ test("marks unknown models and invalid usage as partial without dropping priced 
   request(tracker, "b", 1000)
   expect(tracker.session).toBeCloseTo(0.01)
   expect(tracker.message()).toContain("unavailable this turn")
-  expect(tracker.message()).toContain("partial: openai/gpt-6-astra/default, openai/unknown/default")
+  expect(tracker.message()).toContain("partial: openai/gpt-6-astra/default, " +
+    "missing pricing for unknown; add it to the prices table in codex/cost.ts")
 })
 
 test("does not use OpenAI prices for custom providers", () => {

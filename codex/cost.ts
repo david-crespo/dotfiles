@@ -1,8 +1,9 @@
 import { createReadStream } from "node:fs"
 import { createInterface } from "node:readline"
 
-// USD per million tokens, checked 2026-09-10:
+// USD per million tokens; GPT-6.1 Sol checked 2026-09-30, others 2026-09-10:
 // https://developers.openai.com/api/docs/pricing
+// https://developers.openai.com/api/docs/models/gpt-6.1-sol
 // https://developers.openai.com/api/docs/models/gpt-6-astra
 // https://developers.openai.com/api/docs/guides/prompt-caching
 type Price = {
@@ -17,6 +18,7 @@ type Price = {
 
 const prices: Record<string, Price> = {
   "gpt-6-astra": { input: 10, cached: 1, output: 50, writes: true, long: true, fast: 2, flex: true },
+  "gpt-6.1-sol": { input: 2, cached: 0.1, output: 10, writes: true, long: true, fast: 2, flex: true },
   "gpt-5.6-sol": { input: 4, cached: 0.4, output: 20, writes: true, long: true, fast: 2, flex: true },
   "gpt-5.6-terra": { input: 2, cached: 0.2, output: 12, writes: true, long: true, fast: 2, flex: true },
   "gpt-5.6-luna": { input: 0.2, cached: 0.02, output: 1.2, writes: true, long: true, fast: 2, flex: true },
@@ -46,8 +48,12 @@ function validUsage(value: any): value is Usage {
     value.cached_input_tokens + (value.cache_write_input_tokens ?? 0) <= value.input_tokens
 }
 
+function modelPrice(model: string): Price | undefined {
+  return prices[model.replace(/-\d{4}-\d{2}-\d{2}$/, "")]
+}
+
 export function requestCost(model: string, tier: string | null, usage: Usage): number | undefined {
-  const price = prices[model.replace(/-\d{4}-\d{2}-\d{2}$/, "")]
+  const price = modelPrice(model)
   if (!price || !validUsage(usage)) return undefined
   const fast = tier === "priority" || tier === "fast"
   const multiplier = fast ? price.fast : tier === "flex" ? (price.flex ? 0.5 : undefined)
@@ -98,7 +104,10 @@ export class CostTracker {
       const cost = this.provider === "openai" && validUsage(p.usage)
         ? requestCost(context.model, context.tier, p.usage) : undefined
       if (cost === undefined) {
-        this.missing.add(`${this.provider}/${context.model || "unknown model"}/${context.tier ?? "default"}`)
+        const reason = this.provider === "openai" && context.model && !modelPrice(context.model)
+          ? `missing pricing for ${context.model}; add it to the prices table in codex/cost.ts`
+          : `${this.provider}/${context.model || "unknown model"}/${context.tier ?? "default"}`
+        this.missing.add(reason)
         return
       }
       this.session += cost
