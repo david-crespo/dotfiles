@@ -80,6 +80,7 @@ ln -sf "$PWD/bin/prose.ts" ~/.local/bin/prose
 ln -sf "$PWD/bin/prose-tab.ts" ~/.local/bin/prose-tab
 ln -sf "$PWD/bin/tseval.ts" ~/.local/bin/tseval
 ln -sf "$PWD/bin/tsq.ts" ~/.local/bin/tsq
+ln -sf "$PWD/bin/tracker.sh" ~/.local/bin/tracker
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 

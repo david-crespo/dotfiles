@@ -162,11 +162,16 @@ This applies to capturing conversation. Analysis reports written from scratch
 ### Task trackers
 
 When the user asks for a tracker, keep one in
-`.claude/notes/YYYY-MM-DD-<topic>-tracker.md` (or as a section of the
-analysis report, if there is one). If open threads start piling up without
+`.claude/notes/YYYY-MM-DD-<topic>-tracker.md`, even when there's an analysis
+report: the user keeps it open in a live preview (`tracker [file]`, which
+defaults to the newest `*-tracker.md`). If open threads start piling up without
 one, offer to start it. Its purpose is to keep the user in control and
 aware of what's happening. When picking up work, check for an existing
-tracker first.
+tracker first. A review with more than a couple of numbered findings gets a
+tracker too, reusing the review's numbers as IDs. After creating a tracker
+file, run `tracker --split <file>` once, as its own command: it opens a live
+view in a Ghostty split above your pane. If it fails (not in Ghostty,
+sandbox), mention it in a line and move on.
 
 - Put the goal at the top and group items by how they relate to it:
   needed, cleanup that doesn't affect it, or unrelated. When starting

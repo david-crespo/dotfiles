@@ -312,7 +312,8 @@
       "git push *",
       "git fetch *",
       "git pull *",
-      "jj git *"
+      "jj git *",
+      "tracker *"
     ]
   },
   "effortLevel": "high",
