@@ -119,13 +119,19 @@ find "${skill_copy_dests[@]}" -maxdepth 2 -name "$skill_marker" |
   while read -r marker; do rm -rf "$(dirname "$marker")"; done
 find "${skill_copy_dests[@]}" -maxdepth 1 -type l -delete
 
-for skill in "$PWD/claude/skills"/*/; do
-  name=$(basename "$skill")
-  ln -sf "$skill" ~/.claude/skills/
-  for dest in "${skill_copy_dests[@]}"; do
-    rm -rf "$dest/$name"
-    cp -R "${skill%/}" "$dest/"
-    touch "$dest/$name/$skill_marker"
+# ah (see below) ships its own skills, so they install the same way
+skill_sources=("$PWD/claude/skills")
+[ -d "$HOME/repos/ah/skills" ] && skill_sources+=("$HOME/repos/ah/skills")
+
+for source in "${skill_sources[@]}"; do
+  for skill in "$source"/*/; do
+    name=$(basename "$skill")
+    ln -sf "$skill" ~/.claude/skills/
+    for dest in "${skill_copy_dests[@]}"; do
+      rm -rf "$dest/$name"
+      cp -R "${skill%/}" "$dest/"
+      touch "$dest/$name/$skill_marker"
+    done
   done
 done
 
