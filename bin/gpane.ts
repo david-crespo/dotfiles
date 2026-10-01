@@ -11,7 +11,7 @@
 //
 // `gpane split` splits a pane by id (or `self`), runs a command in the new
 // pane, sizes it with resize_split, and returns focus. `gpane resize` moves
-// one edge of a pane to a position in the tab.
+// one edge of a pane to a position in the tab. `gpane close` closes panes.
 
 import $ from "@david/dax"
 import { Command, EnumType, ValidationError } from "@cliffy/command"
@@ -453,7 +453,12 @@ on run argv
           set end of ttys to (tty of term as text)
         end repeat
         if ttys contains targetTty then
-          set out to (maxW as text) & fs & (maxH as text) & fs & (windowIndex as text) & fs & (index of t as text) & fs & (name of t) & fs & (id of focused terminal of t) & fs & (id of w) & fs & (id of t)
+          -- a tab can have no focused terminal, e.g. after its focused pane closes
+          set focusedId to ""
+          try
+            set focusedId to id of focused terminal of t
+          end try
+          set out to (maxW as text) & fs & (maxH as text) & fs & (windowIndex as text) & fs & (index of t as text) & fs & (name of t) & fs & focusedId & fs & (id of w) & fs & (id of t)
           repeat with term in terminals of t
             set out to out & rs & (id of term) & fs & (tty of term) & fs & (name of term) & fs & (working directory of term) & fs & (pid of term as text)
           end repeat
@@ -617,6 +622,25 @@ on run argv
 end run
 `
   await $`osascript -e ${script} ${terminalId} ${direction} ${pixels}`.stdout("null")
+}
+
+/**
+ * Close terminals by id, then focus `refocusId`. Addressing each by id rather
+ * than iterating the tab matters: closing shifts the tab's terminal indexes.
+ */
+async function closePanes(ids: string[], refocusId: string) {
+  const script = `
+on run argv
+  set refocusId to item 1 of argv
+  tell application "Ghostty"
+    repeat with i from 2 to count of argv
+      close (terminal id (item i of argv))
+    end repeat
+    focus (terminal id refocusId)
+  end tell
+end run
+`
+  await $`osascript -e ${script} ${refocusId} ${ids}`.stdout("null")
 }
 
 /** The tab's layout, when it's clear enough to pick a divider to move. */
@@ -818,6 +842,21 @@ if (import.meta.main) {
       if (plan.amount > 0) {
         await resizeSplit(info.panes[plan.via].id, plan.direction, plan.amount)
       }
+    })
+    .command(
+      "close",
+      "Close panes in this tab, whatever is running in them. Refuses self.\n" +
+        "Focus goes back to the pane that had it, or to self if that one closed.",
+    )
+    .arguments("<panes...:string>")
+    .example("close a preview", "gpane close 3acc")
+    .action(async (_options, ...refs) => {
+      const info = await readTab(selfTty())
+      const targets = [...new Set(refs.map((ref) => findPane(info.panes, ref)))]
+      if (targets.some((p) => p.self)) throw new ValidationError("won't close self")
+      const focused = info.panes.find((p) => p.focused && !targets.includes(p))
+      const refocus = focused ?? info.panes.find((p) => p.self)!
+      await closePanes(targets.map((p) => p.id), refocus.id)
     })
     .parse(Deno.args)
     .catch((error) => {
