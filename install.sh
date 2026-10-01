@@ -80,7 +80,6 @@ ln -sf "$PWD/bin/prose.ts" ~/.local/bin/prose
 ln -sf "$PWD/bin/prose-tab.ts" ~/.local/bin/prose-tab
 ln -sf "$PWD/bin/tseval.ts" ~/.local/bin/tseval
 ln -sf "$PWD/bin/tsq.ts" ~/.local/bin/tsq
-ln -sf "$PWD/bin/tracker.sh" ~/.local/bin/tracker
 ln -sf "$PWD/bin/gpane.ts" ~/.local/bin/gpane
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
@@ -161,6 +160,11 @@ if [ -d "$alfred_prefs/workflows" ]; then
   link_alfred_workflow google-meet CF67E427-2764-4E80-8A14-50E9E23CAC2A
   link_alfred_workflow say-last-claude-answer FEDCB77F-51D1-4A24-A872-D4F308A615A3
   link_alfred_workflow transform-text A0DC9B64-8694-4A42-B13B-15D6EEDD9691
+fi
+
+# ah, the agent host (separate repo, not required)
+if [ -d "$HOME/repos/ah" ]; then
+  ln -sf "$HOME/repos/ah/ah" ~/.local/bin/ah
 fi
 
 # private dotfiles (separate private repo, not required)

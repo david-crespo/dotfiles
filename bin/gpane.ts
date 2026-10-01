@@ -533,8 +533,8 @@ export interface Proc {
 /**
  * Ghostty's terminal `pid` is really the tty's foreground process group
  * (tcgetpgrp). That's usually the command's own pid, but after `exec` in zsh
- * (as `tracker --split` does) zsh hands the terminal back to the group it
- * started in, which belongs to macOS's `login` wrapper. So name the group's
+ * (a script ending in `exec glow …`) zsh hands the terminal back to the group
+ * it started in, which belongs to macOS's `login` wrapper. So name the group's
  * leader unless it's login, in which case name login's child in the group.
  */
 export function foregroundCommand(pgid: number, procs: Proc[]): string {
@@ -782,7 +782,10 @@ if (import.meta.main) {
     )
     .option("--height <percent:string>", "Like --width, for up/down.")
     .example("tracker above self", "gpane split self up --size 35% -- glow --tui notes.md")
-    .example("middle column", "gpane split self right --width 25% -- tracker notes.md")
+    .example(
+      "middle column",
+      "gpane split self right --width 25% -- ah app markdown open --in here notes.md",
+    )
     .action(async function ({ size, width, height }, ref, direction) {
       const info = await readTab(selfTty())
       const target = findPane(info.panes, ref)

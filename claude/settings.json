@@ -313,7 +313,7 @@
       "git fetch *",
       "git pull *",
       "jj git *",
-      "tracker *",
+      "ah *",
       "gpane *"
     ]
   },

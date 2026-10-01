@@ -179,16 +179,19 @@ This applies to capturing conversation. Analysis reports written from scratch
 
 When the user asks for a tracker, keep one in
 `.claude/notes/YYYY-MM-DD-<topic>-tracker.md`, even when there's an analysis
-report: the user keeps it open in a live preview (`tracker [file]`, which
-defaults to the newest `*-tracker.md`). If open threads start piling up without
-one, offer to start it. Its purpose is to keep the user in control and
-aware of what's happening. When picking up work, check for an existing
+report: the user keeps it in view while you work. If open threads start piling
+up without one, offer to start it. Its purpose is to keep the user in control
+and aware of what's happening. When picking up work, check for an existing
 tracker first. A review with more than a couple of numbered findings gets a
 tracker too, reusing the review's numbers as IDs. After creating a tracker
-file, open a live view of it once: `tracker --split <file>` puts it 35% above
-your pane, or pick a better spot with `gpane split … -- tracker <file>` (see
-Ghostty panes). If it fails (not in Ghostty, sandbox), mention it in a line and
-move on.
+file or picking one up, run `ah app markdown open <file> --in dashboard` (as its
+own command, like gpane) to make it this session's file in the dashboard. Its
+output says whether a dashboard page is open. If none is, or the user asks for a
+view, open one: `ah app markdown open <file> --in split` puts it in glow 35%
+above your pane, or pick a better spot with `gpane split … -- ah app markdown
+open --in here <file>` (see Ghostty panes). If it fails (not in Ghostty,
+sandbox), mention it in a line and move on. When the tracker's goal is done or
+the work moves elsewhere, run `ah app markdown close`.
 
 - Put the goal at the top and group items by how they relate to it:
   needed, cleanup that doesn't affect it, or unrelated. When starting
