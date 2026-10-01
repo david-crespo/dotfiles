@@ -164,7 +164,7 @@ fi
 
 # ah, the agent host (separate repo, not required)
 if [ -d "$HOME/repos/ah" ]; then
-  ln -sf "$HOME/repos/ah/ah" ~/.local/bin/ah
+  ln -sf "$HOME/repos/ah/ah.ts" ~/.local/bin/ah
 fi
 
 # private dotfiles (separate private repo, not required)
