@@ -1,0 +1,6 @@
+{
+  "name": "session-cost",
+  "version": "0.1.0",
+  "description": "A tool the model calls to report the session's cost, for remote control where /cost isn't available",
+  "author": { "name": "David Crespo" }
+}

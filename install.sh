@@ -92,9 +92,6 @@ ln -sf "$PWD/pi/APPEND_SYSTEM.md" ~/.pi/agent/APPEND_SYSTEM.md
 ln -sf "$PWD/claude/settings.json" ~/.claude/settings.json
 ln -sf "$PWD/claude/statusline.ts" ~/.claude/statusline.ts
 ln -sf "$PWD/claude/commands" ~/.claude
-# Claude Code has no folder it scans for mods. CLAUDE_CODE_PLUGIN_DIRS in
-# settings.json lists each one under here.
-ln -sf "$PWD/claude/mods" ~/.claude
 
 mkdir -p ~/.codex
 ln -sf "$PWD/codex/hooks.json" ~/.codex/hooks.json
@@ -133,6 +130,12 @@ for source in "${skill_sources[@]}"; do
       touch "$dest/$name/$skill_marker"
     done
   done
+done
+
+# Claude Code auto-loads a plugin it finds at ~/.claude/skills/<name>, so mods
+# go there too (Claude only; the other agents don't run them).
+for mod in "$PWD"/claude/mods/*/; do
+  ln -sf "$mod" ~/.claude/skills/
 done
 
 # opencode subagent tiers (see claude/skills/shellout)

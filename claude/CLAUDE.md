@@ -101,6 +101,12 @@ Some information about the user's coding environment:
   like a tracker, a full-height middle column works well: `split self right
 --width 25%`. With two agents side by side, split up at `--size 35%`.
 
+### Session cost
+
+- When asked what the session has cost, call `mcp__session-cost__cost` (the
+  `session-cost` mod in `claude/mods/`). The mobile app over remote control
+  has no `/cost`.
+
 ### Misc. coding rules
 
 - use `npm info` or similar to find the latest version of a package when adding
