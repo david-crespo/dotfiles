@@ -1,0 +1,6 @@
+{
+  "name": "statusline",
+  "version": "0.1.0",
+  "description": "Context tokens, session cost, and estimated cache expiry above the prompt in the Desktop app",
+  "author": { "name": "David Crespo" }
+}

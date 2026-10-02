@@ -95,6 +95,9 @@ ln -sf "$PWD/pi/APPEND_SYSTEM.md" ~/.pi/agent/APPEND_SYSTEM.md
 ln -sf "$PWD/claude/settings.json" ~/.claude/settings.json
 ln -sf "$PWD/claude/statusline.ts" ~/.claude/statusline.ts
 ln -sf "$PWD/claude/commands" ~/.claude
+# Claude Code has no folder it scans for mods. CLAUDE_CODE_PLUGIN_DIRS in
+# settings.json lists each one under here.
+ln -sf "$PWD/claude/mods" ~/.claude
 
 mkdir -p ~/.codex
 ln -sf "$PWD/codex/hooks.json" ~/.codex/hooks.json
