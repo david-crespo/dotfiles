@@ -1,19 +1,18 @@
-// Pi port of the Ghostty tab-title hooks (see bin/ghostty-tab-title.ts).
+// Pi's agent hooks for ah's session registry, which sets Ghostty tab titles.
 //
-// The deno `ghostty-tab-title` tool is harness-agnostic: it reads Claude-style
-// hook JSON on stdin and drives the tab title. This extension makes pi a second
-// producer of that same hook input, so the tool itself stays unchanged.
+// `ah app sessions hook` reads Claude-style hook JSON on stdin, so this
+// extension makes pi a producer of that same input.
 //
 // Event mapping (pi -> hook_event_name):
 //   session_start         -> SessionStart      (pins terminal, sets base label)
-//   before_agent_start    -> prompt             (state "🌀") + async summarize
+//   before_agent_start    -> UserPromptSubmit  (state "🌀") + async summarize
 //   agent_end             -> Stop              (state "")
 //   session_shutdown/quit -> SessionEnd        (retain an idle sticky segment)
 //
 // GHOSTTY_TERMINAL_ID and GHOSTTY_TAB_BASE_LABEL are inherited from the shell
-// env (set by `ghostty-tab-title shell` in .zshrc), same as under Claude.
+// env (set by .zshrc), same as under Claude.
 //
-// The prompt command forwards a transcript path to its detached summarizer.
+// The prompt event carries a transcript path for ah's summarizer.
 // Pi's session format differs from Claude's, so we synthesize a minimal transcript (one
 // {"type":"user","message":{"content":...}} line per user message) in a temp
 // file. That is all readUserMessages() needs.
@@ -24,7 +23,8 @@ import { mkdir, writeFile } from "node:fs/promises"
 import { homedir, tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 
-const BIN = join(homedir(), ".local", "bin", "ghostty-tab-title")
+const BIN = join(homedir(), ".local", "bin", "ah")
+const HOOK = ["app", "sessions", "hook", "--harness", "pi"]
 
 function transcriptPathFor(sessionId: string): string {
   return join(tmpdir(), "ghostty-pi-transcripts", `${sessionId}.jsonl`)
@@ -83,7 +83,7 @@ export default function (pi: ExtensionAPI) {
     // Reload keeps the same session; re-running SessionStart would wipe the
     // summary from the tool's state file. Skip it.
     if (event.reason === "reload") return
-    await runTool(["hook"], hookJson("SessionStart", ctx))
+    await runTool(HOOK, hookJson("SessionStart", ctx))
   })
 
   pi.on("before_agent_start", async (event, ctx) => {
@@ -100,7 +100,7 @@ export default function (pi: ExtensionAPI) {
       return
     }
     await runTool(
-      ["prompt"],
+      HOOK,
       hookJson("UserPromptSubmit", ctx, {
         prompt: event.prompt,
         transcript_path: transcriptPath,
@@ -109,13 +109,13 @@ export default function (pi: ExtensionAPI) {
   })
 
   pi.on("agent_end", async (_event, ctx) => {
-    await runTool(["hook"], hookJson("Stop", ctx))
+    await runTool(HOOK, hookJson("Stop", ctx))
   })
 
   pi.on("session_shutdown", async (event, ctx) => {
     // Only a real exit ends the session. new/resume/fork hand off to a fresh
     // session_start that retitles; reload keeps state.
     if (event.reason !== "quit") return
-    await runTool(["hook"], hookJson("SessionEnd", ctx))
+    await runTool(HOOK, hookJson("SessionEnd", ctx))
   })
 }

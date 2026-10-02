@@ -89,7 +89,7 @@ function set_title() {
 
   export GHOSTTY_TAB_BASE_LABEL="$title"
 
-  if [[ -n $GHOSTTY_RESOURCES_DIR ]] && (( $+commands[ghostty-tab-title] )); then
+  if [[ -n $GHOSTTY_RESOURCES_DIR ]] && (( $+commands[ah] )); then
     # First call: run synchronously so GHOSTTY_TERMINAL_ID lands in the shell
     # env before Claude is launched. Subsequent calls (chpwd) can background.
     # An inherited GHOSTTY_TERMINAL_ID is only trusted alongside a matching
@@ -97,13 +97,14 @@ function set_title() {
     # (relaunching from a terminal), and from there into every new shell.
     if [[ -z $GHOSTTY_TERMINAL_ID || $GHOSTTY_TERMINAL_TTY != "$TTY" ]]; then
       unset GHOSTTY_TERMINAL_ID
-      # Pass $TTY so capture matches our own pane, not the frontmost tab —
-      # essential on restart, when every restored shell starts concurrently.
-      eval "$(ghostty-tab-title shell --tty "$TTY" "$title" 2>/dev/null)"
-      [[ -n $GHOSTTY_TERMINAL_ID ]] && export GHOSTTY_TERMINAL_TTY="$TTY"
-    else
-      ghostty-tab-title shell "$title" >/dev/null 2>&1 &!
+      # Find our own pane by $TTY, not the frontmost tab — essential on
+      # restart, when every restored shell starts concurrently.
+      local terminal_id
+      terminal_id=$(ah app sessions terminal "$TTY" 2>/dev/null) &&
+        export GHOSTTY_TERMINAL_ID=$terminal_id GHOSTTY_TERMINAL_TTY=$TTY
     fi
+    # ah sets the tab title from this label and the agents in the tab
+    ah app sessions shell "$title" >/dev/null 2>&1 &!
   else
     echo -ne "\033]0;$title\007"
   fi

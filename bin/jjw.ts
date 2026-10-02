@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,rm,git,ghostty-tab-title
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,rm,git,ah
 
 import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
@@ -53,15 +53,15 @@ interface WorkspaceInfo {
 
 async function workspaceInfos(workspaces: Workspace[]): Promise<WorkspaceInfo[]> {
   const cwd = Deno.cwd()
-  const hasTool = !!(await $.which("ghostty-tab-title"))
+  const hasTool = !!(await $.which("ah"))
   if (!hasTool) {
-    console.error("ghostty-tab-title not found in PATH; skipping descriptions")
+    console.error("ah not found in PATH; skipping descriptions")
   }
   return await Promise.all(workspaces.map(async ({ name, wsPath }) => ({
     name,
     wsPath,
     description: hasTool
-      ? (await $`ghostty-tab-title description ${wsPath}`.text()).trim()
+      ? (await $`ah app sessions description ${wsPath}`.text()).trim()
       : "",
     current: cwd === wsPath || cwd.startsWith(wsPath + "/"),
   })))

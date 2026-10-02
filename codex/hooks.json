@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ghostty-tab-title hook"
+            "command": "ah app sessions hook --harness codex"
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ghostty-tab-title prompt"
+            "command": "ah app sessions hook --harness codex"
           }
         ]
       }
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ghostty-tab-title hook"
+            "command": "ah app sessions hook --harness codex"
           },
           {
             "type": "command",
