@@ -35,7 +35,7 @@ Some information about the user's coding environment:
 
 ### jj (Jujutsu)
 
-- When asked to start work on something that affects versioned files and you're on an empty commit with no description, set a short description before you start editing: one imperative line, under about 50 chars, saying what changed. A few words of why are fine if they fit ("Drop file count, index too large"); a sentence of rationale is not. Longer reasoning goes in a body after a blank line, or in the PR. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme. Setting a description is not necessary if you're only working in .claude/notes directories other than the CWD.
+- When asked to start work on something that affects versioned files and you're on an empty commit with no description, set a short description before you start editing: one imperative line, under about 50 chars, saying what changed. A few words of why are fine if they fit ("Drop file count, index too large"); a sentence of rationale is not. Longer reasoning goes in a body after a blank line, or in the PR. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme. Setting a description is not necessary if you're only working in .claude/notes directories other than the CWD. It is also unnecessary when the edit is a small follow-up to @- that the user is likely to squash if they like it.
 - To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
 - In jj repos, use jj for everything git would do (`jj status`, `jj diff`, `jj diff -r @-`, `jj log`, `jj file annotate`, ...). Fall back to git only when jj has no way to do the thing.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
@@ -90,7 +90,7 @@ Some information about the user's coding environment:
 - To open something next to yourself (a tracker, a preview, a dev server), run
   `gpane ls` to see your tab's panes (id, position and size, command, which one
   is `self`), then `gpane split <id|self> <up|down|left|right> [--size N%] --
-  <cmd…>`. `--size` is a share of the split pane; `--width`/`--height` N% is a
+<cmd…>`. `--size` is a share of the split pane; `--width`/`--height` N% is a
   share of the tab, taken from beyond the split pane so it keeps its size. The
   command runs in your cwd, the pane closes when it exits, and focus stays put.
   `gpane resize <id|self> <edge> N%` moves that edge of a pane to N% of the tab
@@ -99,7 +99,7 @@ Some information about the user's coding environment:
 - The user's usual layout: agent in a full-height left third, editor over a
   terminal on the right. Prefer splitting your own pane. For something long
   like a tracker, a full-height middle column works well: `split self right
-  --width 25%`. With two agents side by side, split up at `--size 35%`.
+--width 25%`. With two agents side by side, split up at `--size 35%`.
 
 ### Misc. coding rules
 
@@ -179,10 +179,17 @@ This applies to capturing conversation. Analysis reports written from scratch
 
 When the user asks for a tracker, keep one in
 `.claude/notes/YYYY-MM-DD-<topic>-tracker.md`, even when there's an analysis
-report: the user keeps it in view while you work. If open threads start piling
+report: the user keeps it in view while you work. "Tracker" always means that
+file shown as this session's file in the ah dashboard: "make it the tracker"
+means write it there and show it in the dashboard, and "the tracker" in chat
+is whatever the dashboard is showing for this session. If open threads start piling
 up without one, offer to start it. Its purpose is to keep the user in control
 and aware of what's happening. When picking up work, check for an existing
-tracker first. A review with more than a couple of numbered findings gets a
+tracker first. After a `/clear` the SessionStart hook names the session's
+tracker; a fresh session has none, so when the user says to keep going with
+"the tracker", look for it with `ls -t .claude/notes/*-tracker.md | head`, take
+the newest one that fits the request (ask if it's unclear), and open it in the
+dashboard as below. A review with more than a couple of numbered findings gets a
 tracker too, reusing the review's numbers as IDs. After creating a tracker
 file or picking one up, run `ah app markdown open <file> --in dashboard` (as its
 own command, like gpane) to make it this session's file in the dashboard. Its
