@@ -139,6 +139,42 @@ const botAppend = new Command()
     console.log(`${await vaultPath()}/${BOT_NOTES}/${name}.md`)
   })
 
+const COACH_TYPES = ["goal", "experiment", "thread", "pattern", "tactic", "lesson"]
+
+const coachIndex = new Command()
+  .description(
+    "Print the coach memory index (Coach.base): one line per item, grouped by type",
+  )
+  .action(async () => {
+    type Row = {
+      "file name": string
+      type?: string
+      status?: string
+      updated?: string
+      description?: string
+    }
+    const rows: Row[] = JSON.parse(
+      await obs("base:query", "path=Coach.base", "format=json"),
+    )
+    for (const type of COACH_TYPES) {
+      const items = rows
+        .filter((r) => r.type === type)
+        .sort((a, b) => (a.updated ?? "").localeCompare(b.updated ?? ""))
+      if (items.length === 0) continue
+      console.log(`## ${type}`)
+      for (const r of items) {
+        console.log(`- ${r["file name"]} (${r.status}, ${r.updated}) — ${r.description}`)
+      }
+      console.log()
+    }
+    const untyped = rows.filter((r) => !COACH_TYPES.includes(r.type ?? ""))
+    if (untyped.length) {
+      console.log(
+        `Missing or unknown type: ${untyped.map((r) => r["file name"]).join(", ")}`,
+      )
+    }
+  })
+
 await new Command()
   .name("obsidian-notes")
   .description("Scoped access to Obsidian daily notes and bot notes")
@@ -155,4 +191,5 @@ await new Command()
   .command("bot:list", botList)
   .command("bot:create", botCreate)
   .command("bot:append", botAppend)
+  .command("coach:index", coachIndex)
   .parse(Deno.args)
