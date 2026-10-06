@@ -14,8 +14,7 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "left_control",
-                                        "lazy": true
+                                        "key_code": "left_control"
                                     }
                                 ],
                                 "to_if_alone": [{ "key_code": "escape" }],
