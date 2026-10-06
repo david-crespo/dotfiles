@@ -1,0 +1,6 @@
+{
+  "name": "mcp-batch",
+  "version": "0.1.0",
+  "description": "Runs a JSON recipe of MCP calls and commands in the background, writing each result to a file, with no model in the loop",
+  "author": { "name": "David Crespo" }
+}
