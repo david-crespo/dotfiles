@@ -45,6 +45,12 @@ ln -sf "$PWD/nushell/env.nu" ~/.config/nushell/env.nu
 ln -sf "$PWD/nushell/config.nu" ~/.config/nushell/config.nu
 ln -sf "$PWD/nushell/zsh-functions.nu" ~/.config/nushell/zsh-functions.nu
 
+# Karabiner replaces karabiner.json on save, so link the whole directory
+if [ -d ~/.config/karabiner ] && [ ! -L ~/.config/karabiner ]; then
+  mv ~/.config/karabiner ~/.config/karabiner.bak
+fi
+ln -sfn "$PWD/karabiner" ~/.config/karabiner
+
 mkdir -p ~/.local/bin
 # Deno resolves imports from the command symlink, so mirror the config and
 # source directories that command entrypoints import from beside those symlinks.
