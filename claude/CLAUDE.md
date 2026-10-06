@@ -72,6 +72,18 @@ Some information about the user's coding environment:
   session model only for real implementation or hard reasoning. Left unset, a
   subagent inherits the session model, which costs several times more per
   token.
+- When I ask for a fresh read or outside perspective, don't use a subagent:
+  subagents always get CLAUDE.md and an SDK preamble. Run a bare `claude -p`
+  from an empty dir instead. In the sandbox, the Bash tool call needs
+  `allowed_domains: ["api.anthropic.com"]`. The reader starts with no
+  context: give it what it needs, in the system prompt or the prompt, but not
+  your own conclusions.
+
+  ```bash
+  cd "$(mktemp -d)" && claude -p --model sonnet --tools "" \
+    --system-prompt "<framing for the task>" \
+    --setting-sources "" --strict-mcp-config < /abs/path/prompt.txt
+  ```
 
 ### Browser interaction (frontend dev work)
 
