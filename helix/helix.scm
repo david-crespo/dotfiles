@@ -1,11 +1,13 @@
 ; (require "helix/editor.scm")
 (require (prefix-in helix. "helix/commands.scm"))
 (require (prefix-in helix.static. "helix/static.scm"))
+(require "helix/misc.scm")
 
 (provide wrap-console-log
          wrap-console-dir
          wrap-dbg
-         copy-path)
+         copy-path
+         notes-picker)
 
 (define (make-wrapper prefix suffix)
   (lambda ()
@@ -34,3 +36,13 @@
                        (substring abs-path (string-length cwd-with-slash))
                        abs-path)))
     (helix.run-shell-command (string-append "echo -n '" rel-path "' | pbcopy"))))
+
+;;@doc
+;; Pick a file in .claude/notes, newest first. Notes start with a date, so
+;; reverse name order is newest first.
+(define (notes-picker)
+  (let ([dir (string-append (helix.static.get-helix-cwd) "/.claude/notes")])
+    (if (is-dir? dir)
+        (push-component!
+         (picker (sort (filter (lambda (f) (not (is-dir? f))) (read-dir dir)) string>?)))
+        (set-status! (string-append "No notes directory at " dir)))))

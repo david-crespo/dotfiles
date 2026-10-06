@@ -44,7 +44,7 @@
    ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'")))
 
 (keymap (global)
-        (normal (" " (q ":bc") (o (n ":o .claude/notes")))
+        (normal (" " (q ":bc") (o (n ":notes-picker")))
                 (A-w ":bc")
                 ("=" ":reflow")
                 (Cmd-k "select_line_above")
