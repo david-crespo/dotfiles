@@ -328,6 +328,7 @@
     }
   },
   "tui": "fullscreen",
+  "autoMemoryEnabled": false,
   "skipWorkflowUsageWarning": true,
   "editorMode": "vim",
   "preferredNotifChannel": "terminal_bell",
