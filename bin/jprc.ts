@@ -5,12 +5,32 @@ import { Command, ValidationError } from "@cliffy/command"
 import { getGitHubRepoSlug } from "./lib/github.ts"
 import { bookmarksInLogOrder } from "./lib/jj.ts"
 
-const prompt = `Generate a short branch name from this description of a PR.
-Pick the main topic and omit secondary details and follow-up work.
-Use 1-3 short words. Aim for 8-15 characters; maximum 19, including hyphens.
-Drop filler like add, improve, support, and implementation. Use familiar words.
-For upgrades, use package-version, e.g. vitest-5.
-Return only the name in lowercase with hyphens. No prefixes, quotes, or markdown.`
+// Tuned against real console and omicron branch names. Size labels on commits
+// matter as much as the wording: without them, small newest commits like "fix
+// test" or "bump api" pull the name away from the bulk of the change.
+const prompt = $.dedent`
+  Name the git branch for a pull request. The input is the PR's commit descriptions, newest first, or the PR's title and body. When there are several commits, each is labeled with how much of the PR it accounts for.
+
+  Name what the PR is mostly about. Weight each commit by its size: a large commit is the bulk of the change, while small commits are usually tests, review fixes, cleanup, or incidental tweaks, even when they are newest. The oldest commit often states the intent.
+
+  Style:
+  - 2-4 lowercase words joined by hyphens, usually 10-22 characters.
+  - Plain words a teammate would recognize. Name the feature or area, plus a verb when it matters: fix-, remove-, bump-, rename-, move-, no-. Skip filler verbs like add, improve, support, implement, update.
+  - Don't abbreviate words unless the abbreviation is common (api, ui, e2e, ip).
+  - Dependency upgrades: package and major version, with hyphens for dots, e.g. vite-7, react-19-2.
+  - No prefixes like feat/ or fix/.
+
+  Output only the branch name, even if the commits are vague. No quotes, explanation, or markdown.`
+
+/** Lockfiles and generated code, left out of commit sizes so a lockfile
+ * churn or API client regen doesn't look like the bulk of a PR. */
+const generatedFiles = [
+  "**/package-lock.json",
+  "**/*.lock",
+  "openapi/**",
+  "**/__generated__/**",
+  "**/tests/output/**",
+].map((g) => `root-glob:"${g}"`).join(" | ")
 
 /** If there are bookmarks between trunk() and r, let user pick. Otherwise use trunk(). */
 async function pickBase(r: string) {
@@ -144,22 +164,47 @@ async function readPrFile(path: string) {
   return { title, body }
 }
 
-/** Just the commit descriptions in range (no graph, no diff). The full diff
- * can be huge on branches that touch many files, and it's overkill for naming. */
+/** Commit descriptions in range (no graph, no diff), each labeled with its
+ * share of the changed lines when there's more than one. The full diff can be
+ * huge on branches that touch many files, and it's overkill for naming. */
 async function commitDescriptions(range: string) {
-  const logTmpl = `description ++ "\n"`
-  return await $`jj log -r ${range} --no-graph -T ${logTmpl}`.text()
+  const diff = `self.diff(${JSON.stringify(`~(${generatedFiles})`)})`
+  const stat = `${diff}.stat()`
+  const logTmpl = [
+    `json(description)`,
+    `${stat}.total_added() + ${stat}.total_removed()`,
+    `${diff}.files().len()`,
+  ].join(` ++ "\\t" ++ `) + ` ++ "\\n"`
+  const commits = (await $`jj log -r ${range} --no-graph -T ${logTmpl}`.lines())
+    .filter(Boolean)
+    .map((line) => {
+      const [desc, lines, files] = line.split("\t")
+      return { desc: (JSON.parse(desc) as string).trim(), lines: +lines, files: +files }
+    })
+  if (commits.length === 1) return commits[0].desc + "\n"
+
+  const total = commits.reduce((sum, c) => sum + c.lines, 0)
+  return commits.map((c) => {
+    const share = total ? `, ${Math.round((100 * c.lines) / total)}% of the PR` : ""
+    const label = `[${c.lines} line${c.lines === 1 ? "" : "s"} changed in ${c.files} file${
+      c.files === 1 ? "" : "s"
+    }${share}]`
+    return `${label}\n${c.desc}`
+  }).join("\n\n") + "\n"
 }
 
 /** Ask the LLM for a branch name from a description of the change. */
 async function suggestBranchName(input: string) {
   // Capture both streams instead of using .text(): ai prints its error output
   // to stdout, which .text() throws away, leaving only "Exited with code: 1".
-  const aiResult = await $`ai --system "${prompt}" --model luna --raw --ephemeral`
-    .stdinText(input)
-    .stdout("piped")
-    .stderr("piped")
-    .noThrow()
+  // The schema keeps Sonnet from occasionally answering with its reasoning
+  const schema = `{ name: "string" }`
+  const aiResult =
+    await $`ai --system ${prompt} --model sonnet -o ${schema} --raw --ephemeral`
+      .stdinText(input)
+      .stdout("piped")
+      .stderr("piped")
+      .noThrow()
 
   if (aiResult.code !== 0) {
     console.error(`\nai exited with code ${aiResult.code}`)
@@ -167,5 +212,5 @@ async function suggestBranchName(input: string) {
     if (output) console.error(output)
     Deno.exit(1)
   }
-  return aiResult.stdout.trim()
+  return (JSON.parse(aiResult.stdout) as { name: string }).name.trim()
 }
