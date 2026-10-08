@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,rm,git,ah
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run=jj,git,ah
 
 import { Command, ValidationError } from "@cliffy/command"
 import $ from "@david/dax"
@@ -158,14 +158,12 @@ const rmCmd = new Command()
 
     for (const { name, wsPath } of selected) {
       // A stale working copy (e.g. advanced by another checkout) makes the
-      // snapshot/forget below refuse to run. update-stale reconciles it, and
-      // is a no-op when the working copy isn't stale.
+      // snapshot in `workspace remove` refuse to run. update-stale reconciles
+      // it, and is a no-op when the working copy isn't stale.
       await $`jj workspace update-stale --quiet`.cwd(wsPath).printCommand()
-      // snapshot the target's working copy so any un-snapshotted edits land as
-      // commits in the repo before we forget the workspace and delete its files
-      await $`jj util snapshot`.cwd(wsPath).printCommand()
-      await $`jj workspace forget ${name}`.printCommand()
-      await $`rm -rf ${wsPath}`.printCommand()
+      // snapshots the working copy, forgets the workspace (and its Git
+      // worktree, if colocated), and deletes the directory
+      await $`jj workspace remove ${name}`.printCommand()
     }
   })
 
