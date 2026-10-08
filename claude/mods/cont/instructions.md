@@ -1,9 +1,8 @@
----
-name: cont
-description: Cheaply continue a previous Claude Code chat in a fresh session. Use when the user says /cont, "continue the last chat", or "pick up where we left off" after a /clear or /new — instead of sending another message into a huge, now-uncached context. Finds the previous session in this project (or by topic), reads a compact digest, and carries on.
----
-
 # cont
+
+The `cont` mod sends you here when the user runs `/cont`. If the session had
+history, the mod has already run `/clear`, and ARGUMENTS starts with or mentions
+the id of the session it cleared.
 
 The user ended a long chat (often 100k+ tokens) and wants to keep going without
 paying to re-read the whole thing. Do not `--resume` and do not read the whole

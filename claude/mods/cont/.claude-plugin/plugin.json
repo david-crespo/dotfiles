@@ -1,0 +1,6 @@
+{
+  "name": "cont",
+  "version": "0.1.0",
+  "description": "/cont: continue a previous chat cheaply in a fresh session, clearing this one first if it has history",
+  "author": { "name": "David Crespo" }
+}
