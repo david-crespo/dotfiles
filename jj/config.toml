@@ -88,6 +88,8 @@ delta-preview = ["--ignore-working-copy", "util", "exec", "--", "bash", "-c", ''
 d = ["diff"]
 dm = ["describe", "-m"]
 dp = ["describe", "-r", "@-"]
+# squash rev R into its parent, keeping the parent's description
+sq = ["util", "exec", "--", "bash", "-c", 'jj squash -f "$1" -t "$1-" -u', "jj sq"]
 # diff rev against fork point like GitHub PR diff or git ...
 # dt/dts exclude lock files; dta/dtas show all files.
 # Baked-in args can be overridden since jj 0.44 (last occurrence wins), e.g.
