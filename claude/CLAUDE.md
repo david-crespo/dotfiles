@@ -210,13 +210,11 @@ the newest one that fits the request (ask if it's unclear), and open it in the
 dashboard as below. A review with more than a couple of numbered findings gets a
 tracker too, reusing the review's numbers as IDs. After creating a tracker
 file or picking one up, run `ah app markdown open <file> --in dashboard` (as its
-own command, like gpane) to make it this session's file in the dashboard. Its
-output says whether a dashboard page is open. If none is, or the user asks for a
-view, open one: `ah app markdown open <file> --in split` puts it in glow 35%
-above your pane, or pick a better spot with `gpane split … -- ah app markdown
-open --in here <file>` (see Ghostty panes). If it fails (not in Ghostty,
-sandbox), mention it in a line and move on. When the tracker's goal is done or
-the work moves elsewhere, run `ah app markdown close`.
+own command, like gpane) to make it this session's file in the dashboard. It
+opens a dashboard page itself if none is open. Trackers always go in the
+dashboard — never open one in a terminal pane. If it fails, mention it in a line
+and move on. When the tracker's goal is done or the work moves elsewhere, run
+`ah app markdown close`.
 
 - Put the goal at the top and group items by how they relate to it:
   needed, cleanup that doesn't affect it, or unrelated. When starting
