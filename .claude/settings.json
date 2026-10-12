@@ -1,0 +1,13 @@
+{
+  "sandbox": {
+    "filesystem": {
+      "allowWrite": [
+        "~/repos/ah",
+        "~/repos/dotfiles-private",
+        "~/repos/helix",
+        "~/repos/llm-cli",
+        "~/repos/llm-web"
+      ]
+    }
+  }
+}

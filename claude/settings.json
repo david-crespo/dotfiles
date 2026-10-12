@@ -294,6 +294,11 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": false,
+    "filesystem": {
+      "allowWrite": [
+        "~/oxide"
+      ]
+    },
     "network": {
       "allowUnixSockets": [
         "~/.obsidian-cli.sock"
