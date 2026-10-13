@@ -87,9 +87,9 @@ ln -sf "$PWD/bin/gpane.ts" ~/.local/bin/gpane
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
-mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills ~/.config/opencode/agent
+mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills ~/.config/opencode/agents
 ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
-ln -sf "$PWD/opencode/opencode.json" ~/.config/opencode/opencode.json
+ln -sf "$PWD/opencode/cli.json" ~/.config/opencode/cli.json
 ln -sf "$PWD/claude/CLAUDE.md" ~/.config/opencode/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.codex/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.pi/agent/AGENTS.md
@@ -144,10 +144,10 @@ for mod in "$PWD"/claude/mods/*/; do
   ln -sf "$mod" ~/.claude/skills/
 done
 
-# opencode subagent tiers (see claude/skills/shellout)
-find ~/.config/opencode/agent -maxdepth 1 -type l ! -exec test -e {} \; -delete
-for agent in "$PWD/opencode/agent"/*.md; do
-  ln -sf "$agent" ~/.config/opencode/agent/
+# opencode agent permission tiers
+find ~/.config/opencode/agents -maxdepth 1 -type l ! -exec test -e {} \; -delete
+for agent in "$PWD/opencode/agents"/*.md; do
+  ln -sf "$agent" ~/.config/opencode/agents/
 done
 
 # pi extensions (single-file, dependency-free)
