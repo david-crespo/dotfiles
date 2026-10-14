@@ -1,4 +1,4 @@
-// Pi's agent hooks for ah's session registry, which sets Ghostty tab titles.
+// Pi's agent hooks for ah's session registry, which sets Rex tab titles.
 //
 // `ah app sessions hook` reads Claude-style hook JSON on stdin, so this
 // extension makes pi a producer of that same input.
@@ -9,8 +9,8 @@
 //   agent_end             -> Stop              (state "")
 //   session_shutdown/quit -> SessionEnd        (retain an idle sticky segment)
 //
-// GHOSTTY_TERMINAL_ID and GHOSTTY_TAB_BASE_LABEL are inherited from the shell
-// env (set by .zshrc), same as under Claude.
+// REX_BLOCK is inherited from the shell env (set by Rex), same as under
+// Claude.
 //
 // The prompt event carries a transcript path for ah's summarizer.
 // Pi's session format differs from Claude's, so we synthesize a minimal transcript (one

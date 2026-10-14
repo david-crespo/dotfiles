@@ -97,21 +97,11 @@ Some information about the user's coding environment:
   vs ~5 seconds as a script. MCP tools are fine for one-off inspection of a
   page that's already up.
 
-### Ghostty panes
+### Rex panes
 
-- To open something next to yourself (a tracker, a preview, a dev server), run
-  `gpane ls` to see your tab's panes (id, position and size, command, which one
-  is `self`), then `gpane split <id|self> <up|down|left|right> [--size N%] --
-<cmd…>`. `--size` is a share of the split pane; `--width`/`--height` N% is a
-  share of the tab, taken from beyond the split pane so it keeps its size. The
-  command runs in your cwd, the pane closes when it exits, and focus stays put.
-  `gpane resize <id|self> <edge> N%` moves that edge of a pane to N% of the tab
-  from the left or top. Run each `gpane` call as its own command so its sandbox
-  exclusion applies.
 - The user's usual layout: agent in a full-height left third, editor over a
-  terminal on the right. Prefer splitting your own pane. For something long
-  like a tracker, a full-height middle column works well: `split self right
---width 25%`. With two agents side by side, split up at `--size 35%`.
+  terminal on the right. When opening a pane next to yourself (the `panes`
+  skill), split your own pane, usually above.
 
 ### Session cost
 
@@ -211,7 +201,7 @@ the newest one that fits the request (ask if it's unclear), and open it in the
 dashboard as below. A review with more than a couple of numbered findings gets a
 tracker too, reusing the review's numbers as IDs. After creating a tracker
 file or picking one up, run `ah app markdown open <file> --in dashboard` (as its
-own command, like gpane) to make it this session's file in the dashboard. It
+own command, so the `ah` sandbox exclusion applies) to make it this session's file in the dashboard. It
 opens a dashboard page itself if none is open. Trackers always go in the
 dashboard — never open one in a terminal pane. If it fails, mention it in a line
 and move on. When the tracker's goal is done or the work moves elsewhere, run

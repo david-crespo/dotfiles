@@ -318,8 +318,7 @@
       "git fetch *",
       "git pull *",
       "jj git *",
-      "ah *",
-      "gpane *"
+      "ah *"
     ]
   },
   "feedbackDrafts": "off",

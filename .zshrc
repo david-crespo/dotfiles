@@ -94,36 +94,16 @@ if [[ $TERM_PROGRAM == rex ]]; then
   precmd_functions=(_osc133_precmd $precmd_functions)
 fi
 
-# Use Ghostty's tab-title override so split panes don't stomp the tab label.
 function set_title() {
   local title="$1"
-
-  export GHOSTTY_TAB_BASE_LABEL="$title"
-
-  if [[ -n $GHOSTTY_RESOURCES_DIR ]] && (( $+commands[ah] )); then
-    # First call: run synchronously so GHOSTTY_TERMINAL_ID lands in the shell
-    # env before Claude is launched. Subsequent calls (chpwd) can background.
-    # An inherited GHOSTTY_TERMINAL_ID is only trusted alongside a matching
-    # GHOSTTY_TERMINAL_TTY: the id can leak into the Ghostty app process itself
-    # (relaunching from a terminal), and from there into every new shell.
-    if [[ -z $GHOSTTY_TERMINAL_ID || $GHOSTTY_TERMINAL_TTY != "$TTY" ]]; then
-      unset GHOSTTY_TERMINAL_ID
-      # Find our own pane by $TTY, not the frontmost tab — essential on
-      # restart, when every restored shell starts concurrently.
-      local terminal_id
-      terminal_id=$(ah app sessions terminal "$TTY" 2>/dev/null) &&
-        export GHOSTTY_TERMINAL_ID=$terminal_id GHOSTTY_TERMINAL_TTY=$TTY
-    fi
-    # ah sets the tab title from this label and the agents in the tab
+  # ah sets the tab label from this and the agents in the tab. Interactive
+  # shells only: an agent's Bash calls inherit its REX_BLOCK, and a cd in one
+  # would report the agent's own pane as a shell.
+  if [[ -o interactive && -n $REX_BLOCK ]] && (( $+commands[ah] )); then
     ah app sessions shell "$title" >/dev/null 2>&1 &!
-  elif [[ -n $REX_BLOCK ]] && (( $+commands[ah] )); then
-    # Rex names panes by REX_BLOCK, so no lookup. The OSC 0 titles the pane
-    # header; ah sets the tab label.
-    ah app sessions shell "$title" >/dev/null 2>&1 &!
-    echo -ne "\033]0;$title\007"
-  else
-    echo -ne "\033]0;$title\007"
   fi
+  # Titles the pane header
+  echo -ne "\033]0;$title\007"
 }
 
 # zsh hook to update title on directory change

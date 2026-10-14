@@ -86,7 +86,6 @@ ln -sf "$PWD/bin/say-last.ts" ~/.local/bin/say-last
 ln -sf "$PWD/bin/x-list.ts" ~/.local/bin/x-list
 ln -sf "$PWD/bin/tseval.ts" ~/.local/bin/tseval
 ln -sf "$PWD/bin/tsq.ts" ~/.local/bin/tsq
-ln -sf "$PWD/bin/gpane.ts" ~/.local/bin/gpane
 
 ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
 
