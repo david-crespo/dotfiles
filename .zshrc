@@ -79,9 +79,20 @@ function ps1_jjgit_prompt() {
   local pwd=$(prompt_pwd)
   PROMPT="%K{green}%F{black} ${pwd} %f%k %{${jgp}%}
 \$ "
+  # mark prompt start/end (OSC 133)
+  [[ $TERM_PROGRAM == rex ]] && PROMPT=$'%{\e]133;A\a%}'"$PROMPT"$'%{\e]133;B\a%}'
 }
 
 precmd_functions+=(ps1_jjgit_prompt)
+
+# Ghostty injects OSC 133 shell integration itself. Rex doesn't, so mark
+# command start and end here.
+if [[ $TERM_PROGRAM == rex ]]; then
+  function _osc133_preexec() { print -n '\e]133;C\a' }
+  function _osc133_precmd() { print -n '\e]133;D\a' }
+  preexec_functions+=(_osc133_preexec)
+  precmd_functions=(_osc133_precmd $precmd_functions)
+fi
 
 # Use Ghostty's tab-title override so split panes don't stomp the tab label.
 function set_title() {
@@ -105,6 +116,11 @@ function set_title() {
     fi
     # ah sets the tab title from this label and the agents in the tab
     ah app sessions shell "$title" >/dev/null 2>&1 &!
+  elif [[ -n $REX_BLOCK ]] && (( $+commands[ah] )); then
+    # Rex names panes by REX_BLOCK, so no lookup. The OSC 0 titles the pane
+    # header; ah sets the tab label.
+    ah app sessions shell "$title" >/dev/null 2>&1 &!
+    echo -ne "\033]0;$title\007"
   else
     echo -ne "\033]0;$title\007"
   fi

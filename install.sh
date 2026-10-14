@@ -37,6 +37,9 @@ ln -sf "$PWD/atuin/config.toml" ~/.config/atuin/config.toml
 mkdir -p ~/.config/ghostty
 ln -sf "$PWD/ghostty/config" ~/.config/ghostty/config
 
+mkdir -p ~/.config/rex
+ln -sf "$PWD/rex/init.lua" ~/.config/rex/init.lua
+
 mkdir -p ~/.config/zellij
 ln -sf "$PWD/zellij/config.kdl" ~/.config/zellij/config.kdl
 
