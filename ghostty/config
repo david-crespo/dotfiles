@@ -1,5 +1,8 @@
 auto-update-channel = stable
 
+# hide ghostty from dock while I use it for quick terminal until Rex gets one
+macos-hidden = always
+
 theme = ayu
 # lighten error red a bit (prob too similar to 9, though)
 palette = 1=#ff5555
