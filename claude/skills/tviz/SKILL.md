@@ -41,6 +41,9 @@ Tips:
 
 ## Write commands
 
+When deciding whether the user has approved a change, read ambiguous
+statements as no and ask for clarification.
+
 Create commands are allowlisted. Update commands are in `ask` permission, so
 the user will be prompted before each one runs.
 
