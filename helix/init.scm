@@ -54,16 +54,11 @@
                 (C-r ":rla")
                 (Cmd-s ":w")
                 (Cmd-r ":config-reload")
-                ; Cmd-h only works if you override the macOS default by binding Hide Ghostty to
-                ; ⌘I in Keyboard > Keyboard shortcuts > App shortcuts
-                (Cmd-C-h "jump_view_left")
-                (Cmd-C-j "jump_view_down")
-                (Cmd-C-k "jump_view_up")
-                (Cmd-C-l "jump_view_right")
-                (C-h "jump_view_left")
-                (C-j "jump_view_down")
-                (C-k "jump_view_up")
-                (C-l "jump_view_right")
+                (C-h ":jump-view-left")
+                (C-j ":jump-view-down")
+                (C-k ":jump-view-up")
+                (C-l ":jump-view-right")
+                (Cmd-w ":close-view-or-pane")
                 ; hxai is bin/hxai.ts. Add -f %{buffer_name} to include the whole file.
                 (tab "@:pipe hxai -m k2 ")
                 (L (r "@:pipe hxai ") (s "@:pipe hxai -m sonnet ") (g "@:pipe hxai -m gpt-5 "))

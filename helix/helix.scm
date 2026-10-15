@@ -2,8 +2,14 @@
 (require (prefix-in helix. "helix/commands.scm"))
 (require (prefix-in helix.static. "helix/static.scm"))
 (require "helix/misc.scm")
+(require (prefix-in helix.editor. "helix/editor.scm"))
 
-(provide wrap-console-log
+(provide jump-view-left
+         jump-view-down
+         jump-view-up
+         jump-view-right
+         close-view-or-pane
+         wrap-console-log
          wrap-console-dir
          wrap-dbg
          copy-path
@@ -13,6 +19,60 @@
   (lambda ()
     (helix.static.replace-selection-with
      (string-append prefix (helix.static.current-highlighted-text!) suffix))))
+
+; Move to the split in that direction. With none there, move to the Rex pane in
+; that direction instead (Rex passes ctrl-hjkl through to helix, see
+; ../rex/init.lua).
+(define (jump-view jump direction)
+  (let ([before (helix.editor.editor-focus)])
+    (jump)
+    (when (equal? before (helix.editor.editor-focus))
+      (helix.run-shell-command
+       (string-append "if [ -n \"$REX_SESSION\" ]; then \"$REX_BIN_DIR/rex\" focus -s \"$REX_SESSION\" "
+                      direction
+                      "; fi")))))
+
+;;@doc
+;; Jump to the split on the left, or the Rex pane on the left
+(define (jump-view-left) (jump-view helix.static.jump_view_left "left"))
+;;@doc
+;; Jump to the split below, or the Rex pane below
+(define (jump-view-down) (jump-view helix.static.jump_view_down "down"))
+;;@doc
+;; Jump to the split above, or the Rex pane above
+(define (jump-view-up) (jump-view helix.static.jump_view_up "up"))
+;;@doc
+;; Jump to the split on the right, or the Rex pane on the right
+(define (jump-view-right) (jump-view helix.static.jump_view_right "right"))
+
+; True if a jump in some direction lands on another view. Focus is put back.
+(define (multiple-views?)
+  (let ([start (helix.editor.editor-focus)])
+    (let loop ([jumps (list helix.static.jump_view_left
+                            helix.static.jump_view_right
+                            helix.static.jump_view_up
+                            helix.static.jump_view_down)])
+      (cond
+        [(null? jumps) #f]
+        [else
+         ((car jumps))
+         (if (equal? start (helix.editor.editor-focus))
+             (loop (cdr jumps))
+             (begin
+               (helix.editor.editor-set-focus! start)
+               #t))]))))
+
+;;@doc
+;; Close this split. In the last one, close the Rex pane helix is in, unless a
+;; buffer has unsaved changes.
+(define (close-view-or-pane)
+  (cond
+    [(multiple-views?) (helix.static.wclose)]
+    [(not (null? (filter helix.editor.editor-document-dirty? (helix.editor.editor-all-documents))))
+     (set-error! "Unsaved changes, not closing the pane")]
+    [else
+     (helix.run-shell-command
+      "if [ -n \"$REX_BLOCK\" ]; then \"$REX_BIN_DIR/rex\" block close -s \"$REX_SESSION\" \"$REX_BLOCK\"; fi")]))
 
 ;;@doc
 ;; Wrap in console.log()
