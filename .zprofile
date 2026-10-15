@@ -309,7 +309,7 @@ function ua() {
     'codex --version && npm install -g @openai/codex@latest && codex --version' \
     'claude update' \
     'opencode upgrade' \
-    'pi update pi'
+    'pi update'
 }
 
 # Reinstall the global npm toolchain. fnm has no default-packages mechanism
