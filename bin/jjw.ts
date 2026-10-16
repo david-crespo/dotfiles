@@ -57,14 +57,16 @@ async function workspaceInfos(workspaces: Workspace[]): Promise<WorkspaceInfo[]>
   if (!hasTool) {
     console.error("ah not found in PATH; skipping descriptions")
   }
-  return await Promise.all(workspaces.map(async ({ name, wsPath }) => ({
+  // What the agent in each workspace's Rex tab is doing, by workspace root
+  const summaries: { root: string; summary: string | null }[] = hasTool
+    ? await $`ah workspace ls --json`.json()
+    : []
+  return workspaces.map(({ name, wsPath }) => ({
     name,
     wsPath,
-    description: hasTool
-      ? (await $`ah app sessions description ${wsPath}`.text()).trim()
-      : "",
+    description: summaries.find((w) => w.root === wsPath)?.summary ?? "",
     current: cwd === wsPath || cwd.startsWith(wsPath + "/"),
-  })))
+  }))
 }
 
 function formatOptions(infos: WorkspaceInfo[]): string[] {
