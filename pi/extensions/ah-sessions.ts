@@ -1,6 +1,6 @@
 // Pi's agent hooks for ah's session registry, which sets Rex tab titles.
 //
-// `ah app sessions hook` reads Claude-style hook JSON on stdin, so this
+// `ah hook agent` reads Claude-style hook JSON on stdin, so this
 // extension makes pi a producer of that same input.
 //
 // Event mapping (pi -> hook_event_name):
@@ -24,7 +24,7 @@ import { homedir, tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 
 const BIN = join(homedir(), ".local", "bin", "ah")
-const HOOK = ["app", "sessions", "hook", "--harness", "pi"]
+const HOOK = ["hook", "agent", "--harness", "pi"]
 
 function transcriptPathFor(sessionId: string): string {
   return join(tmpdir(), "ghostty-pi-transcripts", `${sessionId}.jsonl`)

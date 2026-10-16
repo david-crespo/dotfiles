@@ -100,7 +100,7 @@ function set_title() {
   # shells only: an agent's Bash calls inherit its REX_BLOCK, and a cd in one
   # would report the agent's own pane as a shell.
   if [[ -o interactive && -n $REX_BLOCK ]] && (( $+commands[ah] )); then
-    ah app sessions shell "$title" >/dev/null 2>&1 &!
+    ah hook shell "$title" >/dev/null 2>&1 &!
   fi
   # Titles the pane header
   echo -ne "\033]0;$title\007"

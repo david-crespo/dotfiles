@@ -204,7 +204,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ah app sessions hook"
+            "command": "ah hook agent"
           }
         ]
       }
@@ -214,7 +214,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ah app sessions hook"
+            "command": "ah hook agent"
           },
           {
             "type": "command",
@@ -228,7 +228,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ah app sessions hook"
+            "command": "ah hook agent"
           }
         ]
       }
@@ -238,7 +238,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ah app sessions hook"
+            "command": "ah hook agent"
           }
         ]
       }
