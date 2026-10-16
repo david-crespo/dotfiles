@@ -97,8 +97,13 @@ Some information about the user's coding environment:
   vs ~5 seconds as a script. MCP tools are fine for one-off inspection of a
   page that's already up.
 
-### Rex panes
+### Rex
 
+- Sessions usually run in a Rex terminal, with `REX_SESSION` and `REX_BLOCK`
+  set in the shell. For Rex tasks beyond opening a pane (sessions, tabs,
+  reading terminal output, the server API), use the `rex` skill. The user may
+  be viewing a different session or pane than yours.
+- Don't rename Rex sessions or tabs. `ah` sets the titles.
 - The user's usual layout: agent in a full-height left third, editor over a
   terminal on the right. When opening a pane next to yourself (the `panes`
   skill), split your own pane, usually above.
