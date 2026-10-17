@@ -52,6 +52,41 @@ alias jsq="jj squash"
 alias sk="node ~/oxide/skepsis/cli.ts"
 alias rfd-local='LOCAL_RFD_REPO=~/oxide/rfd npm --prefix ~/oxide/rfd-site run dev'
 
+# Use the personal Max account (see ~/.claude-personal in install.sh) under
+# ~/repos and the work account everywhere else. jjw workspaces live in
+# ~/jj-workspaces, so resolve them to their main repo first. An explicit
+# CLAUDE_CONFIG_DIR wins.
+function claude() {
+  if [[ -n "$CLAUDE_CONFIG_DIR" ]]; then
+    command claude "$@"
+    return
+  fi
+  local dir="$PWD"
+  local root
+  root="$(jj root --ignore-working-copy 2>/dev/null)"
+  # in a secondary workspace, .jj/repo is a file pointing at the main repo's
+  if [[ -n "$root" && -f "$root/.jj/repo" ]]; then
+    dir="$root/.jj/$(<"$root/.jj/repo")"
+    dir="${dir:A}"
+  fi
+  if [[ "$dir" == ~/repos/* ]]; then
+    clod "$@"
+  else
+    clox "$@"
+  fi
+}
+
+# Force an account regardless of directory
+function clox() { command claude "$@" } # work
+function clod() { # personal
+  # The theme lives in settings.json, so the personal settings are the shared
+  # ones plus the theme, rebuilt on each launch to pick up shared edits
+  local settings=~/.claude-personal/settings.json
+  jq '. + {theme: "custom:personal-ayu-blue"}' ~/.claude/settings.json > "$settings.tmp" &&
+    mv "$settings.tmp" "$settings"
+  CLAUDE_CONFIG_DIR=~/.claude-personal command claude "$@"
+}
+
 function jjw() {
   if [[ ("$1" == "create" || "$1" == "c") && "$#" -eq 1 ]]; then
     local wspath

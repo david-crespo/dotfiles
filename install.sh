@@ -146,6 +146,18 @@ for mod in "$PWD"/claude/mods/*/; do
   ln -sf "$mod" ~/.claude/skills/
 done
 
+# Personal-account profile, picked by the `claude` function in .zprofile
+# (CLAUDE_CONFIG_DIR) or `clox`. Mirrors config from ~/.claude; login, history, project
+# state stay separate. The custom theme recolors the input box so the account
+# is visible. settings.json isn't linked: `clod` in .zprofile writes it on
+# each launch as the shared settings plus the theme. (Setting theme through a
+# --settings overlay doesn't take effect.)
+mkdir -p ~/.claude-personal/themes
+for item in CLAUDE.md statusline.ts skills agents plugins; do
+  ln -sfn ~/.claude/"$item" ~/.claude-personal/"$item"
+done
+ln -sf "$PWD"/claude/themes/*.json ~/.claude-personal/themes/
+
 # opencode agent permission tiers
 find ~/.config/opencode/agents -maxdepth 1 -type l ! -exec test -e {} \; -delete
 for agent in "$PWD/opencode/agents"/*.md; do

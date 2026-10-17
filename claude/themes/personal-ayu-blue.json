@@ -1,0 +1,11 @@
+{
+  "name": "Personal (Ayu blue)",
+  "base": "dark",
+  "overrides": {
+    "claude": "#6AADDC",
+    "claudeShimmer": "#A5D0EE",
+    "userMessageBackground": "#1F3647",
+    "promptBorder": "#538EAC",
+    "promptBorderShimmer": "#82B2C9"
+  }
+}
