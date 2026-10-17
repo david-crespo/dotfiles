@@ -61,6 +61,19 @@ labels, and edge ordering.
 - **Tall fan-out nodes**: a node with many outgoing edges grows to fit its
   ports. Pin it with `height: 70` (or whatever matches the other boxes).
 - Invisible edges are not a tool here. There is no `~~~`. Use ordering.
+- **Edges that flow against `direction` get routed around the outside**,
+  even when a short straight path exists: ELK treats them as feedback
+  edges. Declare every edge in the layout direction and flip the arrowhead
+  with `<-` where the flow runs back: `server.thread <- you: comment` lays
+  out like `server.thread -> you` but points at `server.thread`. A diagram
+  of a round trip (request out, reply back) needs this on every return edge.
+- **Kinks on edges into a column of nodes**: when the box at the other end
+  is much shorter than the column, its ports bunch up and each edge jogs.
+  Set that box's `height` to about the column's so its ports sit level with
+  their targets. Try two or three heights; the straight one is obvious.
+- **ELK's crossing minimization can override declaration order** for a node
+  with edges on both sides. When reordering doesn't move it, merging or
+  dropping a node usually helps more.
 
 ## Syntax gotchas
 
