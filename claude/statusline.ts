@@ -35,11 +35,54 @@ function cacheColdSegment(): string | undefined {
   return `cache cold ${at.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
 }
 
+// Subscription usage windows. rate_limits is only present for Pro/Max accounts
+// (so not the enterprise one) and only after the first API response; each
+// window can be absent on its own:
+// https://code.claude.com/docs/en/statusline#rate-limit-usage
+// "3:40", no AM/PM: the 5h reset is never far enough away to be ambiguous
+function clockTime(at: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).formatToParts(at)
+  return parts
+    .filter((p) => p.type === "hour" || p.type === "minute" || p.type === "literal")
+    .map((p) => p.value)
+    .join("")
+    .trim()
+}
+
+// "Wed", or "3pm" when the reset is less than a day away
+function weekReset(at: Date): string {
+  if (at.getTime() - Date.now() >= 24 * 60 * 60 * 1000) {
+    return at.toLocaleDateString("en-US", { weekday: "short" })
+  }
+  return at
+    .toLocaleTimeString("en-US", { hour: "numeric" })
+    .replace(/\s/, "") // ICU may use a narrow no-break space here
+    .toLowerCase()
+}
+
+function windowSegment(
+  label: string,
+  window: { used_percentage?: number; resets_at?: number } | undefined,
+  formatReset: (at: Date) => string,
+): string | undefined {
+  if (typeof window?.used_percentage !== "number") return undefined
+  const used = `${label} ${Math.round(window.used_percentage)}%`
+  if (typeof window.resets_at !== "number") return used
+  return `${used} → ${formatReset(new Date(window.resets_at * 1000))}`
+}
+
 const segments = [
   model,
   `${kFmt.format(tokens / 1000)}k (${pct}%)`,
   costFmt.format(cost),
   cacheColdSegment(),
+  windowSegment("5h", input.rate_limits?.five_hour, clockTime),
+  // Shown always for now to get a feel for weekly usage. Once that's familiar,
+  // consider hiding it until used_percentage passes ~70%.
+  windowSegment("7d", input.rate_limits?.seven_day, weekReset),
 ].filter(Boolean)
 
 console.log(segments.join(" | "))
