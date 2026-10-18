@@ -217,10 +217,24 @@ alias cdd='cd ~/oxide/docs'
 alias cdo='cd ~/oxide/omicron'
 alias cdc='cd ~/oxide/console'
 
-alias ls='eza'
-alias l='eza --all --long --group-directories-first --git'
-alias lt='eza --all --tree --group-directories-first --git-ignore --level=2'
-alias ltt='eza --all --tree --group-directories-first --git-ignore --level=3'
+# Unlike ls, eza reads file names from stdin whenever stdin isn't a terminal,
+# even without --stdin. So with no path argument, an open stdin that never
+# closes (agent shells, background jobs) hangs it, and an empty one
+# (</dev/null) makes it print nothing.
+# https://github.com/eza-community/eza/blob/471bfbc/src/options/stdin.rs#L22-L23
+# https://github.com/eza-community/eza/issues/1568
+# https://github.com/eza-community/eza/issues/1725
+# A path argument turns that off, so pass `.` when stdin isn't a terminal and
+# no argument looks like a path. A flag with a separate value
+# (`--sort name`) counts as a path; use `--sort=name`.
+eza_stdin_safe() {
+  if [[ -t 0 ]] || (( ${@[(I)[^-]*]} )); then eza "$@"; else eza "$@" .; fi
+}
+# Not named _eza: that's eza's own completion function, which this would clobber
+alias ls='eza_stdin_safe'
+alias l='eza_stdin_safe --all --long --group-directories-first --git'
+alias lt='eza_stdin_safe --all --tree --group-directories-first --git-ignore --level=2'
+alias ltt='eza_stdin_safe --all --tree --group-directories-first --git-ignore --level=3'
 
 alias sgr='sg run -l rust --pattern'
 alias sgt='sg run -l ts --pattern'

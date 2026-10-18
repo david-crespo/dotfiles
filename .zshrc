@@ -165,6 +165,7 @@ eval "$(atuin init zsh --disable-up-arrow)"
 fpath=(~/.zsh/completion $fpath)
 autoload -U compinit
 compinit
+compdef eza_stdin_safe=eza # wrapper defined in .zprofile
 eval "$(zoxide init zsh)"
 
 source <(COMPLETE=zsh jj)
