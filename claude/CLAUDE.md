@@ -85,6 +85,11 @@ Some information about the user's coding environment:
     --setting-sources "" --strict-mcp-config < /abs/path/prompt.txt
   ```
 
+- `claude` calls you start, in any directory, use this session's account
+  because they inherit `CLAUDE_CONFIG_DIR`. Don't run them with a stripped
+  environment (`env -i`, clean-env wrappers), which falls back to the default
+  config. `claude auth status` shows which account a call will use.
+
 ### Browser interaction (frontend dev work)
 
 - To interact with a browser (verify a change rendered, click through a flow,
