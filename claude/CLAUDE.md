@@ -128,6 +128,7 @@ Some information about the user's coding environment:
 - Don't browse other oxide repos under ~/oxide speculatively. Only read from another oxide repo when the task explicitly requires it (the user named the repo, or a cross-repo reference can't be resolved otherwise). In that case, prefer the local clone over GitHub; if it's not cloned, ask before cloning.
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
 - When giving a list of problems or suggestions in, e.g., a code review, number the suggestions so the user can refer to them easily.
+- To show me an image (a screenshot, a plot, a render), run `open <path>` so it opens in Preview, rather than only giving the path. `open` is blocked in the sandbox, so run it unsandboxed.
 
 ### Working with GitHub
 
