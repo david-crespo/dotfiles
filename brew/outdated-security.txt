@@ -1,0 +1,23 @@
+# Dependencies that handle crypto, network, or untrusted input. brew-outdated
+# always lists these, even when nothing was installed on request that needs
+# them directly.
+c-ares
+curl
+expat
+gnupg
+gnutls
+krb5
+libgcrypt
+libgit2
+libnghttp2
+libssh2
+libxml2
+libxmlsec1
+libyaml
+nss
+openssl@3
+pcre2
+sqlite
+xz
+zlib
+zstd

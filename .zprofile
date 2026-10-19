@@ -183,10 +183,8 @@ alias api-diff='~/oxide/console/tools/api-diff.ts'
 alias bundle-size-diff='~/oxide/console/tools/bundle-size-diff.ts'
 alias npm-clean='dust --no-percent-bars --depth 0 node_modules && echo "Deleting..." && rm -rf node_modules'
 
-alias brew-outdated='brew outdated -v | grep -vf ~/.local/share/brew-outdated-exclude.txt'
-
 function brew-why() {
-  for package in $(brew-outdated | awk '{ print $1 }'); do
+  for package in $(brew-outdated | awk '!/^\+/ { print $1 }'); do
     echo "---------------"
     echo "Package: $package"
     brew uses --installed "$package"

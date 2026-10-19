@@ -87,7 +87,7 @@ ln -sf "$PWD/bin/x-list.ts" ~/.local/bin/x-list
 ln -sf "$PWD/bin/tseval.ts" ~/.local/bin/tseval
 ln -sf "$PWD/bin/tsq.ts" ~/.local/bin/tsq
 
-ln -sf "$PWD/brew/outdated-exclude.txt" ~/.local/share/brew-outdated-exclude.txt
+ln -sf "$PWD/bin/brew-outdated.sh" ~/.local/bin/brew-outdated
 
 mkdir -p ~/.claude/skills ~/.config/opencode/skills ~/.codex/skills ~/.pi/agent/skills ~/.config/opencode/agents
 ln -sf "$PWD/claude/CLAUDE.md" ~/.claude/CLAUDE.md
