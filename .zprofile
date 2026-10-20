@@ -50,6 +50,7 @@ alias jrm="jj git fetch && jj new 'trunk()'"
 alias jb="jj-jump" # see bin/jj-jump.ts
 alias jsq="jj squash"
 alias sk="node ~/oxide/skepsis/cli.ts"
+alias aio="ai --profile oxide" # ai with work API keys
 alias rfd-local='LOCAL_RFD_REPO=~/oxide/rfd npm --prefix ~/oxide/rfd-site run dev'
 
 # Use the personal Max account (see ~/.claude-personal in install.sh) under

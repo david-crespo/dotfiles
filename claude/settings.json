@@ -146,6 +146,7 @@
       "Read(~/.config/gh/**)",
       "Read(~/.config/gcloud/**)",
       "Read(~/.config/oxide/credentials.toml)",
+      "Read(~/.config/llm-cli/**)",
       "Read(~/.npmrc)",
       "Read(~/.codex/auth.json)",
       "Read(~/.local/share/atuin/**)",

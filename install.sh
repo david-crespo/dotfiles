@@ -196,6 +196,12 @@ if [ -d "$HOME/repos/ah" ]; then
   ln -sf "$HOME/repos/ah/ah.ts" ~/.local/bin/ah
 fi
 
+# llm-cli (separate repo, not required). A symlink rather than `npm link`,
+# which lives in the per-version global prefix and is lost on fnm upgrades.
+if [ -d "$HOME/repos/llm-cli" ]; then
+  ln -sf "$HOME/repos/llm-cli/main.ts" ~/.local/bin/ai
+fi
+
 # private dotfiles (separate private repo, not required)
 if [ -d "$HOME/repos/dotfiles-private" ]; then
   "$HOME/repos/dotfiles-private/install.sh"
