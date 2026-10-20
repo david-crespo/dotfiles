@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # Common operations on Claude Code, Codex, and opencode session history.
-# Claude Code sessions: JSONL in ~/.claude/projects/<mangled-path>/*.jsonl
+# Claude Code sessions: JSONL in ~/.claude/projects/<mangled-path>/*.jsonl, and
+#   ~/.claude-personal/projects/... for the personal account (CLAUDE_CONFIG_DIR).
 # Codex sessions: JSONL in ~/.codex/sessions/YYYY/MM/DD/*.jsonl
 # opencode sessions: rows in a SQLite DB (~/.local/share/opencode/opencode.db).
 #   These have no per-session file, so they are referenced by a synthetic
@@ -10,7 +11,8 @@ set -euo pipefail
 #   Claude/Codex file paths. is_opencode() recognizes it and the oc_* helpers
 #   answer queries against the DB.
 
-SESSIONS_ROOT="$HOME/.claude/projects"
+PERSONAL_SESSIONS_ROOT="$HOME/.claude-personal/projects"
+SESSIONS_ROOTS=("$HOME/.claude/projects" "$PERSONAL_SESSIONS_ROOT")
 CODEX_ROOT="$HOME/.codex/sessions"
 OPENCODE_DB="$HOME/.local/share/opencode/opencode.db"
 
@@ -19,7 +21,8 @@ usage() {
 Usage: claude-sessions <command> [args]
 
 Commands:
-  dir [path]                        Print session directory for a project path (default: $PWD)
+  dir [path]                        Print session directories for a project path (default: $PWD),
+                                    one per account that has sessions there
   list [--all | path] [--days N]    List recent sessions, most recent first
   search <term> [--all | path] [--days N]
                                     Search sessions for a term (uses rg)
@@ -43,8 +46,10 @@ Commands:
                                       this when downstream code needs to reparse the input).
                                     --truncate N trims the TSV input column for readability.
 
-With --all, commands include Claude Code, Codex, and opencode sessions.
-Session source is shown in summary output (codex: / opencode: prefixes).
+Claude Code sessions come from both the work (~/.claude) and personal
+(~/.claude-personal) accounts. With --all, commands also include Codex and
+opencode sessions. Session source is shown in summary output (personal: /
+codex: / opencode: prefixes).
 Codex guardian (approval-judge) sub-sessions are excluded from listings.
 EOF
   exit 1
@@ -159,12 +164,24 @@ oc_search_rows() {
        order by time_updated desc;"
 }
 
-# Convert an absolute path to the Claude session directory name
-session_dir() {
+# Claude session directories for an absolute project path, one per account
+# that has any sessions there
+session_dirs() {
   local project_path="${1:-$PWD}"
-  local mangled
+  local mangled root
   mangled=$(echo "$project_path" | tr '/' '-')
-  echo "$SESSIONS_ROOT/$mangled"
+  for root in "${SESSIONS_ROOTS[@]}"; do
+    if [[ -d "$root/$mangled" ]]; then echo "$root/$mangled"; fi
+  done
+}
+
+# Project label for a Claude Code session path, e.g. "oxide/omicron", prefixed
+# with "personal: " for sessions from the personal account
+cc_project() {
+  local project
+  project=$(echo "$1" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
+  if [[ "$1" == "$PERSONAL_SESSIONS_ROOT"/* ]]; then project="personal: $project"; fi
+  echo "$project"
 }
 
 # Filter session identifiers on stdin to those modified within N days.
@@ -201,7 +218,7 @@ format_session_header() {
     project=$(jq -r 'select(.type == "turn_context") | .payload.cwd' "$session" 2>/dev/null | head -1 | sed "s|$HOME/||")
     project="codex: ${project:-unknown}"
   else
-    project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
+    project=$(cc_project "$session")
   fi
   date=$(stat -f '%Sm' -t '%Y-%m-%d' "$session")
   echo "=== $project ($date) ==="
@@ -232,10 +249,14 @@ maybe_filter_days() {
 cmd_list() {
   parse_days_opt "$@"
   set -- "${REPLY_ARGS[@]+"${REPLY_ARGS[@]}"}"
-  local dir
+  local dirs dir root
   if [[ "${1:-}" == "--all" ]]; then
     {
-      fd --extension jsonl --changed-within 30d . "$SESSIONS_ROOT" --exec stat -f '%m %N' {}
+      for root in "${SESSIONS_ROOTS[@]}"; do
+        if [[ -d "$root" ]]; then
+          fd --extension jsonl --changed-within 30d . "$root" --exec stat -f '%m %N' {}
+        fi
+      done
       if [[ -d "$CODEX_ROOT" ]]; then
         fd --extension jsonl --changed-within 30d . "$CODEX_ROOT" --exec stat -f '%m %N' {}
       fi
@@ -244,12 +265,14 @@ cmd_list() {
       | filter_codex_subagents | maybe_filter_days
     return
   fi
-  dir=$(session_dir "${1:-$PWD}")
-  if [[ ! -d "$dir" ]]; then
-    echo "No sessions found in $dir" >&2
+  dirs=$(session_dirs "${1:-$PWD}")
+  if [[ -z "$dirs" ]]; then
+    echo "No sessions found for ${1:-$PWD}" >&2
     exit 1
   fi
-  stat -f '%m %N' "$dir"/*.jsonl 2>/dev/null | sort -rn | awk 'NR<=20 {print $2}' \
+  while IFS= read -r dir; do
+    stat -f '%m %N' "$dir"/*.jsonl 2>/dev/null || true
+  done <<< "$dirs" | sort -rn | awk 'NR<=20 {print $2}' \
     | maybe_filter_days
 }
 
@@ -259,18 +282,23 @@ cmd_search() {
   shift
   parse_days_opt "$@"
   set -- "${REPLY_ARGS[@]+"${REPLY_ARGS[@]}"}"
+  local root dirs dir
   if [[ "${1:-}" == "--all" ]]; then
     {
-      rg --files-with-matches "$term" "$SESSIONS_ROOT"/*/*.jsonl 2>/dev/null || true
+      for root in "${SESSIONS_ROOTS[@]}"; do
+        rg --files-with-matches "$term" "$root"/*/*.jsonl 2>/dev/null || true
+      done
       if [[ -d "$CODEX_ROOT" ]]; then
         rg --files-with-matches --glob '*.jsonl' "$term" "$CODEX_ROOT" 2>/dev/null || true
       fi
       oc_search_rows "$term"
     } | filter_codex_subagents | maybe_filter_days
   else
-    local dir
-    dir=$(session_dir "${1:-$PWD}")
-    rg --files-with-matches "$term" "$dir"/*.jsonl 2>/dev/null | maybe_filter_days || true
+    dirs=$(session_dirs "${1:-$PWD}")
+    [[ -z "$dirs" ]] && return 0
+    while IFS= read -r dir; do
+      rg --files-with-matches "$term" "$dir"/*.jsonl 2>/dev/null || true
+    done <<< "$dirs" | maybe_filter_days
   fi
 }
 
@@ -469,7 +497,7 @@ cmd_summary() {
       project="codex: ${project:-unknown}"
       first_msg=$(jq -r "$CODEX_USER_TEXT" "$session" 2>/dev/null | head -1 | tr -s '[:space:]' ' ' | cut -c1-120 || true)
     else
-      project=$(echo "$session" | sed 's|.*/projects/-Users-david-||; s|/[^/]*$||; s|-|/|g')
+      project=$(cc_project "$session")
       first_msg=$(jq -rn '
         first(inputs | select(.type == "user") | .message.content |
           if type == "string" then select(startswith("<") | not)
@@ -598,7 +626,7 @@ command="$1"
 shift
 
 case "$command" in
-  dir)            session_dir "$@" ;;
+  dir)            session_dirs "$@" ;;
   list)           cmd_list "$@" ;;
   search)         cmd_search "$@" ;;
   bash)           cmd_bash "$@" ;;

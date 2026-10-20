@@ -46,6 +46,11 @@ The script lives next to this skill file. Run it with its full path:
 The directory name is the absolute project path with all `/` replaced by `-`
 (including the leading one, so it starts with `-`).
 
+Sessions under the personal account (`CLAUDE_CONFIG_DIR=~/.claude-personal`)
+live in the same layout under `~/.claude-personal/projects/`. The script
+searches both: `dir` prints one line per account that has sessions for the
+project, and summary/header output labels personal sessions `personal:`.
+
 **Codex** sessions are JSONL files stored by date:
 
     ~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl
@@ -114,12 +119,13 @@ Caveat: within a mode the transcript does not distinguish "allowed by rule" from
 Typical recipe for "audit yesterday's auto-mode calls in repo X":
 
 ```bash
-DIR=$(claude-sessions.sh dir ~/oxide/X)
 > /tmp/audit.jsonl
-for f in "$DIR"/*.jsonl; do
-  d=$(stat -f '%Sm' -t '%Y-%m-%d' "$f")
-  [[ "$d" != "YYYY-MM-DD" ]] && continue
-  claude-sessions.sh tools-audit "$f" --mode auto --json >> /tmp/audit.jsonl
+for DIR in $(claude-sessions.sh dir ~/oxide/X); do
+  for f in "$DIR"/*.jsonl; do
+    d=$(stat -f '%Sm' -t '%Y-%m-%d' "$f")
+    [[ "$d" != "YYYY-MM-DD" ]] && continue
+    claude-sessions.sh tools-audit "$f" --mode auto --json >> /tmp/audit.jsonl
+  done
 done
 
 # Rejections and errors first:
