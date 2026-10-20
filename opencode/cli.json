@@ -14,5 +14,8 @@
   "tabs": {
     "mode": "off"
   },
-  "animations": true
+  "animations": true,
+  "experimental": {
+    "todo": true
+  }
 }
