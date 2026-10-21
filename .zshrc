@@ -94,9 +94,10 @@ fi
 function set_title() {
   local title="$1"
   # ah sets the tab label from this and the agents in the tab. Interactive
-  # shells only: an agent's Bash calls inherit its REX_BLOCK, and a cd in one
-  # would report the agent's own pane as a shell.
-  if [[ -o interactive && -n $REX_BLOCK ]] && (( $+commands[ah] )); then
+  # shells right in Rex only: an agent's Bash calls, and shells in a tmux it
+  # starts, inherit its REX_BLOCK, and a cd in one would report the agent's
+  # own pane as a shell.
+  if [[ -o interactive && -n $REX_BLOCK && $TERM_PROGRAM == rex ]] && (( $+commands[ah] )); then
     ah hook shell "$title" >/dev/null 2>&1 &!
   fi
   # Titles the pane header
