@@ -3,6 +3,7 @@
 (require (prefix-in helix.static. "helix/static.scm"))
 (require "helix/misc.scm")
 (require (prefix-in helix.editor. "helix/editor.scm"))
+(require "ah/ah.scm")
 
 (provide jump-view-left
          jump-view-down
@@ -13,7 +14,10 @@
          wrap-console-dir
          wrap-dbg
          copy-path
-         notes-picker)
+         notes-picker
+         ; From ah, re-exported so they're typable commands
+         ah-comment
+         ah-comment-file)
 
 (define (make-wrapper prefix suffix)
   (lambda ()

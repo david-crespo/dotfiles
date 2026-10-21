@@ -61,7 +61,8 @@
                 (Cmd-w ":close-view-or-pane")
                 ; hxai is bin/hxai.ts. Add -f %{buffer_name} to include the whole file.
                 (tab "@:pipe hxai -m k2 ")
-                (L (r "@:pipe hxai ") (s "@:pipe hxai -m sonnet ") (g "@:pipe hxai -m gpt-5 "))
+                (L (r "@:pipe hxai ") (s "@:pipe hxai -m sonnet ") (g "@:pipe hxai -m gpt-5 ")
+                   (c ":ah-comment") (f ":ah-comment-file"))
                 (M (f ":toggle-option auto-format")
                    (c ":copy-path")
                    (h ":toggle-option lsp.display-inlay-hints")
@@ -69,6 +70,8 @@
                    (l ":lsp-restart")))
         (select (Cmd-k "select_line_above")
                 (Cmd-j "select_line_below")
+                (L (r "@:pipe hxai ") (s "@:pipe hxai -m sonnet ") (g "@:pipe hxai -m gpt-5 ")
+                   (c ":ah-comment") (f ":ah-comment-file"))
                 ("{" "goto_prev_paragraph")
                 ("}" "goto_next_paragraph"))
         (insert (C-ret "completion")))

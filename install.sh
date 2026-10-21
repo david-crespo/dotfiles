@@ -19,6 +19,7 @@ ln -sf "$PWD/helix/languages.toml" ~/.config/helix/languages.toml
 ln -sf "$PWD/helix/config.toml" ~/.config/helix/config.toml
 ln -sf "$PWD/helix/themes/ayu_evolve2.toml" ~/.config/helix/themes/ayu_evolve2.toml
 ln -sf "$PWD/helix/helix.scm" ~/.config/helix/helix.scm
+ln -sfn "$HOME/repos/ah/editors/helix" ~/.config/helix/ah
 ln -sf "$PWD/helix/init.scm" ~/.config/helix/init.scm
 
 mkdir -p ~/.config/zed/themes
