@@ -65,6 +65,7 @@ rex.action{
 }
 rex.bind("cmd+w", "helix_or", { letter = "w", fallback = "client.close" })
 rex.bind("cmd+k", "helix_or_repeat", { letter = "k" })
+rex.bind("cmd+r", "helix_or", { letter = "r" })
 
 -- auto covers me pretty much all the time
 rex.bind("cmd+d", "pane.split.auto")
