@@ -16,6 +16,7 @@ ln -sf "$PWD/wezterm.lua" ~/.config/wezterm/wezterm.lua
 mkdir -p ~/.config/helix/themes
 ln -sf "$HOME/repos/helix/runtime" ~/.config/helix/runtime
 ln -sf "$PWD/helix/languages.toml" ~/.config/helix/languages.toml
+ln -sf "$PWD/helix/config.toml" ~/.config/helix/config.toml
 ln -sf "$PWD/helix/themes/ayu_evolve2.toml" ~/.config/helix/themes/ayu_evolve2.toml
 ln -sf "$PWD/helix/helix.scm" ~/.config/helix/helix.scm
 ln -sf "$PWD/helix/init.scm" ~/.config/helix/init.scm

@@ -1,0 +1,2 @@
+# Empty on purpose: reloading config (including the reload after :workspace-trust) fails
+# when this file is missing.
