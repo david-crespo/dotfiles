@@ -1,8 +1,5 @@
 #!/bin/zsh
 
-# zellij panes are non-login shells, so source .zprofile for aliases and PATH
-[[ -n $ZELLIJ ]] && source ~/.zprofile
-
 function prompt_pwd() {
   local pwd=$PWD
 
