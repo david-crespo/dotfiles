@@ -377,6 +377,7 @@ function npm-globals() {
     vscode-langservers-extracted@^4.10.0 \
     @tailwindcss/language-server@^0.14.29 \
     @astrojs/language-server@^2.16.10 \
+    svelte-language-server@^0.18.5 \
     @earendil-works/pi-coding-agent@latest \
     @openai/codex@latest
 }
