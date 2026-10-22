@@ -22,7 +22,8 @@ checks in a tight loop.
 ```js
 import { chromium } from 'playwright'
 const browser = await chromium.launch()
-const page = await browser.newPage()
+// 2x so screenshots match a Retina display; 1x looks half-res to the user
+const page = await browser.newPage({ deviceScaleFactor: 2 })
 
 await page.goto('http://localhost:4444/projects', { waitUntil: 'domcontentloaded' })
 // wait on a real element, never 'networkidle'
@@ -72,6 +73,11 @@ await browser.close()
   `ariaSnapshot()` first and pick names from it.
 - **Page summary**: `page.locator('body').ariaSnapshot()` (~3KB) instead of
   dumping HTML. Screenshots go to files; Read them after.
+- **Screenshot resolution**: any screenshot the user will look at must be taken
+  at `deviceScaleFactor: 2` (default is 1, which looks half-res on their
+  display). In a Playwright test file, use `test.use({ deviceScaleFactor: 2 })`.
+  Prefer `locator.screenshot()` on the relevant element (a dialog, a card) over
+  a full-page shot.
 
 ## When to use browser MCP tools instead
 
