@@ -16,6 +16,9 @@ inherits = "ayu_evolve"
 [palette]
 black = "#131721" # bring back lighter black from ayu_dark
 red = "#ff5540"   # tone down red a bit
+# match evolve's light_gray so prose (ui.text) and punctuation are as bright as
+# identifiers (variable) instead of ayu_dark's dimmer #bfbdb6
+foreground = "#dedede"
 
 # from ghostty's ayu (or at least it used to be. they changed the colors)
 green = "#b8cc52"

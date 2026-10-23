@@ -148,6 +148,30 @@ source <(fzf --zsh)
 # works to exclude a lot but means you can't look inside node_modules
 export FZF_CTRL_T_COMMAND='fd --type f --hidden --follow --exclude .git --exclude .jj'
 
+# ctrl-x n: pick files from the nearest .claude/notes up the tree, newest first
+# (notes start with a date), like space o n in helix. ctrl-t misses them
+# because they're gitignored.
+fzf-notes-widget() {
+  local root=$PWD
+  until [[ -d $root/.claude/notes || $root == / ]]; do root=${root:h}; done
+  local dir=${root%/}/.claude/notes
+  if [[ ! -d $dir ]]; then
+    zle -M "no .claude/notes in $PWD or above"
+    return 1
+  fi
+  local -a picked
+  # dated notes first, then stray files like screenshots
+  picked=(${(f)"$(print -rl -- $dir/[0-9]*(.NOn:t) $dir/[^0-9]*(.NOn:t) |
+    fzf --multi --height 40% --reverse --scheme=path --tiebreak=index \
+      --preview "bat --color=always --style=plain ${(q)dir}/{}")"})
+  local prefix=${dir#$PWD/} f
+  for f in $picked; do LBUFFER+="${(q)prefix}/${(q)f} "; done
+  zle reset-prompt
+}
+zle -N fzf-notes-widget
+bindkey '^Xn' fzf-notes-widget
+bindkey '^X^N' fzf-notes-widget
+
 export DENO_INSTALL="/Users/david/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 

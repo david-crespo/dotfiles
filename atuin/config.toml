@@ -37,7 +37,9 @@ search_mode = "daemon-fuzzy"
 
 [search]
 ## see filter_mode docs for full set
-filters = ["workspace", "global"]
+## directory is a stopgap: workspace mode misses jj/git worktrees outside the main
+## checkout (https://github.com/atuinsh/atuin/issues/3819)
+filters = ["workspace", "global", "directory"]
 ## ranking knobs for daemon-fuzzy mode: weight recent commands more heavily so
 ## something I ran minutes ago beats tight/frequent fuzzy matches (jrm, jjw rm).
 ## final score blends the fuzzy matcher score with frecency
