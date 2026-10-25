@@ -139,6 +139,7 @@ Some information about the user's coding environment:
 - Use `aipr tracking 1234` to list the sub-issues of a tracking issue
 - Use `aipr discussion 1234` to get all the comments on a PR
 - When running in the repo under discussion, prefer local commands for looking at history over GitHub API calls that would fetch the same data.
+- To make a PR from a jj repo, don't use `jprc`: it stops for interactive confirmation, which needs a terminal. Create a bookmark on the rev (`jj bookmark create <name> -r <rev>`), push it (`jj git push --bookmark <name>`), and run `gh pr create --head <name>` directly.
 
 ### Batch data processing
 
