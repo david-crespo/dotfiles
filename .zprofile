@@ -246,7 +246,15 @@ alias aisf='ai --search -m flash'
 alias aisa='ai --search -m argon'
 alias aif='ai -m flash'
 alias cbd='cb -l diff'
-alias alt='ai --ephemeral --image clipboard --model flash "write brief alt text for a social media post. no markdown formatting, this is for screenreaders. if image is all text, include the full text after a very short description (if helpful), like \"screenshot of terminal output:\"" --quick --raw | ecopy'
+# alt text for the image on the clipboard. optional args steer it, e.g.
+# `alt focus on the error message`
+function alt() {
+  local prompt="write brief alt text for a social media post. no markdown formatting, this is for screenreaders. if image is all text, include the full text after a very short description (if helpful), like \"screenshot of terminal output:\""
+  [ $# -gt 0 ] && prompt="$prompt
+
+guidance from the poster on what to emphasize: $*"
+  ai --ephemeral --image clipboard --model flash "$prompt" --quick --raw | ecopy
+}
 
 alias dashboard='ah dashboard open'
 
