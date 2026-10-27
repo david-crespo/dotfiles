@@ -249,7 +249,7 @@ alias cbd='cb -l diff'
 # alt text for the image on the clipboard. optional args steer it, e.g.
 # `alt focus on the error message`
 function alt() {
-  local prompt="write brief alt text for a social media post. no markdown formatting, this is for screenreaders. if image is all text, include the full text after a very short description (if helpful), like \"screenshot of terminal output:\""
+  local prompt="write brief alt text for a social media post. no markdown formatting, this is for screenreaders. for screenshots of apps or UIs, describe what is shown in a few sentences and quote only the text that matters to the point of the image; do not transcribe the whole screen. if the image is essentially a passage of text meant to be read, like a quote, a post, or a block of terminal output, include the full text after a very short description (if helpful), like \"screenshot of terminal output:\""
   [ $# -gt 0 ] && prompt="$prompt
 
 guidance from the poster on what to emphasize: $*"
