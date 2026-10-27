@@ -77,6 +77,19 @@ rex.bind("cmd+backspace", "pane.send_key", { key = "alt+w" })
 -- Ghostty sent \x1b\r (alt+enter) for newline in Claude Code etc.
 rex.bind("shift+enter", "pane.send_key", { key = "alt+enter" })
 
+-- Option is alt, so restore the dashes macOS types with it. pane.send_key only
+-- sends keys, so write the text to the pane directly.
+rex.action{
+  name = "type_text",
+  title = "Type Text",
+  args = { text = "string" },
+  run = function(ctx, args)
+    rex.block.call("com.superlogical.terminal", "write", { block_id = ctx.block_id, data = args.text })
+  end,
+}
+rex.bind("alt+-", "type_text", { text = "–" })
+rex.bind("alt+shift+-", "type_text", { text = "—" })
+
 -- Agent layout: claude in a full-height left third, editor over a shell on the
 -- right. Commands go in as typed input, so quitting one leaves a shell in its
 -- pane.
