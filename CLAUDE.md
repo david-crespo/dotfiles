@@ -7,6 +7,8 @@ contains claude settings and skills in claude/ and utilities in bin/.
 When adding new scripts to `bin/`, add a corresponding symlink entry in
 `install.sh` and run `install.sh` to create the symlink. Never run `ln -sf`
 directly — `install.sh` is the source of truth for what gets symlinked where.
+Prefer TypeScript over bash for shell scripts meant to be kept around and run by
+hand. See existing scripts for conventions.
 
 This repo is public on GitHub. A private counterpart at `../dotfiles-private`
 follows the same conventions (`bin/` scripts, its own `install.sh`, invoked by

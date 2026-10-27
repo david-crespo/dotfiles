@@ -80,6 +80,7 @@ ln -sf "$PWD/bin/jpl.ts" ~/.local/bin/jpl
 ln -sf "$PWD/bin/jpr.ts" ~/.local/bin/jpr
 ln -sf "$PWD/bin/flag-stats.ts" ~/.local/bin/flag-stats
 ln -sf "$PWD/bin/clip-bot-note.sh" ~/.local/bin/clip-bot-note
+ln -sf "$PWD/bin/rfloat.ts" ~/.local/bin/rfloat
 ln -sf "$PWD/bin/ww.ts" ~/.local/bin/ww
 ln -sf "$PWD/bin/say-last.ts" ~/.local/bin/say-last
 ln -sf "$PWD/bin/x-list.ts" ~/.local/bin/x-list
