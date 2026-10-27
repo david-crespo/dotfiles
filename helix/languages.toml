@@ -75,3 +75,8 @@ formatter = { command = "taplo", args = ["fmt", "--option", "column_width=92", "
 name = "racket"
 formatter = { command = "raco", args = ["fmt", "-i"] }
 auto-format = true
+
+[[language]]
+name = "markdown"
+soft-wrap = { enable = true, wrap-at-text-width = true }
+text-width = 80
