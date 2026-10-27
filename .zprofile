@@ -44,7 +44,7 @@ alias jds="jj diff --stat"
 alias jf="jj git fetch"
 alias jp="jj git push"
 alias jpm="jj git push --remote mine"
-alias jpp="jj new && jj tug && jj git push"
+alias jpp="jj new && jj bookmark advance && jj git push"
 # reset on top of main after being done with a PR
 alias jrm="jj git fetch && jj new 'trunk()'"
 alias jb="jj-jump" # see bin/jj-jump.ts
@@ -118,7 +118,7 @@ function curr_bookmark {
 # see bin/jpl.ts — jpl --help for usage
 
 alias jdr='jj diff --from "$(curr_bookmark)@origin"'
-alias jbs='jj tug'
+alias jbs='jj bookmark advance'
 
 # jj abandon branch
 function jab() {

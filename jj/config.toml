@@ -41,6 +41,13 @@ diff-formatter = ":git"
 # branch) | ::@ (ancestors of my checkout, so someone else's divergent commit
 # on a branch I'm contributing to still shows).
 log = "builtin_log() | ancestors(immutable_heads().., 4) | (divergent() & (mine() | ::@)) | ancestors(bookmarks(), 3)"
+# `jj bookmark advance` moves the closest ancestor bookmark to @-. It prefers
+# non-trunk bookmarks so that merging trunk doesn't drag the trunk bookmark
+# forward. coalesce() returns its first non-empty argument, so it falls back to
+# all ancestor bookmarks (i.e., trunk) when there are no stack bookmarks.
+# `to` is the advance target, which jj makes available in this revset.
+bookmark-advance-to = "@-"
+bookmark-advance-from = "coalesce(closest_stack_bookmarks(to), closest_bookmarks(to))"
 
 [revset-aliases]
 # Treat commits not authored by me as immutable. The `trunk().. &` bit is an
@@ -104,16 +111,6 @@ dtsa = ["diff", "--stat", "--from", "fork()"]
 rp = ["log", "--no-graph", "-T", "commit_id"]
 ds = ["diff", "--stat"]
 cm = ["commit"]
-# move the closest ancestor bookmark to @-. prefers non-trunk bookmarks so
-# that merging trunk doesn't drag the trunk bookmark forward. falls back to
-# including trunk if it's the only ancestor bookmark. the jj log prints "x"
-# per matching rev; grep -q tests whether there's any output (i.e., the
-# revset matched something). if not, we widen the revset to include trunk.
-tug = ["util", "exec", "--", "zsh", "-c", '''
-  from='closest_stack_bookmarks(@)'
-  jj --no-pager log -r "$from" --no-graph -T '"x"' 2>/dev/null | grep -q . || from='closest_bookmarks(@)'
-  jj bookmark move --from "$from" --to '@-'
-  ''', 'jj tug']
 # jj collapse START [END]
 # squash START::END into START
 # second arg optional. if left out does all descendants of START
