@@ -1,5 +1,5 @@
 - The user is an experienced product engineer who mostly works in TypeScript and Rust
-- Prefer updating CLAUDE.md for general guidelines and explicit skills for task instructions. Don't create memory files automatically -- at most, propose a memory update for user approval.
+- Instructions belong in files the user can review and edit: CLAUDE.md for general guidelines, skills for task instructions. Don't create memory files automatically, since they change your behavior where the user won't see it. At most, propose a memory update for the user to approve.
 - Avoid LLM-isms in prose: formulaic rhetorical gestures that perform insight,
   sincerity, or gravity. Common forms:
   - "that's X, not Y" / "that's not X, it's Y"
@@ -16,8 +16,10 @@
   want to read. Length should fit the question: a quick exchange gets a short,
   conversational answer; a real report can be long, but detail the user will
   only skim belongs in a file or note.
-- When estimating how long a task will take, assume SOTA coding agents are doing the work. If tempted to say something will take a day or more, reconsider
-  carefully and be sure.
+- When estimating how long a task will take, assume a SOTA coding agent is
+  doing it. Effort intuitions come from humans doing the work and run far too
+  high: work that feels like an hour or two usually takes an agent a few
+  minutes. Recheck any estimate that comes out in hours.
 
 Some information about the user's coding environment:
 
@@ -35,22 +37,45 @@ Some information about the user's coding environment:
 
 ### jj (Jujutsu)
 
-- When asked to start work on something that affects versioned files and you're on an empty commit with no description, set a short description before you start editing: one imperative line, under about 50 chars, saying what changed. A few words of why are fine if they fit ("Drop file count, index too large"); a sentence of rationale is not. Longer reasoning goes in a body after a blank line, or in the PR. You can update the description if appropriate as you go. Don't bother prefixing the commit message with the overall topic, like "Audit log: " if it's part of a series of commits that are all about the audit log. The PR will cover the theme. Setting a description is not necessary if you're only working in .claude/notes directories other than the CWD. It is also unnecessary when the edit is a small follow-up to @- that the user is likely to squash if they like it.
+When working on a set of unpushed revs, we generally treat the stack as a
+whole as the unit of work rather than one commit at a time. The goal is the
+most logical, coherent and reviewable set of commits to end up pushed. That
+doesn't mean we want a bunch of tiny commits.
+
+- Within a turn, squash, split, rebase, describe and abandon the revs you've
+  made freely to get the clearest result.
+- While the user is still giving feedback on a rev, put follow-up edits in
+  that same rev, not a new one; they're reviewing it as a whole. Once they've
+  moved on, it's settled, and a later change to it goes on top: make the
+  change, let the user review it as its own diff, and squash it in when they
+  say to. Keep the working copy at the tip: the user may have a dev server
+  running there or want to see later revs.
+- Pushed revs are outside the stack. Rewriting them means a force-push, which
+  makes it hard for others to follow along on GitHub, so a change to a pushed
+  rev becomes a new rev on top instead. Squash into pushed revs only when the
+  user decides to force-push.
+- A squash or rebase can conflict with later revs that touch the same lines.
+  Resolve conflicts that are straightforward and follow from what the user
+  asked for. Mention a resolution when the user would want to know, such as
+  when it changed a later rev in a way they didn't ask for.
+- Undoing your own edits with `jj restore` is routine. Ask before a restore
+  that would discard edits the user made.
+- In auto mode, these points decide whether a squash, rebase, abandon or
+  restore is fine. The subcommand alone isn't a reason to stop; what matters
+  is whether it rewrites pushed revs, changes a settled rev without the user
+  saying so, or discards the user's edits.
+
+Commands and conventions:
+
+- When you start work that changes versioned files in this repo and you're on an empty commit with no description, describe it before you start editing. A rev meant to be squashed into another can be left undescribed. Descriptions are how the user reads the stack in `jj log`: one imperative line, under about 50 chars, saying what changed. A few words of why are fine if they fit ("Drop file count, index too large"); a sentence of rationale is not. Longer reasoning goes in a body after a blank line, or in the PR. Update it as the work changes. Leave off a topic prefix like "Audit log: " that a series of commits would share; the PR covers the theme.
 - To trace the origin of a line: `jj file annotate <file> | grep '<pattern>'`, then `jj log -r <id>` for context. If that rev is a refactor/move, repeat with `-r <id>-` (and the old path if renamed) until you find the substantive change.
 - In jj repos, use jj for everything git would do (`jj status`, `jj diff`, `jj diff -r @-`, `jj log`, `jj file annotate`, ...). Fall back to git only when jj has no way to do the thing.
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
 - To exclude paths from a jj command, use fileset syntax: `jj diff '~dir1 & ~dir2'` or `jj restore '~package-lock.json'`
-- when iterating on an existing rev A, work in a new rev on top of A and leave it there for the user to review and squash themselves. Do not squash into A on your own initiative, even in auto mode. If the user says "go ahead and squash" (or similar), that's fine; otherwise default to leaving the rev for review.
 - for parallel approaches, use `jj new <base>` to create siblings from a common base, implement each approach, then compare. bookmarks are unnecessary for this workflow
 - use `jjw` to manage jj workspaces: `jjw create` (or `jjw c`) creates a workspace and cds into it, `jjw ls` lists workspaces, `jjw rm` interactively removes one
-- Non-destructive jj operations are generally allowlisted. When working on a complex change, use `jj new` or `jj commit` (equiv to jj desc + jj new) after chunks of work to snapshot each step in a reviewable way. Check `jj log` immediately before any `jj new` — the working copy may have changed since you last looked — and if you're already on an empty undescribed commit, use it instead of stacking another.
+- Non-destructive jj operations are generally allowlisted. Check `jj log` immediately before any `jj new`: the working copy may have changed since you last looked, and if you're already on an empty undescribed commit, use it instead of stacking another.
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message. These flags are mutually exclusive.
-- whether to run a destructive `jj` op (squash, abandon, rebase) depends on which commits it would touch:
-  - Scratch commits you created earlier in the session whose only purpose was to snapshot intermediate work can be reorganized among themselves (squashed together, abandoned, reworded) as long as the result is still a rev on top of the user's target, not folded into it.
-  - Do not modify commits that existed before the current session — including the rev the user is iterating on — without being asked. Auto mode does not relax this; auto mode is latitude for routine work, not for rewriting history the user didn't ask you to touch.
-  - When the user does ask for a destructive op on pre-existing commits, make sure you understand which commits are involved and what they want before running it.
-  - `jj restore` and `jj resolve` follow the same logic. Restoring specific paths to undo this session's own edits (an abandoned experiment, an accidental lockfile or config change, taking one side of a conflict created by squashing or rebasing your own revs) is routine. Restoring paths the user edited themselves, restoring from a rev outside the current stack, or a bare `jj restore` that resets the whole working copy is not — ask first.
-  - These rules are what decide whether a destructive jj op is acceptable in auto mode. The subcommand name (`squash`, `rebase`, `restore`, `resolve`, `abandon`) is not by itself a reason to prompt; what matters is which commits and whose edits it touches.
 - The user may squash your work into the previous commit while you're working. This is normal — check `@-` (e.g., `jj diff -r @-`) if you need to confirm your changes landed.
 - `--ignore-immutable` may be needed when abandoning divergent commits from other authors, e.g., after rebasing on their branch and force pushing
 - `jj dt` and `jj dts` are custom aliases that diff a rev against its fork point from trunk (like a GitHub PR diff). `jj dt` shows the full diff, `jj dts` shows `--stat`. Both default to `@` but accept an optional rev argument.
@@ -72,7 +97,7 @@ Some information about the user's coding environment:
   session model only for real implementation or hard reasoning. Left unset, a
   subagent inherits the session model, which costs several times more per
   token.
-- When I ask for a fresh read or outside perspective, don't use a subagent:
+- When the user asks for a fresh read or outside perspective, don't use a subagent:
   subagents always get CLAUDE.md and an SDK preamble. Run a bare `claude -p`
   from an empty dir instead. In the sandbox, the Bash tool call needs
   `allowed_domains: ["api.anthropic.com"]`. The reader starts with no
@@ -123,9 +148,8 @@ Some information about the user's coding environment:
 
 - use `npm info` or similar to find the latest version of a package when adding
 - Formatting: after any batch of edits, run the project's formatter before lint, typecheck, and tests. Most TS projects use `oxfmt`, not prettier. Check `package.json` scripts for the project's formatter before running one. Never run a formatter that isn't a project dep (e.g. `bunx prettier`): it uses default settings and reformats whole files.
-- Explanations of how third party code works should be backed up by citations, ideally with GitHub permalinks to docs or code. If that is not available, link to other sources online. When including a GH permalink, use a 7 char short commit hash to keep the URL short — except in GitHub issue/PR bodies and comments, where the code embed only renders with the full hash.
+- When explaining how third-party code works, cite sources the user can check, ideally GitHub permalinks to docs or code, otherwise other links online. What you remember about third-party internals is often wrong or out of date, so cite claims the user will rely on and anything that comes from memory rather than something you just read. Common knowledge doesn't need a citation. When including a GH permalink, use a 7 char short commit hash to keep the URL short — except in GitHub issue/PR bodies and comments, where the code embed only renders with the full hash.
 - in scripts, prefer full length flags instead of abbreviations for readability
-- Don't browse other oxide repos under ~/oxide speculatively. Only read from another oxide repo when the task explicitly requires it (the user named the repo, or a cross-repo reference can't be resolved otherwise). In that case, prefer the local clone over GitHub; if it's not cloned, ask before cloning.
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
 - When giving a list of problems or suggestions in, e.g., a code review, number the suggestions so the user can refer to them easily.
 - To show me an image (a screenshot, a plot, a render), run `open <path>` so it opens in Preview, rather than only giving the path. `open` is blocked in the sandbox, so run it unsandboxed.
@@ -141,31 +165,20 @@ Some information about the user's coding environment:
 - When running in the repo under discussion, prefer local commands for looking at history over GitHub API calls that would fetch the same data.
 - To make a PR from a jj repo, don't use `jprc`: it stops for interactive confirmation, which needs a terminal. Create a bookmark on the rev (`jj bookmark create <name> -r <rev>`), push it (`jj git push --bookmark <name>`), and run `gh pr create --head <name>` directly.
 
-### Batch data processing
-
-When a task involves fetching and processing data for many items (e.g.,
-analyzing many PRs, processing a list of API resources), do not fan out to
-the full list immediately. First, work through the pipeline on a single item
-end-to-end: figure out which commands and API calls to run, what fields matter,
-how to parse and thread the data together, and confirm the output is useful.
-Refine the approach on one or a few cases — try different jq expressions, check
-whether the data model matches expectations, and verify the extraction logic
-produces what's needed. Only after the procedure is solid on one item should you
-scale up, and even then, prefer starting with a small batch before processing
-everything in parallel. Consider saving the procedure in a skill for future use.
-
 ### Analysis and planning
 
-When asked to do analysis and planning for a possible feature, make sure to
-work in a way that is easily resumable by another session. Start a report in a
-markdown file immediately, include the prompt or goal at the top, and fill it in
-as you go instead of at the end. Be thorough and consider alternative approaches
-explicitly, but don't give too much space to alternatives that are obviously
-implausible for whatever reason. When asked to review or improve a design doc,
-engage with the design, not just the prose. The point is to produce a solid
-design and make the case for it. Once a first draft of the report exists,
-open it with the `markdown` skill so we can iterate on it together, without
-asking first.
+When asked for analysis or planning (a possible feature, a design choice),
+write it as a markdown report if the user will keep working on it: it will
+take several rounds, outlast the session, or need their comments in the
+markdown editor. A question a chat reply answers well doesn't need one. Start
+the report as soon as you know it's needed, with the prompt or goal at the
+top, and fill it in as you go rather than at the end, so another session can
+pick it up if this one stops. Be thorough and consider alternative approaches
+explicitly, but don't give much space to ones that are obviously implausible.
+When asked to review or improve a design doc, engage with the design, not just
+the prose: the point is to produce a solid design and make the case for it.
+Once a first draft exists, open it with the `markdown` skill so we can iterate
+on it together, without asking first.
 
 Markdown notes should go in `.claude/notes` relative to repo root. That
 directory is gitignored globally. Give the file a descriptive name and start
@@ -200,10 +213,22 @@ This applies to capturing conversation. Analysis reports written from scratch
 
 ### Task trackers
 
-Keep task trackers with the `tracker` skill: when the user asks for one (even
-alongside an analysis report), when a review has more than a couple of
-numbered findings, and when picking up work, which starts with checking for
-an existing one. If open threads start piling up without one, offer to start
-it. "Tracker" always means this session's file in the ah dashboard: "make it
-the tracker" means show it there, and "the tracker" in chat is whatever the
-dashboard is showing for this session.
+Keep task trackers with the `tracker` skill. A tracker is for when the user
+will want to come back to separate topics one at a time over later turns,
+and would otherwise have to scroll up or ask you to repeat yourself. Use
+judgment, not counts: two big questions can call for one, and five quick ones
+answered in full may not. Typical cases are a message that asks several things
+that each need their own discussion, work that spans several revs or sessions,
+and review findings the user will triage rather than have fixed all at once.
+Start one in those cases without asking. Don't start one for anything settled
+in this reply or the next, or for one piece of work the user follows from
+start to finish, however long it runs, like debugging a single bug. If the
+user asks for one along with an analysis report, write both: the analysis goes
+in the report, and the list of work goes in the tracker. If a current tracker
+fits, add items to it instead of starting another. If open topics pile up
+without one, offer it in a line.
+
+When picking up work, check for an existing tracker first. "Tracker" always
+means this session's file in the ah dashboard: "make it the tracker" means
+show it there, and "the tracker" in chat is whatever the dashboard is showing
+for this session.
