@@ -111,7 +111,7 @@ function zjb() {
 }
 
 function curr_bookmark {
-  jj log --ignore-working-copy --no-graph -r 'closest_bookmarks(@)' \
+  jj log --ignore-working-copy --no-graph -r 'heads(::@ & bookmarks())' \
     -T 'local_bookmarks.map(|b| b.name()).join("\n") ++ "\n"' | head -1
 }
 

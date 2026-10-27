@@ -36,8 +36,8 @@ const generatedFiles = [
 async function pickBase(r: string) {
   // Query the in-between bookmarks and trunk() separately so trunk() lands at the
   // bottom of the list. Folding them into one revset lets jj's topological sort
-  // float a diverged trunk to the top. Note the - on ${r}-: up to one change before r.
-  const between = await bookmarksInLogOrder(`stack_bookmarks(${r}-)`)
+  // float a diverged trunk to the top. Note the - on (${r})-: up to one change before r.
+  const between = await bookmarksInLogOrder(`bookmarks() & trunk()..(${r})-`)
   const trunk = await bookmarksInLogOrder(`trunk()`)
   const bookmarks = [...between, ...trunk]
 

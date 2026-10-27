@@ -17,7 +17,7 @@ export async function bookmarksInLogOrder(revset: string): Promise<string[]> {
  * bookmark names, so the result is intentionally plural.
  */
 export function closestBookmarks(to = "@"): Promise<string[]> {
-  return bookmarksInLogOrder(`closest_bookmarks(${to})`)
+  return bookmarksInLogOrder(`heads(::(${to}) & bookmarks())`)
 }
 
 /**
@@ -37,7 +37,7 @@ export async function closestBookmark(to = "@"): Promise<string> {
  * bookmarks in the current stack.
  */
 export function stackBookmarks(to = "@"): Promise<string[]> {
-  return bookmarksInLogOrder(`stack_bookmarks(${to})`)
+  return bookmarksInLogOrder(`bookmarks() & trunk()..(${to})`)
 }
 
 /**

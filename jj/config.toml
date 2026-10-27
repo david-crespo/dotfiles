@@ -42,12 +42,13 @@ diff-formatter = ":git"
 # on a branch I'm contributing to still shows).
 log = "builtin_log() | ancestors(immutable_heads().., 4) | (divergent() & (mine() | ::@)) | ancestors(bookmarks(), 3)"
 # `jj bookmark advance` moves the closest ancestor bookmark to @-. It prefers
-# non-trunk bookmarks so that merging trunk doesn't drag the trunk bookmark
-# forward. coalesce() returns its first non-empty argument, so it falls back to
-# all ancestor bookmarks (i.e., trunk) when there are no stack bookmarks.
-# `to` is the advance target, which jj makes available in this revset.
+# bookmarks above trunk because after merging trunk into a branch, main is
+# also a closest ancestor (via the merge's other parent) and would move onto
+# the branch too. With none above trunk, coalesce() falls back to trunk, which
+# errors rather than moving sideways if @ is behind it. jj provides `to`, the
+# advance target.
 bookmark-advance-to = "@-"
-bookmark-advance-from = "coalesce(closest_stack_bookmarks(to), closest_bookmarks(to))"
+bookmark-advance-from = "coalesce(heads(bookmarks() & ::to ~ ::trunk()), trunk())"
 
 [revset-aliases]
 # Treat commits not authored by me as immutable. The `trunk().. &` bit is an
@@ -57,10 +58,6 @@ bookmark-advance-from = "coalesce(closest_stack_bookmarks(to), closest_bookmarks
 "immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())"
 "fork(x)" = "fork_point(trunk() | x)"
 "fork()" = "fork_point(trunk() | @)"
-# These are plural because merge ancestry can have multiple closest bookmarks.
-"closest_bookmarks(to)" = "heads(::to & bookmarks())"
-"stack_bookmarks(to)" = "bookmarks() & trunk()..to"
-"closest_stack_bookmarks(to)" = "heads(stack_bookmarks(to))"
 
 [fileset-aliases]
 # lock files are noise in local diffs; exclude with `~lockfiles` (see dt below)
