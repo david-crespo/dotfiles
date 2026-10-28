@@ -51,8 +51,11 @@ alias jb="jj-jump" # see bin/jj-jump.ts
 alias jsq="jj squash"
 alias sk="node ~/oxide/skepsis/cli.ts --open-cmd 'ah view open --name skepsis'"
 alias ska="node ~/oxide/skepsis/cli.ts --send 'jq -r .prompt | ah message send' --open-cmd 'ah view open --name skepsis'"
+alias koine="node ~/oxide/koine/koine.ts"
 alias aio="ai --profile oxide" # ai with work API keys
 alias rfd-local='LOCAL_RFD_REPO=~/oxide/rfd npm --prefix ~/oxide/rfd-site run dev'
+
+vpnip() { ifconfig | awk '/^[a-z]/ {i=$1} /inet / && i ~ /^utun/ {print $2; exit}'; }
 
 # Use the personal Max account (see ~/.claude-personal in install.sh) under
 # ~/repos and the work account everywhere else. jjw workspaces live in
