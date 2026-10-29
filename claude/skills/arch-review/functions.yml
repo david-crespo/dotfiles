@@ -1,0 +1,25 @@
+# Named functions for metrics.mjs: declarations, methods, and function or arrow
+# expressions assigned to a variable. Inline callbacks are left out, so they
+# don't swamp the count of short functions. The Tsx copy is the same rule;
+# YAML anchors don't reach across documents.
+id: function
+language: TypeScript
+rule:
+  any:
+    - kind: function_declaration
+    - kind: generator_function_declaration
+    - kind: method_definition
+    - all:
+        - any: [{ kind: arrow_function }, { kind: function_expression }]
+        - inside: { kind: variable_declarator, stopBy: neighbor }
+---
+id: function-tsx
+language: Tsx
+rule:
+  any:
+    - kind: function_declaration
+    - kind: generator_function_declaration
+    - kind: method_definition
+    - all:
+        - any: [{ kind: arrow_function }, { kind: function_expression }]
+        - inside: { kind: variable_declarator, stopBy: neighbor }

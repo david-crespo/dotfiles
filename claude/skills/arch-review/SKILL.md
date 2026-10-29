@@ -1,6 +1,6 @@
 ---
 name: arch-review
-description: "Get a context-free architecture review of a TypeScript codebase: build a digest of every file's size, leading comment and exported declarations, give it to a bare Opus `claude -p` with no tools and no project or planning context, then check its findings against the code before reporting. Use when the user wants a fresh or outside read on a codebase's architecture or data model, for example after a big refactor."
+description: "Get a context-free architecture review of a TypeScript codebase: build a digest of every file's size, leading comment and exported declarations, give it to a bare Opus `claude -p` with no tools and no project or planning context, then check its findings against the code before reporting. Also measures structure (dependency graph, function sizes, single-use helpers) across revisions. Use when the user wants a fresh or outside read on a codebase's architecture or data model, for example after a big refactor, or to check whether a refactor or a reviewer's suggestion made the structure better or worse."
 ---
 
 # Context-free architecture review
@@ -95,6 +95,10 @@ most findings held, and the misses followed patterns:
 - **Gaps in the digest show up as inferred findings.** If it says a file
   had no declarations, fix the digest and consider running it again.
 
+Before relaying a finding that proposes moving code, measure it (below).
+Reviewers agree on moves that read well in the digest but make the graph
+worse.
+
 Report findings in the reviewer's order, numbered, each marked confirmed,
 partly right or wrong, with the file reference. Then give your own view on
 what to do first. Save the review next to the repo's notes
@@ -102,3 +106,68 @@ what to do first. Save the review next to the repo's notes
 so a later run can be compared against it. The review has more than a
 couple of numbered findings, so offer to put them in a tracker (the tracker
 skill).
+
+## Structure metrics
+
+`metrics.mjs` measures a repo's structure, one column per revision, so a
+refactor or a proposed move can be judged by more than how it reads. Run it
+from the repo root:
+
+```
+node ~/.claude/skills/arch-review/metrics.mjs [--exclude <regex>] [--list] [<rev>...]
+```
+
+With no revs it measures the working copy. Revs are jj revsets for single
+commits (git revs in a plain git repo), including hidden ones by commit ID,
+so an abandoned attempt or an earlier state from `jj evolog` can go in a
+column. To measure a commit against its parent, pass `<rev>- <rev>`. `--list` prints the last
+column's single-use helpers. Exclude e2e harnesses, mocks and generated code
+the same way as for the digest.
+
+What the rows mean:
+
+- **Dependency graph**, from `imports.mjs`, type-only imports included.
+  - ACD is the average number of files each file depends on, itself
+    included.
+  - NCCD is the total of that over all files, divided by the total for a
+    balanced binary tree of the same size (Lakos), so 1 is a tree's
+    coupling and higher is more coupled.
+  - Propagation cost is that same total over n²: the share of the code a
+    change in one file can reach.
+  - Redundant edges are imports a longer path already implies.
+  - "Edges toward less stable files" counts imports of a file that itself
+    depends on more than it's depended on (Martin's stable dependencies
+    principle).
+- **Functions**, from `functions.yml`: declarations, methods, and functions
+  assigned to a variable, not inline callbacks.
+- **Single-use helpers**: non-exported functions or private methods called
+  once in their file, not counting React components. This is the row that
+  tracks splitting code into many small pieces. The share of short
+  functions doesn't, since most short functions are ordinary methods and
+  path helpers.
+
+Compare columns of the same repo; no threshold means anything on its own.
+The numbers can be gamed (merging files cuts edges), so use them to check a
+judgment, not to make one. Each single-use helper still has to earn its name.
+
+How the rows behaved when checked against refactors the user had already
+judged:
+
+- A move that two outside reviewers agreed on, and that the user rejected,
+  made every graph row worse: a longer import chain, higher ACD, more
+  redundant edges, one more edge toward a less stable file.
+- Splitting one long function into six single-use helpers raised the
+  single-use count by four. The two-function split the user preferred
+  brought it below where it started.
+- Across several dozen of the user's cleanup commits in a larger repo, lines
+  went down in about three quarters and named functions more often than
+  not. Single-use helpers mostly went down. The graph rows rarely moved,
+  since most cleanups stay inside a file, and when they did, they usually
+  improved.
+- Pulling code out into its own file usually reads as slightly worse on the
+  graph (one more file, a few more edges), even when the user considered it
+  an improvement. Judge those on readability instead.
+
+So in a cleanup the user likes, the code usually gets shorter, has fewer
+functions, and the graph doesn't get worse. A change that adds lines and
+single-use helpers while calling itself a cleanup is worth questioning.
