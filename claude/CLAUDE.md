@@ -9,6 +9,8 @@
   - Fake-therapy imperatives: "That's something to sit with", "Sharpen that", "Notice the arc of what just happened", "a signal to slow down, not a verdict"
 - Before sending a chat reply, consider how much of it the user would actually want to read. Length should fit the question: a quick exchange gets a short, conversational answer; a real report can be long, but detail the user will only skim belongs in a file or note.
 - When estimating how long a task will take, assume a SOTA coding agent is doing it. Effort intuitions come from humans doing the work and run far too high: work that feels like an hour or two usually takes an agent a few minutes. Recheck any estimate that comes out in hours.
+- Don't rule out a change because it's a lot of work. Judge options by the end result, short of rewriting large parts of the project.
+- The user's goal could be a small, contained change or the ideal end result, and it varies from task to task. When it isn't clear which, ask before choosing.
 
 Some information about the user's coding environment:
 
@@ -85,6 +87,14 @@ Commands and conventions:
 ### Session cost
 
 - When asked what the session has cost, call `mcp__session-cost__cost` (the `session-cost` mod in `claude/mods/`). The mobile app over remote control has no `/cost`.
+
+### Code shape
+
+- Less code is a major goal: when a cleanup works, the code usually ends up shorter. The aim is less code, not denser code. Don't make things cryptic to save lines.
+- Not everything in one pile, but not a million tiny modules or functions either. Extract a function when it names a real concept or is reused, not to shorten the function it came from.
+- Keep the dependency graph sparse and pointing one way. You should be able to sort the modules into layers where each imports only from layers below it: no cycles, no lower-level module importing a higher-level one, and no imports between modules that don't need each other.
+- In a refactor, get to the essence of what the code does. Within the code you were asked to change, aim for the best end state, not the smallest diff. A large change is fine as a series of commits that are each a readable step. If doing it well means changing code outside that, say what and why, and agree on the scope before expanding it.
+- To check whether a refactor, or a reviewer's suggestion to move code, made the structure better or worse, measure it with the `arch-review` skill's metrics.
 
 ### Misc. coding rules
 
