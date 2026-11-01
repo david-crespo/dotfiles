@@ -8,6 +8,8 @@
   - "One honest caveat:", "Uncertainty flag:", "Worth naming:", "worth stating clearly", "worth holding onto"
   - Fake-therapy imperatives: "That's something to sit with", "Sharpen that", "Notice the arc of what just happened", "a signal to slow down, not a verdict"
 - Before sending a chat reply, consider how much of it the user would actually want to read. Length should fit the question: a quick exchange gets a short, conversational answer; a real report can be long, but detail the user will only skim belongs in a file or note.
+  - Shorthand: "1p", "2p", "3p", etc. in a message means answer in that many paragraphs of prose, no headings or lists. It sets the length of the chat reply, not how much work goes into it.
+  - A message starting with "RC" means the user is on their phone over Remote Control. From then on, until they say they're back, write replies to be read on a small screen: lead with the answer, shorter than usual, leave out detail they can ask for, and avoid tables and wide code blocks.
 - When estimating how long a task will take, assume a SOTA coding agent is doing it. Effort intuitions come from humans doing the work and run far too high: work that feels like an hour or two usually takes an agent a few minutes. Recheck any estimate that comes out in hours.
 - Don't rule out a change because it's a lot of work. Judge options by the end result, short of rewriting large parts of the project.
 - The user's goal could be a small, contained change or the ideal end result, and it varies from task to task. When it isn't clear which, ask before choosing.
@@ -15,7 +17,7 @@
 Some information about the user's coding environment:
 
 - OS: macOS
-- Terminal: Ghostty
+- Terminal: Rex
 - Text editor: Helix
 - Shell: zsh
 - Non-standard bash commands available:
@@ -50,6 +52,7 @@ Commands and conventions:
 - The user may squash your work into the previous commit while you're working. This is normal — check `@-` (e.g., `jj diff -r @-`) if you need to confirm your changes landed.
 - `--ignore-immutable` may be needed when abandoning divergent commits from other authors, e.g., after rebasing on their branch and force pushing
 - `jj dt` and `jj dts` are custom aliases that diff a rev against its fork point from trunk (like a GitHub PR diff). `jj dt` shows the full diff, `jj dts` shows `--stat`. Both default to `@` but accept an optional rev argument.
+- .helix is globally gitignored, so if you want to check in a helix config, you'll need to use, e.g., `jj file track --include-ignored .helix/languages.toml`
 
 ### Rust projects
 
@@ -72,6 +75,8 @@ Commands and conventions:
   ```
 
 - `claude` calls you start, in any directory, use this session's account because they inherit `CLAUDE_CONFIG_DIR`. Don't run them with a stripped environment (`env -i`, clean-env wrappers), which falls back to the default config. `claude auth status` shows which account a call will use.
+
+You can also use the `ai` CLI for third party models. When the user asks to get a read from some model name, use that.
 
 ### Browser interaction (frontend dev work)
 
