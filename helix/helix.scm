@@ -5,11 +5,9 @@
 (require (prefix-in helix.editor. "helix/editor.scm"))
 (require "ah/ah.scm")
 
-(provide jump-view-left
-         jump-view-down
-         jump-view-up
-         jump-view-right
-         close-view-or-pane
+(provide close-view-or-pane
+         split-right
+         split-below
          wrap-console-log
          wrap-console-dir
          wrap-dbg
@@ -23,31 +21,6 @@
   (lambda ()
     (helix.static.replace-selection-with
      (string-append prefix (helix.static.current-highlighted-text!) suffix))))
-
-; Move to the split in that direction. With none there, move to the Rex pane in
-; that direction instead (Rex passes ctrl-hjkl through to helix, see
-; ../rex/init.lua).
-(define (jump-view jump direction)
-  (let ([before (helix.editor.editor-focus)])
-    (jump)
-    (when (equal? before (helix.editor.editor-focus))
-      (helix.run-shell-command
-       (string-append "if [ -n \"$REX_SESSION\" ]; then \"$REX_BIN_DIR/rex\" focus -s \"$REX_SESSION\" "
-                      direction
-                      "; fi")))))
-
-;;@doc
-;; Jump to the split on the left, or the Rex pane on the left
-(define (jump-view-left) (jump-view helix.static.jump_view_left "left"))
-;;@doc
-;; Jump to the split below, or the Rex pane below
-(define (jump-view-down) (jump-view helix.static.jump_view_down "down"))
-;;@doc
-;; Jump to the split above, or the Rex pane above
-(define (jump-view-up) (jump-view helix.static.jump_view_up "up"))
-;;@doc
-;; Jump to the split on the right, or the Rex pane on the right
-(define (jump-view-right) (jump-view helix.static.jump_view_right "right"))
 
 ; True if a jump in some direction lands on another view. Focus is put back.
 (define (multiple-views?)
@@ -77,6 +50,43 @@
     [else
      (helix.run-shell-command
       "if [ -n \"$REX_BLOCK\" ]; then \"$REX_BIN_DIR/rex\" block close -s \"$REX_SESSION\" \"$REX_BLOCK\"; fi")]))
+
+(define (env-set? name)
+  (let ([v (maybe-get-env-var name)])
+    (and (Ok? v) (not (equal? (Ok->value v) "")))))
+
+; In Rex, open a new Rex pane in that direction with hx on this buffer at the
+; cursor; with editor.session = "auto" that hx joins this editor. A buffer
+; with no file, like the scratch buffer of a bare hx, gets a bare hx, since a
+; joining hx can't open an existing scratch buffer. Elsewhere, a helix split.
+; None in ah's editor pane, which sets AH_PANE.
+(define (split direction native)
+  (let ([file (helix.static.cx->current-file)])
+    (cond
+      [(env-set? "AH_PANE") (set-error! "Splitting not allowed in ah editor pane")]
+      [(env-set? "REX_BLOCK")
+       (helix.run-shell-command
+        (string-append "\"$REX_BIN_DIR/rex\" split -s \"$REX_SESSION\" -b \"$REX_BLOCK\" --split "
+                       direction
+                       " --cwd \"$PWD\" -- hx"
+                       (if file
+                           (string-append " '"
+                                          file
+                                          ":"
+                                          (number->string (+ 1 (helix.static.get-current-line-number)))
+                                          ":"
+                                          (number->string (+ 1 (helix.static.get-current-column-number)))
+                                          "'")
+                           "")
+                       " > /dev/null"))]
+      [else (native)])))
+
+;;@doc
+;; Split right: a new Rex pane in Rex, else a helix split
+(define (split-right) (split "right" helix.static.vsplit))
+;;@doc
+;; Split below: a new Rex pane in Rex, else a helix split
+(define (split-below) (split "below" helix.static.hsplit))
 
 ;;@doc
 ;; Wrap in console.log()

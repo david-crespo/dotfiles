@@ -17,16 +17,17 @@ local function runs_helix(block_id)
 end
 
 -- Like Ghostty's performable: move focus if there is a pane in that direction,
--- otherwise let the key through to the terminal (e.g. ctrl+l to clear).
--- Helix always gets the key so it can move between its own splits; at its edge
--- it runs `rex focus` (see jump-view in ../helix/helix.scm).
+-- otherwise let the key through to the terminal (e.g. ctrl+l to clear). Helix
+-- never gets it, so it doesn't delete or kill text in insert mode at the edge.
+-- In Rex, its C-w v and s open Rex panes (../helix/helix.scm); any helix
+-- splits it does have move with C-w hjkl.
 local function focus_or_pass(direction)
   return function(ctx)
-    if runs_helix(ctx and ctx.block_id) then return false end
     local view = rex.session.view{}
     if view == nil then return false end
     local result = rex.session.focus_direction{ direction = direction }
-    return result ~= nil and result.revision ~= view.revision
+    local moved = result ~= nil and result.revision ~= view.revision
+    return moved or runs_helix(ctx and ctx.block_id)
   end
 end
 rex.bind("ctrl+h", focus_or_pass("left"))

@@ -41,7 +41,9 @@
   (C-b ":sh gh browse %{buffer_name}:%{cursor_line} -c=%sh{latest_pushed_commit}")
   ; show blame for current line
   (C-B
-   ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'")))
+   ":sh git blame --date=short -L %{cursor_line},+1 %{buffer_name} | sed -E 's/[0-9]+).*//' | sed 's/(//g'")
+  ; Rex panes in Rex, helix splits elsewhere (helix.scm)
+  (C-w (v ":split-right") (s ":split-below"))))
 
 (keymap (global)
         (normal (" " (q ":bc") (o (n ":notes-picker")))
@@ -54,10 +56,6 @@
                 (C-r ":rla")
                 (Cmd-s ":w")
                 (Cmd-r ":config-reload")
-                (C-h ":jump-view-left")
-                (C-j ":jump-view-down")
-                (C-k ":jump-view-up")
-                (C-l ":jump-view-right")
                 (Cmd-w ":close-view-or-pane")
                 ; hxai is bin/hxai.ts. Add -f %{buffer_name} to include the whole file.
                 (tab "@:pipe hxai -m k2 ")
