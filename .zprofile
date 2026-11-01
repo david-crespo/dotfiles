@@ -93,9 +93,9 @@ function clod() { # personal
 }
 
 function jjw() {
-  if [[ ("$1" == "create" || "$1" == "c") && "$#" -eq 1 ]]; then
+  if [[ ("$1" == "create" || "$1" == "c") && "$#" -le 2 && "$2" != -* ]]; then
     local wspath
-    wspath="$(jjw-cmd create)" || return 1
+    wspath="$(jjw-cmd create "${@:2}")" || return 1
     cd "$wspath"
   elif [[ "$1" == "cd" && "$#" -eq 1 ]]; then
     local wspath

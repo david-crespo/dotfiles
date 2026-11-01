@@ -46,7 +46,7 @@ Commands and conventions:
 - To view a file at a revision, use `jj file show <path> -r <rev>` (not `jj cat`).
 - To exclude paths from a jj command, use fileset syntax: `jj diff '~dir1 & ~dir2'` or `jj restore '~package-lock.json'`
 - for parallel approaches, use `jj new <base>` to create siblings from a common base, implement each approach, then compare. bookmarks are unnecessary for this workflow
-- use `jjw` to manage jj workspaces: `jjw create` (or `jjw c`) creates a workspace and cds into it, `jjw ls` lists workspaces, `jjw rm` interactively removes one
+- use `jjw` to manage jj workspaces: `jjw create [name]` (or `jjw c`) creates a workspace at `~/jj-workspaces/<repo>-<name>` (numbered if no name) and cds into it, `jjw ls` lists workspaces, `jjw rm [names...]` removes them. Create workspaces with `jjw c <name>`, not `jj workspace add`: it symlinks the unversioned files (`.claude/notes`, `.claude/settings.local.json`, `.helix`, `CLAUDE.local.md`) from the main checkout, and `~/jj-workspaces` is where workspaces are expected to live, so other tools and the user can find them
 - Non-destructive jj operations are generally allowlisted. Check `jj log` immediately before any `jj new`: the working copy may have changed since you last looked, and if you're already on an empty undescribed commit, use it instead of stacking another.
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message. These flags are mutually exclusive.
 - The user may squash your work into the previous commit while you're working. This is normal — check `@-` (e.g., `jj diff -r @-`) if you need to confirm your changes landed.

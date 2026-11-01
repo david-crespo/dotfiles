@@ -245,7 +245,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jjw-cmd create"
+            "command": "jjw-cmd create \"$(jq -r .name)\""
           }
         ]
       }

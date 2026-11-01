@@ -98,8 +98,12 @@ async function symlinkIfIgnored(
 }
 
 const createCmd = new Command()
-  .description("Create a new jj workspace and print its path")
-  .action(async () => {
+  .description(
+    "Create a new jj workspace at ~/jj-workspaces/<repo>-<name> and print its path. " +
+      "Without a name, uses the next free number.",
+  )
+  .arguments("[name:string]")
+  .action(async (_opts, name?: string) => {
     // use the default workspace, not the current one — running `jjw c` from
     // inside an existing workspace should still name and link relative to the
     // main checkout
@@ -108,14 +112,18 @@ const createCmd = new Command()
 
     const baseDir = join(Deno.env.get("HOME")!, "jj-workspaces")
     await Deno.mkdir(baseDir, { recursive: true })
+    const exists = (n: string | number) =>
+      Deno.stat(join(baseDir, `${repoName}-${n}`)).then(() => true, () => false)
 
-    let i = 1
-    while (
-      await Deno.stat(join(baseDir, `${repoName}-${i}`)).catch(() => null)
-    ) {
-      i++
+    let suffix: string | number = 1
+    if (name) {
+      if (name.includes("/")) throw new ValidationError(`Name can't contain /: ${name}`)
+      if (await exists(name)) throw new ValidationError(`${repoName}-${name} already exists`)
+      suffix = name
+    } else {
+      while (await exists(suffix)) suffix++
     }
-    const wspath = join(baseDir, `${repoName}-${i}`)
+    const wspath = join(baseDir, `${repoName}-${suffix}`)
 
     // capture jj output and echo to stderr so only the path goes to stdout
     const jjOut = await $`jj workspace add ${wspath}`.text()
@@ -124,25 +132,36 @@ const createCmd = new Command()
     await symlinkIfIgnored(defaultPath, wspath, join(".claude", "settings.local.json"))
     await symlinkIfIgnored(defaultPath, wspath, join(".claude", "notes"))
     await symlinkIfIgnored(defaultPath, wspath, ".helix")
+    await symlinkIfIgnored(defaultPath, wspath, "CLAUDE.local.md")
 
     // only output: the path for the shell wrapper to cd into
     console.log(wspath)
   })
 
 const rmCmd = new Command()
-  .description("Remove one or more jj workspaces")
-  .action(async () => {
+  .description("Remove jj workspaces, picking interactively if none are named")
+  .arguments("[names...:string]")
+  .action(async (_opts, ...names: string[]) => {
     const workspaces = (await listWorkspaces()).filter((w) => w.name !== "default")
-    if (workspaces.length === 0) {
-      console.error("No non-default workspaces found.")
-      Deno.exit(0)
+    let selected: Workspace[]
+    if (names.length > 0) {
+      selected = names.map((name) => {
+        const ws = workspaces.find((w) => w.name === name)
+        if (!ws) throw new ValidationError(`No non-default workspace named ${name}`)
+        return ws
+      })
+    } else {
+      if (workspaces.length === 0) {
+        console.error("No non-default workspaces found.")
+        Deno.exit(0)
+      }
+      const picked = await $.multiSelect({
+        message: "Remove workspaces (space to toggle, enter to confirm)",
+        options: workspaces.map((w) => w.name),
+      })
+      if (picked.length === 0) Deno.exit(0)
+      selected = picked.map(({ index }) => workspaces[index])
     }
-    const picked = await $.multiSelect({
-      message: "Remove workspaces (space to toggle, enter to confirm)",
-      options: workspaces.map((w) => w.name),
-    })
-    if (picked.length === 0) Deno.exit(0)
-    const selected = picked.map(({ index }) => workspaces[index])
 
     const cwd = Deno.cwd()
     for (const { wsPath } of selected) {
