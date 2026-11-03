@@ -6,7 +6,7 @@
 import { Command } from "@cliffy/command"
 import $ from "@david/dax"
 
-const BOT_NOTES = "Base files/Bot notes"
+const BOT_NOTES = "Bot notes"
 const DAILY_NOTES = "Daily notes"
 
 // obsidian-cli is the official CLI entrypoint; the lowercase app binary path

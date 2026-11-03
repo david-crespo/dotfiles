@@ -29,9 +29,9 @@ if [ -f "$path" ]; then verb="updated"; else verb="created"; fi
 
 printf '%s' "$content" | obsidian-notes bot:append "$name"
 
-# path is <vault>/Base files/Bot notes/<name>.md; the vault name is the
-# basename three levels up
-vault=$(basename "$(dirname "$(dirname "$(dirname "$path")")")")
+# path is <vault>/Bot notes/<name>.md; the vault name is the
+# basename two levels up
+vault=$(basename "$(dirname "$(dirname "$path")")")
 vault_enc=$(jq --raw-output --null-input --arg s "$vault" '$s|@uri')
 name_enc=$(jq --raw-output --null-input --arg s "$name" '$s|@uri')
 echo "Note $verb at [$name](obsidian://open?vault=$vault_enc&file=$name_enc)"
