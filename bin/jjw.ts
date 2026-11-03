@@ -197,8 +197,11 @@ async function createWorkspace(name?: string): Promise<string> {
   return wspath
 }
 
-/** Confirm, then remove the workspaces and their directories. Returns whether it did. */
-async function removeWorkspaces(selected: Workspace[]): Promise<boolean> {
+/**
+ * Remove the workspaces and their directories, asking first if `confirm` is set.
+ * Returns whether it did.
+ */
+async function removeWorkspaces(selected: Workspace[], confirm: boolean): Promise<boolean> {
   for (const { name, wsPath } of selected) {
     if (name === "default") throw new ValidationError("Can't remove the default workspace")
     if (isInside(wsPath)) {
@@ -206,7 +209,7 @@ async function removeWorkspaces(selected: Workspace[]): Promise<boolean> {
     }
   }
   const paths = selected.map((w) => w.wsPath).join(", ")
-  if (!(await confirmed(`Delete ${paths}?`))) return false
+  if (confirm && !(await confirmed(`Delete ${paths}?`))) return false
 
   for (const { name, wsPath } of selected) {
     // A stale working copy (e.g. advanced by another checkout) makes the
@@ -293,7 +296,8 @@ async function picker() {
         return
       case "remove":
         try {
-          await removeWorkspaces([ws])
+          // a keypress in a list is easy to hit by accident
+          await removeWorkspaces([ws], true)
         } catch (e) {
           if (!(e instanceof ValidationError)) throw e
           console.error(e.message)
@@ -321,7 +325,9 @@ const rmCmd = new Command()
       if (!ws) throw new ValidationError(`No workspace named ${name}`)
       return ws
     })
-    await removeWorkspaces(selected)
+    // naming the workspaces is confirmation enough, and `jj workspace remove`
+    // snapshots the working copy first, so only ignored files are lost
+    await removeWorkspaces(selected, false)
   })
 
 const lsCmd = new Command()
