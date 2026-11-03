@@ -92,18 +92,17 @@ function clod() { # personal
   CLAUDE_CONFIG_DIR=~/.claude-personal command claude "$@"
 }
 
+# The picker and create hand back a directory to cd into on fd 3, leaving
+# stdout on the terminal
 function jjw() {
-  if [[ ("$1" == "create" || "$1" == "c") && "$#" -le 2 && "$2" != -* ]]; then
-    local wspath
-    wspath="$(jjw-cmd create "${@:2}")" || return 1
-    cd "$wspath"
-  elif [[ "$1" == "cd" && "$#" -eq 1 ]]; then
-    local wspath
-    wspath="$(jjw-cmd cd)" || return 1
-    [[ -n "$wspath" ]] && cd "$wspath"
-  else
-    jjw-cmd "$@"
-  fi
+  case "$1" in
+    "" | cd | create | c)
+      local wspath
+      wspath="$(JJW_CD_FD=3 jjw-cmd "$@" 3>&1 1>&2)" || return 1
+      [[ -n "$wspath" ]] && cd "$wspath"
+      ;;
+    *) jjw-cmd "$@" ;;
+  esac
 }
 
 # fzf jj bookmark picker
