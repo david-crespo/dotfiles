@@ -49,8 +49,10 @@ alias jpp="jj new && jj bookmark advance && jj git push"
 alias jrm="jj git fetch && jj new 'trunk()'"
 alias jb="jj-jump" # see bin/jj-jump.ts
 alias jsq="jj squash"
-alias sk="node ~/oxide/skepsis/cli.ts --open-cmd 'ah view open --name skepsis'"
-alias ska="node ~/oxide/skepsis/cli.ts --send 'jq -r .prompt | ah message send' --open-cmd 'ah view open --name skepsis'"
+alias sk="node ~/oxide/skepsis/cli.ts --open-cmd 'ah tool page --name skepsis'"
+alias ska="node ~/oxide/skepsis/cli.ts --send 'jq -r .prompt | ah message send' --open-cmd 'ah tool page --name skepsis'"
+# For the ah server, which can't see aliases: the stack page's diff buttons run skepsis
+export AH_SKEPSIS="node $HOME/oxide/skepsis/cli.ts"
 alias koine="node ~/oxide/koine/koine.ts"
 alias aio="ai --profile oxide" # ai with work API keys
 alias rfd-local='LOCAL_RFD_REPO=~/oxide/rfd npm --prefix ~/oxide/rfd-site run dev'
@@ -258,7 +260,7 @@ guidance from the poster on what to emphasize: $*"
   ai --ephemeral --image clipboard --model flash "$prompt" --quick --raw | ecopy
 }
 
-alias dashboard='ah dashboard open'
+alias dashboard='ah tool dashboard'
 
 # run the same prompt against several models (comma-separated after -m)
 function aic() {
