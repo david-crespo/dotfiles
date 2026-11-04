@@ -146,16 +146,15 @@ bindkey '^X^N' fzf-notes-widget
 export DENO_INSTALL="/Users/david/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 
-# bun completions
-[ -s "/Users/david/.bun/_bun" ] && source "/Users/david/.bun/_bun"
-
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 eval "$(atuin init zsh --disable-up-arrow)"
 
-fpath=(~/.zsh/completion $fpath)
+# ~/.bun has bun's _bun completion. Sourcing it instead runs a second
+# compinit with a different fpath, which rebuilds .zcompdump on every start.
+fpath=(~/.zsh/completion ~/.bun $fpath)
 autoload -U compinit
 compinit
 compdef eza_stdin_safe=eza # wrapper defined in .zprofile
