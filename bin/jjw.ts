@@ -27,6 +27,8 @@ interface Workspace {
   rev: string
   /** First line of that commit's description */
   revDesc: string
+  /** Whether it's the workspace jj resolved from the cwd */
+  current: boolean
 }
 
 /**
@@ -58,7 +60,8 @@ async function defaultRoot(): Promise<string> {
 async function listWorkspaces(color = false): Promise<Workspace[]> {
   const rev = (c: string) =>
     `${c}.change_id().shortest(8) ++ "\t" ++ ${c}.description().first_line()`
-  const tmpl = `name ++ "\t" ++ self.root() ++ "\t" ++ if(
+  const tmpl =
+    `name ++ "\t" ++ self.current_workspace() ++ "\t" ++ self.root() ++ "\t" ++ if(
     target.empty() && !target.description(),
     target.parents().map(|c| ${rev("c")}).join("\t"),
     ${rev("target")},
@@ -67,9 +70,10 @@ async function listWorkspaces(color = false): Promise<Workspace[]> {
   return (await $`jj workspace list --color ${colorArg} -T ${tmpl}`.lines())
     .filter((l) => l)
     .map((line) => {
-      const [name, wsPath, rev, revDesc] = line.split("\t")
+      const [name, current, wsPath, rev, revDesc] = line.split("\t")
       return {
         name: stripAnsiCode(name),
+        current: stripAnsiCode(current) === "true",
         wsPath: stripAnsiCode(wsPath),
         rev,
         revDesc: stripAnsiCode(revDesc),
@@ -80,11 +84,7 @@ async function listWorkspaces(color = false): Promise<Workspace[]> {
 interface WorkspaceInfo extends Workspace {
   /** What the agent in the workspace's Rex tab is doing, from ah */
   summary: string
-  current: boolean
 }
-
-const isInside = (dir: string, path = Deno.cwd()) =>
-  path === dir || path.startsWith(dir + "/")
 
 async function workspaceInfos(color: boolean): Promise<WorkspaceInfo[]> {
   const workspaces = await listWorkspaces(color)
@@ -99,7 +99,6 @@ async function workspaceInfos(color: boolean): Promise<WorkspaceInfo[]> {
   return workspaces.map((ws) => ({
     ...ws,
     summary: summaries.find((w) => w.root === ws.wsPath)?.summary ?? "",
-    current: isInside(ws.wsPath),
   }))
 }
 
@@ -202,20 +201,16 @@ async function createWorkspace(name?: string): Promise<string> {
  * Returns whether it did.
  */
 async function removeWorkspaces(selected: Workspace[], confirm: boolean): Promise<boolean> {
-  for (const { name, wsPath } of selected) {
+  for (const { name, current } of selected) {
     if (name === "default") throw new ValidationError("Can't remove the default workspace")
-    if (isInside(wsPath)) {
+    if (current) {
       throw new ValidationError(`Can't remove ${name}: the shell is inside it`)
     }
   }
   const paths = selected.map((w) => w.wsPath).join(", ")
   if (confirm && !(await confirmed(`Delete ${paths}?`))) return false
 
-  for (const { name, wsPath } of selected) {
-    // A stale working copy (e.g. advanced by another checkout) makes the
-    // snapshot in `workspace remove` refuse to run. update-stale reconciles
-    // it, and is a no-op when the working copy isn't stale.
-    await $`jj workspace update-stale --quiet`.cwd(wsPath).printCommand()
+  for (const { name } of selected) {
     // snapshots the working copy, forgets the workspace (and its Git
     // worktree, if colocated), and deletes the directory
     await $`jj workspace remove ${name}`.printCommand()
