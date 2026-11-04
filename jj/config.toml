@@ -138,18 +138,26 @@ builtin_log_compact ++ if(
 # Username part of the email address
 'format_short_signature(signature)' = 'signature.email().local()'
 
-# format_commit_summary_with_refs minus the git commit, and remove empty label
-# color from description_placeholder
+# The zsh prompt for @: the closest bookmarked ancestor and how many commits
+# @ is past it (main+3), then format_commit_summary_with_refs minus the git
+# commit, and remove empty label color from description_placeholder
 # https://github.com/jj-vcs/jj/blob/faa689a7/cli/src/config/templates.toml#L192C1
-'zsh_prompt_summary(commit, refs)' = '''
+'zsh_prompt' = '''
 separate(" ",
-  format_short_change_id_with_change_offset(commit),
-  if(commit.conflict(), label("conflict", "(conflict)")),
-  if(commit.empty(),
-    label("empty", "(empty)"),
-  ),
-  if(commit.description(),
-    commit.description().first_line(),
+  if(revset("heads(::@ & bookmarks())"), concat(
+    label("bookmark", truncate_end(15,
+      revset("heads(::@ & bookmarks())").first().local_bookmarks().first().name(),
+      "…",
+    )),
+    if(revset("heads(::@ & bookmarks())..@"),
+      label("rest", "+" ++ revset("heads(::@ & bookmarks())..@").len()),
+    ),
+  )),
+  format_short_change_id_with_change_offset(self),
+  if(self.conflict(), label("conflict", "(conflict)")),
+  if(self.empty(), label("empty", "(empty)")),
+  if(self.description(),
+    self.description().first_line(),
     label("description placeholder", "(no desc)")
   ),
 )
