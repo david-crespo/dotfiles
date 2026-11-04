@@ -1,0 +1,44 @@
+{
+  "description": "Export every Gmail thread matching a query to threads.json: subject, snippet, sender, cc and labels for up to 5 messages per thread, and the thread's message count. For building eval sets from the user's own mail.",
+  "vars": {
+    "query": {
+      "type": "string",
+      "description": "Gmail search query"
+    },
+    "view": {
+      "type": "string",
+      "description": "search_threads view",
+      "default": "THREAD_VIEW_MINIMAL"
+    },
+    "pageSize": {
+      "type": "number",
+      "description": "Threads per call; MINIMAL results over ~8 threads can exceed the MCP output limit",
+      "default": 6
+    },
+    "max": {
+      "type": "number",
+      "description": "Stop after this many threads",
+      "default": 2000
+    }
+  },
+  "steps": [
+    {
+      "name": "threads",
+      "mcp": {
+        "server": "claude.ai Gmail",
+        "tool": "search_threads",
+        "args": {
+          "query": "${query}",
+          "view": "${view}",
+          "pageSize": "${pageSize}"
+        }
+      },
+      "paginate": {
+        "token": "nextPageToken",
+        "arg": "pageToken",
+        "items": "threads",
+        "max": "${max}"
+      }
+    }
+  ]
+}
