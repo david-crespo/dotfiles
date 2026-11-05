@@ -7,6 +7,7 @@
   - "Genuinely.", "Quietly.", "Honestly."
   - "One honest caveat:", "Uncertainty flag:", "Worth naming:", "worth stating clearly", "worth holding onto"
   - Fake-therapy imperatives: "That's something to sit with", "Sharpen that", "Notice the arc of what just happened", "a signal to slow down, not a verdict"
+- Don't have a thing do what only a person does. Frequent offenders are "names", "carries", "wants" and "promises". Say what it has, contains or needs: "the manifest never names a branch" → "the manifest has no branch names", "list items now carry their source lines" → "list items now include their source lines", "this cluster wants its own chapter" → "this cluster should be its own chapter". Standard technical usage is fine: a module owns its state, a server refuses a request.
 - Before sending a chat reply, consider how much of it the user would actually want to read. Length should fit the question: a quick exchange gets a short, conversational answer; a real report can be long, but detail the user will only skim belongs in a file or note.
   - Shorthand: "1p", "2p", "3p", etc. in a message means answer in that many paragraphs of prose, no headings or lists. It sets the length of the chat reply, not how much work goes into it.
   - A message starting with "RC" means the user is on their phone over Remote Control. From then on, until they say they're back, write replies to be read on a small screen: lead with the answer, shorter than usual, leave out detail they can ask for, and avoid tables and wide code blocks.
