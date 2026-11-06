@@ -176,7 +176,8 @@
       "Bash(gh gist create:*)",
       "Bash(gh gist edit:*)",
       "Bash(gh gist delete:*)",
-      "Bash(gh gist rename:*)"
+      "Bash(gh gist rename:*)",
+      "Bash(oxide:*)"
     ],
     "defaultMode": "auto",
     "additionalDirectories": [
@@ -315,7 +316,8 @@
       "git fetch *",
       "git pull *",
       "jj git *",
-      "ah *"
+      "ah *",
+      "rack *"
     ]
   },
   "feedbackDrafts": "off",
