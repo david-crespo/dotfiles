@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Copy stdin to the clipboard. On the Mac that's pbcopy. Elsewhere, such as on
+# a remote dev VM, send OSC 52, which has the terminal (Rex) set the clipboard
+# on the machine it's running on.
+
+if command -v pbcopy >/dev/null; then
+  exec pbcopy
+fi
+printf '\e]52;c;%s\a' "$(base64 | tr -d '\n')" >/dev/tty

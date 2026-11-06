@@ -167,7 +167,7 @@ function ecopy() {
     output=$(cat)
   fi
   echo "$output (copied!)"
-  echo -n "$output" | pbcopy
+  echo -n "$output" | clip
 }
 
 alias server='python3 -m http.server 8000'
@@ -401,11 +401,11 @@ source "$HOME/.cargo/env"
 export PATH="$HOME/.local/bin:$PATH"
 
 # omicron things obviously
-export PATH="/Users/david/oxide/omicron/out/dendrite-stub/root/opt/oxide/dendrite/bin:$PATH"
-export PATH="/Users/david/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin:$PATH"
-export PATH="/Users/david/oxide/omicron/out/mg-ddm/root/opt/oxide/mg-ddm/bin:$PATH"
-export PATH="/Users/david/oxide/omicron/out/clickhouse:$PATH"
-export PATH="/Users/david/oxide/omicron/out/cockroachdb/bin:$PATH"
+export PATH="$HOME/oxide/omicron/out/dendrite-stub/root/opt/oxide/dendrite/bin:$PATH"
+export PATH="$HOME/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin:$PATH"
+export PATH="$HOME/oxide/omicron/out/mg-ddm/root/opt/oxide/mg-ddm/bin:$PATH"
+export PATH="$HOME/oxide/omicron/out/clickhouse:$PATH"
+export PATH="$HOME/oxide/omicron/out/cockroachdb/bin:$PATH"
 
 # Untracked secrets/env (API keys, etc.)
 [[ -f "$HOME/.env.local" ]] && source "$HOME/.env.local"
@@ -415,5 +415,5 @@ export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
 
 # gate these to suppress noisy warnings whenever codex runs things
 [[ -o interactive ]] || return
-eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 eval "$(fnm env --use-on-cd --resolve-engines=false --shell zsh)"

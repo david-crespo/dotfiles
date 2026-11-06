@@ -142,7 +142,7 @@ zle -N fzf-notes-widget
 bindkey '^Xn' fzf-notes-widget
 bindkey '^X^N' fzf-notes-widget
 
-export DENO_INSTALL="/Users/david/.deno"
+export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
 
 # bun
@@ -160,14 +160,13 @@ compdef eza_stdin_safe=eza # wrapper defined in .zprofile
 eval "$(zoxide init zsh)"
 
 source <(COMPLETE=zsh jj)
-. "/Users/david/.deno/env"
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/david/.lmstudio/bin"
+export PATH="$PATH:$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
 
 # opencode
-export PATH=/Users/david/.opencode/bin:$PATH
+export PATH=$HOME/.opencode/bin:$PATH
 
 
 # BEGIN opam configuration
@@ -175,7 +174,7 @@ export PATH=/Users/david/.opencode/bin:$PATH
 #   - the correct directories to the PATH
 #   - auto-completion for the opam binary
 # This section can be safely removed at any time if needed.
-[[ ! -r '/Users/david/.opam/opam-init/init.zsh' ]] || source '/Users/david/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
+[[ ! -r "$HOME/.opam/opam-init/init.zsh" ]] || source "$HOME/.opam/opam-init/init.zsh" > /dev/null 2> /dev/null
 # END opam configuration
 
 # nub

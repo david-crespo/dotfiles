@@ -109,7 +109,7 @@
          (rel-path (if (starts-with? abs-path cwd-with-slash)
                        (substring abs-path (string-length cwd-with-slash))
                        abs-path)))
-    (helix.run-shell-command (string-append "echo -n '" rel-path "' | pbcopy"))))
+    (helix.run-shell-command (string-append "echo -n '" rel-path "' | clip"))))
 
 ;;@doc
 ;; Pick a file in .claude/notes, newest first. Notes start with a date, so
