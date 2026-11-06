@@ -111,6 +111,7 @@ You can also use the `ai` CLI for third party models. When the user asks to get 
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
 - When giving a list of problems or suggestions in, e.g., a code review, number the suggestions so the user can refer to them easily.
 - To show me an image (a screenshot, a plot, a render), run `open <path>` so it opens in Preview, rather than only giving the path. `open` is blocked in the sandbox, so run it unsandboxed.
+- In commands that delete or move files (`rm`, `mv`, `cp -R` into an existing dir), write every path out literally: no shell variables, globs, brace expansion or arrays, even when the path is a long scratchpad dir. The auto mode classifier can't see what `rm -rf $S/foo-{a,b}` or `rm "${DEL[@]}"` resolves to, so it blocks the call.
 
 ### Working with GitHub
 
