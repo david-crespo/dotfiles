@@ -49,6 +49,7 @@ alias jpp="jj new && jj bookmark advance && jj git push"
 alias jrm="jj git fetch && jj new 'trunk()'"
 alias jb="jj-jump" # see bin/jj-jump.ts
 alias jsq="jj squash"
+alias doc="ah tool doc open"
 alias sk="node ~/oxide/skepsis/cli.ts --open-cmd 'ah tool page --name skepsis'"
 alias ska="node ~/oxide/skepsis/cli.ts --send 'jq -r .prompt | ah message send' --open-cmd 'ah tool page --name skepsis'"
 # For the ah server, which can't see aliases: the stack page's diff buttons run skepsis
