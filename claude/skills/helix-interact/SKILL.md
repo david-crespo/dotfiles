@@ -32,7 +32,7 @@ rex kill hx-test
 - Use `:config-reload` and `:lsp-restart` when testing config changes
 - Check config statically first: `hx --health` or `hx --health rust`
 
-**Letting the user watch:** when the user wants to see the editor, split your own pane instead of using a hidden session (see the `panes` skill): `rex split --block "$REX_BLOCK" --split above --ratio 50 --focus=false --cwd "$PWD" --label hx -- hx file`. It prints the block id; then drive it with `-b <id>` (your own session, so no `-s`) and close it with `rex block close <id>`.
+**Letting the user watch:** when the user wants to see the editor, split your own pane instead of using a hidden session (see the `ah-panes` skill): `rex split --block "$REX_BLOCK" --split above --ratio 50 --focus=false --cwd "$PWD" --label hx -- hx file`. It prints the block id; then drive it with `-b <id>` (your own session, so no `-s`) and close it with `rex block close <id>`.
 
 ## Docs
 
