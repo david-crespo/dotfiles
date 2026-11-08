@@ -192,6 +192,13 @@ if [ -d "$alfred_prefs/workflows" ]; then
   link_alfred_workflow transform-text A0DC9B64-8694-4A42-B13B-15D6EEDD9691
 fi
 
+# Obsidian plugin, copied rather than symlinked so Obsidian Sync uploads the
+# real files to other devices. Enable it once in Community plugins.
+if [ -d "$HOME/obsidian/.obsidian" ]; then
+  mkdir -p ~/obsidian/.obsidian/plugins/vault-tweaks
+  cp "$PWD"/obsidian/vault-tweaks/{main.js,manifest.json} ~/obsidian/.obsidian/plugins/vault-tweaks/
+fi
+
 # ah, the agent host (separate repo, not required)
 if [ -d "$HOME/repos/ah" ]; then
   ln -sf "$HOME/repos/ah/ah.ts" ~/.local/bin/ah

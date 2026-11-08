@@ -1,0 +1,9 @@
+{
+  "id": "vault-tweaks",
+  "name": "Vault tweaks",
+  "version": "0.2.0",
+  "minAppVersion": "1.4.0",
+  "description": "Personal tweaks for this vault.",
+  "author": "David Crespo",
+  "isDesktopOnly": false
+}
