@@ -7,6 +7,8 @@
 
 const { Notice, Plugin, TFile, moment } = require("obsidian")
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 module.exports = class VaultTweaks extends Plugin {
   onload() {
     // Obsidian fires "create" for every file while loading the vault
@@ -14,16 +16,50 @@ module.exports = class VaultTweaks extends Plugin {
       this.registerEvent(this.app.vault.on("create", (file) => this.stampCreated(file)))
     })
     this.scopeValueSuggestions()
+    this.addDateCommand("set-date-today", "Set date to today", "date", "calendar-plus")
+    this.addDateCommand(
+      "set-end-date-today",
+      "Set end date to today",
+      "date_end",
+      "calendar-check",
+    )
   }
 
-  // A new, empty note gets `created`. Notes that arrive with content (Sync,
-  // agents, imports) are left alone; whatever writes them sets `created`.
+  // Sets a date property on the note being edited (including a note open in a
+  // base's popover) to today. Bind a hotkey, or add it to the mobile toolbar.
+  addDateCommand(id, name, key, icon) {
+    this.addCommand({
+      id,
+      name,
+      icon, // shown on the mobile toolbar
+      checkCallback: (checking) => {
+        const file = this.app.workspace.activeEditor?.file ??
+          this.app.workspace.getActiveFile()
+        if (!(file instanceof TFile) || file.extension !== "md") return false
+        if (!checking) {
+          this.app.fileManager.processFrontMatter(file, (fm) => {
+            fm[key] = moment().format("YYYY-MM-DD")
+          })
+        }
+        return true
+      },
+    })
+  }
+
+  // A new note without `created` gets it, set to the file's creation time.
+  // Notes that already have it (imports, notes synced from a device that
+  // stamped them) are left alone. An empty note is stamped right away; one
+  // created with content (from a base, a template, an agent) gets a moment for
+  // its creator to finish writing first.
   async stampCreated(file) {
     if (!(file instanceof TFile) || file.extension !== "md") return
-    if ((await this.app.vault.read(file)).trim()) return
-    const now = moment().format("YYYY-MM-DDTHH:mm")
+    if ((await this.app.vault.read(file)).trim()) await sleep(1500)
+    const text = await this.app.vault.read(file)
+    const frontmatter = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? ""
+    if (/^created:[ \t]*\S/m.test(frontmatter)) return
+    const created = moment(file.stat.ctime).format("YYYY-MM-DDTHH:mm")
     await this.app.fileManager.processFrontMatter(file, (fm) => {
-      fm.created ??= now
+      fm.created ??= created
     })
   }
 
