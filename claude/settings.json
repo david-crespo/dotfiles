@@ -321,6 +321,7 @@
     ]
   },
   "feedbackDrafts": "off",
+  "model": "claude-fable-5-2",
   "effortLevel": "high",
   "modelSettings": {
     "claude-fable-5-1": {
