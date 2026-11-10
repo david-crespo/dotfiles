@@ -139,9 +139,85 @@ const botAppend = new Command()
     console.log(`${await vaultPath()}/${BOT_NOTES}/${name}.md`)
   })
 
+// Runs inside Obsidian through the CLI's eval. It reads only the metadata
+// cache and vault config: frontmatter keys, never values or note bodies.
+// Folders in NO_KEYS get counts only (hiring material, which agents under the
+// personal account stay out of).
+const NO_KEYS = ["Oxide/Hiring"]
+const LAYOUT_JS = `(() => {
+  const noKeys = ${JSON.stringify(NO_KEYS)}
+  const types = app.metadataTypeManager.getAllProperties()
+  const bookmarks = app.internalPlugins.getPluginById("bookmarks").instance.items
+  const bookmarked = new Set(bookmarks.map((item) => item.path))
+  const folders = {}
+  for (const file of app.vault.getFiles()) {
+    // An attachments/ folder is counted on its parent's line.
+    const inAttachments = file.parent.name === "attachments"
+    const dir = (inAttachments ? file.parent.parent : file.parent).path
+    const folder = (folders[dir] ??= { notes: 0, attachments: 0, files: 0, bases: [], keys: {} })
+    if (file.extension === "md") {
+      folder.notes++
+      if (noKeys.includes(dir)) continue
+      const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter ?? {}
+      for (const key of Object.keys(frontmatter)) {
+        const type = types[key.toLowerCase()]?.widget ?? "text"
+        const label = key + ":" + type
+        folder.keys[label] = (folder.keys[label] ?? 0) + 1
+      }
+    } else if (file.extension === "base") {
+      folder.bases.push(file.name + (bookmarked.has(file.path) ? "" : " (no bookmark)"))
+    } else if (inAttachments) folder.attachments++
+    else folder.files++
+  }
+  return JSON.stringify({ excluded: app.vault.getConfig("userIgnoreFilters"), folders })
+})()`
+
+type Layout = {
+  excluded: string[]
+  folders: Record<
+    string,
+    {
+      notes: number
+      attachments: number
+      files: number
+      bases: string[]
+      keys: Record<string, number>
+    }
+  >
+}
+
+const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`
+
+const vaultLayout = new Command()
+  .description(
+    "Print the vault's folders: note counts, bases, and frontmatter keys with types and counts",
+  )
+  .action(async () => {
+    const result = await obs("eval", `code=${LAYOUT_JS}`)
+    const layout: Layout = JSON.parse(result.replace(/^=> /, ""))
+    console.log(`Excluded files: ${layout.excluded.join(", ")}\n`)
+    for (
+      const [dir, f] of Object.entries(layout.folders).sort(([a], [b]) =>
+        a.localeCompare(b)
+      )
+    ) {
+      const name = dir === "/" ? "(vault root)" : `${dir}/`
+      const parts = [
+        f.notes && count(f.notes, "note"),
+        f.attachments && count(f.attachments, "attachment"),
+        f.files && count(f.files, "other file"),
+        ...f.bases,
+      ].filter(Boolean)
+      console.log(`${name}  ${parts.join(", ")}`)
+      const keys = Object.entries(f.keys).sort(([, a], [, b]) => b - a)
+      if (keys.length) console.log(`  ${keys.map(([k, n]) => `${k} ${n}`).join(", ")}`)
+      else if (f.notes && NO_KEYS.includes(dir)) console.log("  (keys not listed)")
+    }
+  })
+
 await new Command()
   .name("obsidian-notes")
-  .description("Scoped access to Obsidian daily notes and bot notes")
+  .description("Scoped access to Obsidian daily notes, bot notes and the vault layout")
   .action(function () {
     this.showHelp()
   })
@@ -155,4 +231,5 @@ await new Command()
   .command("bot:list", botList)
   .command("bot:create", botCreate)
   .command("bot:append", botAppend)
+  .command("vault:layout", vaultLayout)
   .parse(Deno.args)
