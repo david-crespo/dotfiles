@@ -196,7 +196,7 @@ fi
 # real files to other devices. Enable it once in Community plugins.
 if [ -d "$HOME/obsidian/.obsidian" ]; then
   mkdir -p ~/obsidian/.obsidian/plugins/vault-tweaks
-  cp "$PWD"/obsidian/vault-tweaks/{main.js,manifest.json} ~/obsidian/.obsidian/plugins/vault-tweaks/
+  cp "$PWD"/obsidian/vault-tweaks/{main.js,manifest.json,styles.css} ~/obsidian/.obsidian/plugins/vault-tweaks/
 fi
 
 # ah, the agent host (separate repo, not required)

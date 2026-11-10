@@ -1,0 +1,137 @@
+/* Rich list Bases view (RichListView in main.js) */
+
+.vt-rich-list {
+  container-type: inline-size;
+  max-width: 820px;
+  padding: var(--size-4-2) var(--size-4-3);
+}
+
+.vt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-4);
+  padding: var(--size-4-2);
+  border-radius: var(--radius-s);
+  cursor: var(--cursor-link);
+}
+
+/* Only with a real pointer: on touch screens hover sticks after a tap */
+@media (hover: hover) {
+  .vt-row:hover {
+    background: var(--background-modifier-hover);
+  }
+}
+
+.vt-row:active {
+  background: var(--background-modifier-active-hover);
+}
+
+.vt-row:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: -2px;
+}
+
+.vt-group {
+  margin: var(--size-4-4) var(--size-4-2) var(--size-4-1);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+
+.vt-title {
+  flex: 1 1 8em;
+  min-width: 8em;
+  font-weight: var(--font-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Everything but the title, packed together on the right. It wraps rather
+   than squeezing the title when there are many chips. */
+.vt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--size-4-1) var(--size-4-3);
+  min-width: 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.vt-meta:empty {
+  display: none;
+}
+
+.vt-number,
+.vt-date {
+  font-variant-numeric: tabular-nums;
+}
+
+.vt-text {
+  max-width: 16em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-1);
+}
+
+.vt-chip {
+  padding: 1px 8px;
+  border-radius: var(--radius-s);
+  background: rgba(var(--vt-chip-rgb), 0.22);
+  color: var(--text-normal);
+}
+
+.vt-link {
+  display: flex;
+  color: var(--text-faint);
+}
+
+.vt-link svg {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
+
+/* Phone width: each row is the title, with the rest on a line under it, and
+   rows are separated by rules instead of hover backgrounds */
+@container (max-width: 520px) {
+  .vt-rich-list {
+    padding: 0;
+  }
+
+  .vt-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--size-4-1);
+    padding: var(--size-4-2) var(--size-4-4) var(--size-4-3);
+    border-radius: 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+  }
+
+  .vt-title {
+    flex: none;
+    min-width: 0;
+    white-space: normal;
+    line-height: var(--line-height-tight);
+  }
+
+  .vt-meta {
+    justify-content: flex-start;
+  }
+
+  .vt-chip {
+    padding: 0 6px;
+    font-size: var(--font-ui-smaller);
+  }
+
+  .vt-group {
+    margin: var(--size-4-5) var(--size-4-4) var(--size-4-1);
+  }
+}
