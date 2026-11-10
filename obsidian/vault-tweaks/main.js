@@ -9,12 +9,16 @@ const { Notice, Plugin, TFile, moment } = require("obsidian")
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// Notes in these folders are named after their `date` (one entry per day)
+const NAMED_BY_DATE = ["Notes/Moods"]
+
 module.exports = class VaultTweaks extends Plugin {
   onload() {
     // Obsidian fires "create" for every file while loading the vault
     this.app.workspace.onLayoutReady(() => {
       this.registerEvent(this.app.vault.on("create", (file) => this.stampCreated(file)))
     })
+    this.registerEvent(this.app.metadataCache.on("changed", (file, _, cache) => this.nameByDate(file, cache)))
     this.scopeValueSuggestions()
     this.addDateCommand("set-date-today", "Set date to today", "date", "calendar-plus")
     this.addDateCommand(
@@ -44,6 +48,20 @@ module.exports = class VaultTweaks extends Plugin {
         return true
       },
     })
+  }
+
+  // A note made with a base's New button starts as Untitled. In a
+  // NAMED_BY_DATE folder, it's renamed to its date once `date` is set.
+  async nameByDate(file, cache) {
+    if (!NAMED_BY_DATE.includes(file.parent?.path) || !file.basename.startsWith("Untitled")) return
+    const date = cache.frontmatter?.date
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return
+    const path = `${file.parent.path}/${date}.md`
+    if (this.app.vault.getAbstractFileByPath(path)) {
+      new Notice(`vault-tweaks: not renaming ${file.basename}, ${path} already exists`)
+      return
+    }
+    await this.app.fileManager.renameFile(file, path)
   }
 
   // A new note without `created` gets it, set to the file's creation time.
