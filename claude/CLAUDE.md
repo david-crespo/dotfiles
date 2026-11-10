@@ -77,7 +77,7 @@ Commands and conventions:
 
 - `claude` calls you start, in any directory, use this session's account because they inherit `CLAUDE_CONFIG_DIR`. Don't run them with a stripped environment (`env -i`, clean-env wrappers), which falls back to the default config. `claude auth status` shows which account a call will use.
 
-You can also use the `ai` CLI for third party models. When the user asks to get a read from some model name, use that.
+- To get a read from a model outside Claude (Gemini, OpenAI), use the `ai-cli` skill. When the user names a model, use that one.
 
 ### Browser interaction (frontend dev work)
 

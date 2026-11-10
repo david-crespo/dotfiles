@@ -246,9 +246,8 @@ alias sgt='sg run -l ts --pattern'
 alias sgx='sg run -l tsx --pattern'
 alias sga='sg run --pattern'
 
-alias ais='ai --search -m sol'
+alias ais='ai --search -m carbon'
 alias aisf='ai --search -m flash'
-alias aisa='ai --search -m argon'
 alias aif='ai -m flash'
 alias cbd='cb -l diff'
 # alt text for the image on the clipboard. optional args steer it, e.g.
