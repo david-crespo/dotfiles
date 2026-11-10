@@ -154,7 +154,7 @@ done
 # each launch as the shared settings plus the theme. (Setting theme through a
 # --settings overlay doesn't take effect.)
 mkdir -p ~/.claude-personal/themes
-for item in CLAUDE.md statusline.ts skills agents plugins; do
+for item in CLAUDE.md statusline.ts skills agents plugins rules; do
   ln -sfn ~/.claude/"$item" ~/.claude-personal/"$item"
 done
 ln -sf "$PWD"/claude/themes/*.json ~/.claude-personal/themes/
