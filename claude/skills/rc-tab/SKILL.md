@@ -38,8 +38,9 @@ outside the sandbox: it talks to the Rex server over a socket.
    flag to skip it in an interactive session. Capture the pane a few seconds
    after starting (`rex capture -s "$REX_SESSION" -b <block> --trim | tail -25`).
    If it shows `Yes, I trust this folder`, send `down`, then `enter`. Don't
-   wait on the screen with Monitor: its watches never fired here. Capture again
-   in a separate call instead.
+   wait on the screen with Monitor: it always runs sandboxed, where `rex` can't
+   reach its socket, so the watch never matches. Capture again in a separate
+   call instead.
 
 5. **Hand back the link.** Capture until the screen shows a
    `https://claude.ai/code/session_…` URL and give it to the user, with the tab
