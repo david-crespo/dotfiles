@@ -88,9 +88,15 @@ function claude() {
 function clox() { command claude "$@" } # work
 function clod() { # personal
   # The theme lives in settings.json, so the personal settings are the shared
-  # ones plus the theme, rebuilt on each launch to pick up shared edits
+  # ones plus the theme, rebuilt on each launch to pick up shared edits. The
+  # private repo's settings-personal.json, if there, adds deny rules that only
+  # this account gets (work material it must stay out of).
   local settings=~/.claude-personal/settings.json
-  jq '. + {theme: "custom:personal-ayu-blue"}' ~/.claude/settings.json > "$settings.tmp" &&
+  local overlay=~/repos/dotfiles-private/claude/settings-personal.json
+  [[ -f "$overlay" ]] || overlay=/dev/null
+  jq --slurp '.[1] as $overlay | .[0] + {theme: "custom:personal-ayu-blue"}
+      | .permissions.deny += ($overlay.permissions.deny // [])' \
+    ~/.claude/settings.json "$overlay" > "$settings.tmp" &&
     mv "$settings.tmp" "$settings"
   CLAUDE_CONFIG_DIR=~/.claude-personal command claude "$@"
 }
