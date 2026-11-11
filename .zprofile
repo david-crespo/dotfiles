@@ -405,12 +405,13 @@ source "$HOME/.cargo/env"
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# omicron things obviously
-export PATH="$HOME/oxide/omicron/out/dendrite-stub/root/opt/oxide/dendrite/bin:$PATH"
-export PATH="$HOME/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin:$PATH"
-export PATH="$HOME/oxide/omicron/out/mg-ddm/root/opt/oxide/mg-ddm/bin:$PATH"
-export PATH="$HOME/oxide/omicron/out/clickhouse:$PATH"
-export PATH="$HOME/oxide/omicron/out/cockroachdb/bin:$PATH"
+# omicron things obviously. Appended, not prepended: agents can write to these
+# dirs from the sandbox, so they must not be able to shadow another command.
+export PATH="$PATH:$HOME/oxide/omicron/out/cockroachdb/bin"
+export PATH="$PATH:$HOME/oxide/omicron/out/clickhouse"
+export PATH="$PATH:$HOME/oxide/omicron/out/mg-ddm/root/opt/oxide/mg-ddm/bin"
+export PATH="$PATH:$HOME/oxide/omicron/out/mgd/root/opt/oxide/mgd/bin"
+export PATH="$PATH:$HOME/oxide/omicron/out/dendrite-stub/bin"
 
 # Untracked secrets/env (API keys, etc.)
 [[ -f "$HOME/.env.local" ]] && source "$HOME/.env.local"
