@@ -67,7 +67,8 @@ function set_title() {
   # ah sets the tab label from this and the agents in the tab. Interactive
   # shells right in Rex only: an agent's Bash calls, and shells in a tmux it
   # starts, inherit its REX_BLOCK, and a cd in one would report the agent's
-  # own pane as a shell.
+  # own pane as a shell. An interactive zsh an agent runs passes this check;
+  # ah drops its report, because its env has an agent session id.
   if [[ -o interactive && -n $REX_BLOCK && $TERM_PROGRAM == rex ]] && (( $+commands[ah] )); then
     ah hook shell "$title" >/dev/null 2>&1 &!
   fi
