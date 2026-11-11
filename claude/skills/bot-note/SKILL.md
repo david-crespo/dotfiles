@@ -6,19 +6,28 @@ user_invocable: true
 
 # Bot Note
 
-Write a note summarizing the recent conversation using `obsidian-notes`.
+Write a note summarizing the recent conversation. Bot notes are plain markdown files in `~/obsidian/Bot notes/`, one per note, named `<name>.md`. Read and write them as files; Obsidian picks up changes on disk and doesn't need to be running. The folder is writable from the sandbox. Stay inside it: the rest of the vault is not for this skill.
 
 ## On invocation
 
 1. Review the last several messages in the conversation to identify the substantive topic.
-2. Pick a short, lowercase, descriptive name (e.g., `jj workspace tool`). Match the style of existing notes (`obsidian-notes bot:list`).
-3. Write the note by piping content to `obsidian-notes bot:create "<name>"`.
+2. Pick a short, lowercase, descriptive name (e.g., `jj workspace tool`), with no `/` or `:`. Match the style of existing notes (`ls ~/obsidian/"Bot notes"`).
+3. Write the note to `~/obsidian/Bot notes/<name>.md` with the Write tool.
 
 If invoked with an argument, treat it as instructions on what to include in the note (topic, scope, emphasis). The filename should always just be a good short representative title regardless of the argument.
 
 ## Note format
 
 The filename is the note title. Do not add a leading Markdown heading like `# title` inside the note body.
+
+A new note starts with frontmatter holding when it was made, in local time (`date +%Y-%m-%dT%H:%M`), then the body:
+
+```
+---
+created: 2026-11-10T21:30
+---
+First paragraph of the note.
+```
 
 The key principle: **the note should be very close to verbatim what was said in the conversation.** If you gave a good explanation in the chat, copy it nearly verbatim into the note. Do not rewrite, reorganize, or "summarize" something that was already well-written. The conversation is the primary source — the note preserves it, lightly edited at most.
 
@@ -31,14 +40,8 @@ The key principle: **the note should be very close to verbatim what was said in 
 
 ## Before writing
 
-Run all `obsidian-notes` commands outside the execution sandbox from the first
-call. Obsidian's official CLI discovers and connects to the running macOS app,
-but sandboxed processes cannot see that app and misleadingly report that
-Obsidian is not running. Do not launch Obsidian in response to that error unless
-an unsandboxed `obsidian-notes` command reports the same error.
-
-Run `obsidian-notes bot:list` to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one. To append, pipe content to `obsidian-notes bot:append "<name>"`. To edit an existing note directly, use `obsidian-notes bot:path "<name>"` to get the absolute filesystem path, then read/edit the file.
+List the folder to check existing notes and avoid duplicating a topic. If a closely related note already exists, ask whether to append or create a new one. To append or edit, read the file and use the Edit tool; leave its `created` line alone. Don't overwrite an existing note with Write.
 
 ## After writing
 
-End with a single line of the form `Note created at [<name>](<url>)` (or `Note updated at ...` for appends/edits) where `<name>` is just the note filename without the `Bot notes/` prefix or `.md` extension, and `<url>` is `obsidian://open?vault=<vault>&file=<url-encoded-name>`. `bot:create` and `bot:append` print the note's absolute path; the vault name is the basename of the note's grandparent directory (the vault directory containing `Bot notes/`). The link must be clickable, so URL-encode spaces as `%20`.
+End with a single line of the form `Note created at [<name>](<url>)` (or `Note updated at ...` for appends/edits) where `<name>` is just the note filename without the `Bot notes/` prefix or `.md` extension, and `<url>` is `obsidian://open?vault=obsidian&file=<url-encoded-name>`. The link must be clickable, so URL-encode spaces as `%20`.

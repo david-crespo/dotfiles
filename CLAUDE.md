@@ -17,8 +17,8 @@ repo it belongs in; when looking for an existing script or config, check both.
 
 When the user asks about their work, productivity, or what they've been up to,
 use the `/coach` skill. It knows how to gather context from daily notes, tasks,
-GitHub, and sessions. Key utilities: `bin/obsidian-notes.ts` (daily notes and
-bot notes), `claude/skills/session-history/claude-sessions.sh`, and — in the
+GitHub, and sessions. Key utilities: `bin/obsidian-notes.ts` (daily notes),
+`claude/skills/session-history/claude-sessions.sh`, and — in the
 private repo — `../dotfiles-private/claude/skills/coach/gh-activity.sh`. Use
 these tools directly — don't go searching the filesystem for Obsidian vaults
 or other external state. When the user asks you to update a skill, look in

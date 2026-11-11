@@ -1,12 +1,12 @@
 #!/usr/bin/env -S deno run --allow-env --allow-run=/Applications/Obsidian.app/Contents/MacOS/obsidian-cli --allow-read=/Applications/Obsidian.app
 
-// Scoped access to daily notes and bot notes in Obsidian.
-// Wraps the obsidian CLI so it can be allowlisted as a single command.
+// Scoped access to daily notes and the vault layout in Obsidian, through the
+// obsidian CLI. Bot notes are plain files in ~/obsidian/Bot notes and need no
+// wrapper (see the bot-note skill).
 
 import { Command } from "@cliffy/command"
 import $ from "@david/dax"
 
-const BOT_NOTES = "Bot notes"
 const DAILY_NOTES = "Daily notes"
 
 // obsidian-cli is the official CLI entrypoint; the lowercase app binary path
@@ -98,47 +98,6 @@ const dailyList = new Command()
     console.log(await obs("files", `folder=${DAILY_NOTES}`))
   })
 
-const botRead = new Command()
-  .description("Read a bot note by name (without .md)")
-  .arguments("<name:string>")
-  .action(async (_opts, name: string) => {
-    console.log(await obs("read", `path=${BOT_NOTES}/${name}.md`))
-  })
-
-const botPath = new Command()
-  .description("Print the absolute filesystem path to a bot note")
-  .arguments("<name:string>")
-  .action(async (_opts, name: string) => {
-    const vault = await vaultPath()
-    console.log(`${vault}/${BOT_NOTES}/${name}.md`)
-  })
-
-const botList = new Command()
-  .description("List bot notes")
-  .action(async () => {
-    console.log(await obs("files", `folder=${BOT_NOTES}`))
-  })
-
-const botCreate = new Command()
-  .description("Create a bot note. Reads content from stdin, prints the note's path.")
-  .arguments("<name:string>")
-  .action(async (_opts, name: string) => {
-    const content = await readStdin()
-    await obs("create", `path=${BOT_NOTES}/${name}.md`, `content=${content}`)
-    console.log(`${await vaultPath()}/${BOT_NOTES}/${name}.md`)
-  })
-
-const botAppend = new Command()
-  .description(
-    "Append content to a bot note (creates if needed). Reads from stdin, prints the note's path.",
-  )
-  .arguments("<name:string>")
-  .action(async (_opts, name: string) => {
-    const content = await readStdin()
-    await appendOrCreate(`${BOT_NOTES}/${name}.md`, content)
-    console.log(`${await vaultPath()}/${BOT_NOTES}/${name}.md`)
-  })
-
 // Runs inside Obsidian through the CLI's eval. It reads only the metadata
 // cache and vault config: frontmatter keys, never values or note bodies.
 // Folders in NO_KEYS get counts only (hiring material, which agents under the
@@ -217,7 +176,7 @@ const vaultLayout = new Command()
 
 await new Command()
   .name("obsidian-notes")
-  .description("Scoped access to Obsidian daily notes, bot notes and the vault layout")
+  .description("Scoped access to Obsidian daily notes and the vault layout")
   .action(function () {
     this.showHelp()
   })
@@ -226,10 +185,5 @@ await new Command()
   .command("daily:append", dailyAppend)
   .command("daily:path", dailyPath)
   .command("daily:list", dailyList)
-  .command("bot:read", botRead)
-  .command("bot:path", botPath)
-  .command("bot:list", botList)
-  .command("bot:create", botCreate)
-  .command("bot:append", botAppend)
   .command("vault:layout", vaultLayout)
   .parse(Deno.args)
