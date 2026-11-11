@@ -5,8 +5,7 @@ description: How to delegate a self-contained task to a cheaper pseudo-subagent 
 
 # shellout: codex as a pseudo-subagent
 
-Anthropic's cheaper models are not cost-effective for subagent work, so this skill
-delegates self-contained tasks to a one-shot `codex exec` run: a full agent with
+This skill delegates self-contained tasks to a one-shot `codex exec` run: a full agent with
 file, search, and shell tools that runs in cwd, takes one prompt, and prints a
 final answer. It is the `claude -p` equivalent.
 
