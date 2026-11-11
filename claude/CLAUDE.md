@@ -10,7 +10,7 @@
 - Don't have a thing do what only a person does. Frequent offenders are "names", "carries", "wants" and "promises". Say what it has, contains or needs: "the manifest never names a branch" → "the manifest has no branch names", "list items now carry their source lines" → "list items now include their source lines", "this cluster wants its own chapter" → "this cluster should be its own chapter". Standard technical usage is fine: a module owns its state, a server refuses a request.
 - Before sending a chat reply, consider how much of it the user would actually want to read. Length should fit the question: a quick exchange gets a short, conversational answer; a real report can be long, but detail the user will only skim belongs in a file or note.
   - Shorthand: "1p", "2p", "3p", etc. in a message means answer in that many paragraphs of prose, no headings or lists. It sets the length of the chat reply, not how much work goes into it.
-  - A message starting with "RC" means the user is on their phone over Remote Control. From then on, until they say they're back, write replies to be read on a small screen: lead with the answer, shorter than usual, leave out detail they can ask for, and avoid tables and wide code blocks.
+  - A message with "RC" in it, or one that says the user is on their phone, means they are reading over Remote Control. From then on, until they say they're back, write replies to be read on a small screen: lead with the answer, shorter than usual, leave out detail they can ask for, and avoid tables and wide code blocks.
 - When estimating how long a task will take, assume a SOTA coding agent is doing it. Effort intuitions come from humans doing the work and run far too high: work that feels like an hour or two usually takes an agent a few minutes. Recheck any estimate that comes out in hours.
 - Don't rule out a change because it's a lot of work. Judge options by the end result, short of rewriting large parts of the project.
 - The user's goal could be a small, contained change or the ideal end result, and it varies from task to task. When it isn't clear which, ask before choosing.
@@ -33,7 +33,7 @@ Some information about the user's coding environment:
 When working on a set of unpushed revs, we generally treat the stack as a whole as the unit of work rather than one commit at a time. The goal is the most logical, coherent and reviewable set of commits to end up pushed. That doesn't mean we want a bunch of tiny commits.
 
 - Within a turn, squash, split, rebase, describe and abandon the revs you've made freely to get the clearest result.
-- While the user is still giving feedback on a rev, put follow-up edits in that same rev, not a new one; they're reviewing it as a whole. Once they've moved on, it's settled, and a later change to it goes on top: make the change, let the user review it as its own diff, and squash it in when they say to. Keep the working copy at the tip: the user may have a dev server running there or want to see later revs.
+- While the user is still giving feedback on a rev, put follow-up edits in that same rev, not a new one; they're reviewing it as a whole. Once they've moved on, it's settled, and a later change to it goes on top: make the change, let the user review it as its own diff, and squash it in when they say to. Keep the working copy at the tip. If you need a different rev checked out, use a workspace instead of moving it.
 - Pushed revs are outside the stack. Rewriting them means a force-push, which makes it hard for others to follow along on GitHub, so a change to a pushed rev becomes a new rev on top instead. Squash into pushed revs only when the user decides to force-push.
 - A squash or rebase can conflict with later revs that touch the same lines. Resolve conflicts that are straightforward and follow from what the user asked for. Mention a resolution when the user would want to know, such as when it changed a later rev in a way they didn't ask for.
 - Undoing your own edits with `jj restore` is routine. Ask before a restore that would discard edits the user made.
@@ -48,6 +48,7 @@ Commands and conventions:
 - To exclude paths from a jj command, use fileset syntax: `jj diff '~dir1 & ~dir2'` or `jj restore '~package-lock.json'`
 - for parallel approaches, use `jj new <base>` to create siblings from a common base, implement each approach, then compare. bookmarks are unnecessary for this workflow
 - use `jjw` to manage jj workspaces: `jjw create [name]` (or `jjw c`) creates a workspace at `~/jj-workspaces/<repo>-<name>` (numbered if no name) and cds into it, `jjw ls` lists workspaces, `jjw rm [names...]` removes them. Create workspaces with `jjw c <name>`, not `jj workspace add`: it symlinks the unversioned files (`.claude/notes`, `.claude/settings.local.json`, `.helix`, `CLAUDE.local.md`) from the main checkout, and `~/jj-workspaces` is where workspaces are expected to live, so other tools and the user can find them
+- jj commands in a repo or workspace outside the session's working directories fail in the sandbox with a lock-file error ("Failed to open lock file … Operation not permitted"). Run those unsandboxed.
 - Non-destructive jj operations are generally allowlisted. Check `jj log` immediately before any `jj new`: the working copy may have changed since you last looked, and if you're already on an empty undescribed commit, use it instead of stacking another.
 - when using `jj squash`, avoid the editor popup with `-m 'msg'` or `-u` to keep the destination message. These flags are mutually exclusive.
 - The user may squash your work into the previous commit while you're working. This is normal — check `@-` (e.g., `jj diff -r @-`) if you need to confirm your changes landed.
@@ -75,7 +76,7 @@ Commands and conventions:
     --setting-sources "" --strict-mcp-config < /abs/path/prompt.txt
   ```
 
-- `claude` calls you start, in any directory, use this session's account because they inherit `CLAUDE_CONFIG_DIR`. Don't run them with a stripped environment (`env -i`, clean-env wrappers), which falls back to the default config. `claude auth status` shows which account a call will use.
+- `claude` calls you start, in any directory, use this session's account because they inherit `CLAUDE_CONFIG_DIR`. Don't run them with a stripped environment (`env -i`, clean-env wrappers), which falls back to the default config. `claude auth status` shows which account a call will use. This doesn't hold for processes started through Rex (`rex run`, `rex send`), which get the Rex server's environment, not yours. There, use `clod` or `clox`, or set `CLAUDE_CONFIG_DIR` explicitly.
 
 - To get a read from a model outside Claude (Gemini, OpenAI), use the `ai-cli` skill. When the user names a model, use that one.
 
@@ -110,7 +111,7 @@ Commands and conventions:
 - in scripts, prefer full length flags instead of abbreviations for readability
 - When fixing a bug, prefer a red-green workflow where reasonable: write a failing test that reproduces the bug first, confirm it fails for the expected reason, then implement the fix and watch it go green.
 - When giving a list of problems or suggestions in, e.g., a code review, number the suggestions so the user can refer to them easily.
-- To show me an image (a screenshot, a plot, a render), run `open <path>` so it opens in Preview, rather than only giving the path. `open` is blocked in the sandbox, so run it unsandboxed.
+- To show me an image (a screenshot, a plot, a render), run `show-image <path>` so it opens in Preview, rather than only giving the path. It takes `.png`, `.jpg` and `.gif` files only, and runs outside the sandbox, where plain `open` is blocked.
 - In commands that delete or move files (`rm`, `mv`, `cp -R` into an existing dir), write every path out literally: no shell variables, globs, brace expansion or arrays, even when the path is a long scratchpad dir. The auto mode classifier can't see what `rm -rf $S/foo-{a,b}` or `rm "${DEL[@]}"` resolves to, so it blocks the call.
 
 ### Working with GitHub

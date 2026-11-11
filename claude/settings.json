@@ -317,7 +317,8 @@
       "git pull *",
       "jj git *",
       "ah *",
-      "rack *"
+      "rack *",
+      "show-image *"
     ]
   },
   "feedbackDrafts": "off",

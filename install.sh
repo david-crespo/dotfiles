@@ -87,6 +87,7 @@ ln -sf "$PWD/bin/x-list.ts" ~/.local/bin/x-list
 ln -sf "$PWD/bin/tseval.ts" ~/.local/bin/tseval
 ln -sf "$PWD/bin/tsq.ts" ~/.local/bin/tsq
 ln -sf "$PWD/bin/clip" ~/.local/bin/clip
+ln -sf "$PWD/bin/show-image.sh" ~/.local/bin/show-image
 
 ln -sf "$PWD/bin/brew-outdated.sh" ~/.local/bin/brew-outdated
 
