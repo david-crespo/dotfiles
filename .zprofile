@@ -252,7 +252,7 @@ alias sgt='sg run -l ts --pattern'
 alias sgx='sg run -l tsx --pattern'
 alias sga='sg run --pattern'
 
-alias ais='ai --search -m carbon'
+alias ais='ai --search -m sol'
 alias aisf='ai --search -m flash'
 alias aif='ai -m flash'
 alias cbd='cb -l diff'
