@@ -99,7 +99,7 @@ ln -sf "$PWD/claude/CLAUDE.md" ~/.codex/AGENTS.md
 ln -sf "$PWD/claude/CLAUDE.md" ~/.pi/agent/AGENTS.md
 ln -sf "$PWD/pi/APPEND_SYSTEM.md" ~/.pi/agent/APPEND_SYSTEM.md
 
-ln -sf "$PWD/claude/settings.json" ~/.claude/settings.json
+# settings.json is linked by the private install.sh
 ln -sf "$PWD/claude/statusline.ts" ~/.claude/statusline.ts
 ln -sf "$PWD/claude/commands" ~/.claude
 
